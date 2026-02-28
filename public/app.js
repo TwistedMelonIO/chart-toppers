@@ -3,6 +3,9 @@ console.log('APP.JS FILE LOADED SUCCESSFULLY!');
 
 const socket = io();
 
+// Team IDs constant for state updates
+const TEAM_IDS = ['anthems', 'icons'];
+
 // Password Modal Elements
 const settingsBtn = document.getElementById('settingsBtn');
 const passwordModal = document.getElementById('passwordModal');
