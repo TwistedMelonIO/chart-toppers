@@ -76,7 +76,7 @@ environment:
 ```
 
 ### QLab Setup
-1. Configure QLab to listen on port 53000
+1. Configure QLab 5 to listen on port 53000
 2. Set up cue names: ANTHEMS, ICONS
 3. Send OSC commands to trigger team animations
 
@@ -180,6 +180,15 @@ npm test
 npm run test:integration
 ```
 
+### Testing with QLab 5
+```bash
+# Test OSC commands with QLab 5
+npm run test:qlab
+
+# Verify QLab 5 OSC integration
+npm run test:integration:qlab
+```
+
 ## 📝 License
 
 Chart Toppers Scoring System - Twisted Melon Ltd.
@@ -195,4 +204,4 @@ For technical support or questions:
 
 **Version**: 2.1.0  
 **Last Updated**: 2026-02-28  
-**Compatible**: QLab 4+, Docker 20+
+**Compatible**: QLab 5+, Docker 20+
