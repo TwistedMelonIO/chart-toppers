@@ -4,72 +4,98 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Chart Toppers - Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Chakra+Petch:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
   <style>
     .settings-container {
       max-width: 1400px;
       margin: 0 auto;
       padding: 2rem 1.5rem;
+      position: relative;
+      z-index: 1;
     }
-    
+
     .settings-header {
       display: flex;
       flex-direction: column;
       gap: 1rem;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
       border-bottom: 1px solid var(--border);
+      animation: fadeInDown 0.6s ease both;
     }
-    
+
+    .settings-header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, var(--accent), #fcd34d);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
     .header-title {
       display: flex;
       flex-direction: column;
     }
-    
+
     .back-btn {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
       padding: 0.75rem 1.5rem;
-      background: var(--bg-card);
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       color: var(--text-secondary);
       text-decoration: none;
-      transition: all 0.2s ease;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 500;
+      transition: all 0.3s ease;
       align-self: flex-start;
       margin-top: 1rem;
+      backdrop-filter: blur(10px);
     }
-    
+
     .back-btn:hover {
-      background: var(--bg-card-hover);
-      color: var(--text-primary);
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--accent);
       border-color: var(--accent);
+      transform: translateX(-4px);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
     }
-    
+
     .pack-selection {
-      background: var(--bg-card);
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
+      border-radius: 16px;
+      padding: 2rem;
       margin-bottom: 2rem;
+      backdrop-filter: blur(20px) saturate(1.5);
+      animation: fadeInUp 0.6s ease 0.1s both;
     }
-    
+
     .pack-header {
       margin-bottom: 1.5rem;
     }
-    
+
     .pack-header h2 {
       margin: 0 0 0.5rem 0;
       color: var(--text-primary);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 0.06em;
     }
-    
+
     .pack-header .subtitle {
       margin: 0;
       color: var(--text-secondary);
       font-size: 0.9rem;
     }
-    
+
     .pack-controls {
       display: flex;
       justify-content: space-between;
@@ -77,147 +103,178 @@
       gap: 2rem;
       flex-wrap: wrap;
     }
-    
+
     .pack-selector {
       display: flex;
       align-items: center;
       gap: 1rem;
     }
-    
+
     .pack-selector label {
       color: var(--text-secondary);
       font-weight: 500;
     }
-    
+
     .pack-dropdown {
-      padding: 1.5rem 2rem;
-      background: var(--bg-dark);
-      border: 3px solid var(--border);
-      border-radius: 16px;
+      padding: 1.25rem 1.75rem;
+      background: rgba(6, 9, 26, 0.8);
+      border: 2px solid var(--border);
+      border-radius: 12px;
       color: var(--text-primary);
       cursor: pointer;
-      min-width: 300px;
-      font-size: 1.2rem;
-      min-height: 60px;
+      min-width: 280px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      min-height: 56px;
       font-weight: 500;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.02em;
       transition: all 0.3s ease;
     }
-    
+
     .pack-dropdown:hover {
       border-color: var(--accent);
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(108, 92, 231, 0.3);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2);
     }
-    
+
     .pack-dropdown:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.2);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
     }
-    
+
     .pack-info {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
     }
-    
+
     .pack-info p {
       margin: 0;
       color: var(--text-secondary);
       font-size: 1rem;
     }
-    
+
     .pack-info strong {
       color: var(--text-primary);
     }
-    
-    /* Stats Grid - 2x2 Symmetrical Layout */
+
+    /* Stats Grid */
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
-      gap: 2rem;
+      gap: 1.5rem;
       margin: 2rem 0;
     }
-    
+
     .stat-card {
-      background: var(--bg-card);
-      border: 2px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
       border-radius: 16px;
       padding: 2rem;
       text-align: center;
       transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
-      min-height: 150px;
+      backdrop-filter: blur(20px) saturate(1.5);
+      min-height: 140px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      position: relative;
+      overflow: hidden;
     }
-    
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
     .stat-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(108, 92, 231, 0.3);
-      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.3);
     }
-    
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-card:nth-child(1) { animation: fadeInUp 0.5s ease 0.2s both; }
+    .stat-card:nth-child(2) { animation: fadeInUp 0.5s ease 0.3s both; }
+    .stat-card:nth-child(3) { animation: fadeInUp 0.5s ease 0.4s both; }
+    .stat-card:nth-child(4) { animation: fadeInUp 0.5s ease 0.5s both; }
+
     .stat-value {
+      font-family: 'Chakra Petch', sans-serif;
       font-size: 3rem;
-      font-weight: 800;
+      font-weight: 700;
       color: var(--accent);
       margin-bottom: 0.5rem;
       font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
     }
-    
+
     .stat-label {
-      font-size: 1rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
       color: var(--text-secondary);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-weight: 500;
+      letter-spacing: 0.1em;
+      font-weight: 600;
     }
-    
+
     .export-btn {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 1rem 1.5rem;
-      background: var(--bg-dark);
-      border: 2px solid var(--accent);
+      padding: 0.85rem 1.5rem;
+      background: transparent;
+      border: 1px solid var(--accent);
       border-radius: 8px;
       color: var(--accent);
-      font-size: 0.95rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
       font-weight: 600;
+      letter-spacing: 0.03em;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
       margin-left: auto;
     }
-    
+
     .export-btn:hover {
       background: var(--accent);
-      color: white;
+      color: #0a0e1a;
       transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
     }
-    
+
     .export-btn:active {
-      transform: scale(0.98);
+      transform: scale(0.97);
     }
-    
+
     .export-btn svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
     }
-    
+
     .activity-log {
-      background: var(--bg-card);
-      border: 2px solid var(--border);
-      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 16px;
       padding: 2rem;
       margin-bottom: 2rem;
+      backdrop-filter: blur(20px) saturate(1.5);
+      animation: fadeInUp 0.6s ease 0.6s both;
     }
-    
+
     .activity-header {
       display: flex;
       justify-content: space-between;
@@ -226,116 +283,147 @@
       padding-bottom: 1rem;
       gap: 2rem;
     }
-    
+
+    .activity-header h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 0.06em;
+    }
+
     .activity-filters {
       display: flex;
-      gap: 1rem;
+      gap: 0.75rem;
       margin-bottom: 1rem;
       flex-wrap: wrap;
       min-width: 350px;
     }
-    
+
     .filter-select {
-      padding: 1.5rem 2rem;
-      background: var(--bg-dark);
-      border: 3px solid var(--border);
-      border-radius: 16px;
+      padding: 1rem 1.5rem;
+      background: rgba(6, 9, 26, 0.8);
+      border: 2px solid var(--border);
+      border-radius: 10px;
       color: var(--text-primary);
       cursor: pointer;
-      font-size: 1.1rem;
-      min-height: 60px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      min-height: 50px;
       font-weight: 500;
-      letter-spacing: 0.05em;
-      min-width: 200px;
+      letter-spacing: 0.02em;
+      min-width: 180px;
       transition: all 0.3s ease;
     }
-    
+
     .filter-select:hover {
       border-color: var(--accent);
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(108, 92, 231, 0.3);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.15);
     }
-    
+
     .filter-select:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.2);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
     }
-    
+
     .activity-table {
       width: 100%;
       border-collapse: collapse;
     }
-    
+
     .activity-table th {
       text-align: left;
       padding: 1rem;
-      background: var(--bg-dark);
+      background: rgba(6, 9, 26, 0.6);
       border-bottom: 2px solid var(--border);
-      color: var(--text-secondary);
+      color: var(--text-muted);
+      font-family: 'Outfit', sans-serif;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.1em;
     }
-    
+
     .activity-table td {
-      padding: 1rem;
-      border-bottom: 1px solid rgba(42, 42, 74, 0.5);
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       color: var(--text-primary);
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
-    
+
+    .activity-table tr {
+      transition: background 0.2s ease;
+    }
+
     .activity-table tr:hover {
-      background: rgba(108, 92, 231, 0.05);
+      background: rgba(245, 158, 11, 0.04);
     }
-    
+
     .activity-type {
       display: inline-block;
-      padding: 0.5rem 1rem;
+      padding: 0.35rem 0.85rem;
       border-radius: 100px;
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
-    
+
     .activity-type.correct {
-      background: rgba(0, 184, 148, 0.2);
+      background: rgba(52, 211, 153, 0.15);
       color: var(--correct);
+      border: 1px solid rgba(52, 211, 153, 0.25);
     }
-    
+
     .activity-type.reset {
-      background: rgba(231, 76, 60, 0.2);
+      background: rgba(244, 63, 94, 0.15);
       color: var(--danger);
+      border: 1px solid rgba(244, 63, 94, 0.25);
     }
-    
+
     .activity-type.stop {
-      background: rgba(255, 193, 7, 0.2);
-      color: #ffc107;
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.25);
     }
-    
+
     .activity-type.playing {
-      background: rgba(255, 215, 0, 0.2);
-      color: #ffd700;
-    }
-    
-    .activity-type.stopPlaying {
-      background: rgba(74, 144, 226, 0.2);
-      color: #4a90e2;
-    }
-    
-    .activity-type.system {
-      background: rgba(108, 92, 231, 0.2);
+      background: rgba(245, 158, 11, 0.15);
       color: var(--accent);
+      border: 1px solid rgba(245, 158, 11, 0.25);
     }
-    
+
+    .activity-type.stopPlaying {
+      background: rgba(6, 182, 212, 0.15);
+      color: #06b6d4;
+      border: 1px solid rgba(6, 182, 212, 0.25);
+    }
+
+    .activity-type.system {
+      background: rgba(139, 92, 246, 0.15);
+      color: #a78bfa;
+      border: 1px solid rgba(139, 92, 246, 0.25);
+    }
+
     .empty-activity {
       text-align: center;
       padding: 4rem;
       color: var(--text-muted);
-      font-size: 1.1rem;
+      font-size: 1rem;
+      font-style: italic;
     }
-    
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* Responsive: Stats grid on small screens */
     @media (max-width: 600px) {
       .stats-grid {
@@ -343,14 +431,18 @@
         grid-template-rows: auto;
         gap: 1rem;
       }
-      
+
       .stat-card {
-        min-height: 120px;
+        min-height: 110px;
         padding: 1.5rem;
       }
-      
+
       .stat-value {
         font-size: 2.5rem;
+      }
+
+      .settings-header h1 {
+        font-size: 2.2rem;
       }
     }
   </style>
@@ -377,6 +469,9 @@
       <div class="gradient-circle pointer" data-color="140, 100, 255"></div>
     </div>
   </div>
+
+  <!-- Noise texture overlay for cinematic depth -->
+  <div class="noise-overlay"></div>
 
   <div class="settings-container">
     <div class="settings-header">
