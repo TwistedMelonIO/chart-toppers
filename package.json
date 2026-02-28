@@ -1,6 +1,6 @@
 {
   "name": "chart-toppers",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "QLab scoring system - OSC-driven game timer with Bitfocus Companion integration",
   "main": "src/server.js",
   "scripts": {
@@ -10,7 +10,8 @@
   "dependencies": {
     "express": "^4.18.2",
     "osc": "^2.4.4",
-    "socket.io": "^4.7.4"
+    "socket.io": "^4.7.4",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

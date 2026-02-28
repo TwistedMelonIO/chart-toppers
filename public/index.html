@@ -207,6 +207,22 @@
         });
       });
     </script>
-  <script src="app.js"></script>
+  <script src="app.js?v=prod"></script>
+  
+  <!-- iOS-style Reset Confirmation Modal -->
+  <div class="ios-alert-overlay" id="iosResetAlert">
+    <div class="ios-alert">
+      <div class="ios-alert-header">
+        <h3 class="ios-alert-title" id="iosAlertTitle">Confirm Reset</h3>
+      </div>
+      <div class="ios-alert-body">
+        <p class="ios-alert-message" id="iosAlertMessage">Are you sure you want to reset?</p>
+      </div>
+      <div class="ios-alert-actions">
+        <button class="ios-alert-btn ios-alert-cancel" id="iosAlertCancel">Cancel</button>
+        <button class="ios-alert-btn ios-alert-confirm" id="iosAlertConfirm">Reset</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

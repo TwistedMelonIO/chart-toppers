@@ -192,8 +192,14 @@ function registerCorrectAnswer(teamId, source = 'system') {
     return null;
   }
 
+  // Check if team has already reached the maximum time limit
+  if (team.earnedTime >= CONFIG.MAX_TIME) {
+    console.log(`[GAME] ${TEAMS[teamId].name} has already reached ${CONFIG.MAX_TIME}s limit, ignoring correct answer`);
+    return null;
+  }
+
   team.correctAnswers += 1;
-  team.earnedTime = team.correctAnswers * team.pointsPerCorrect;
+  team.earnedTime = Math.min(team.correctAnswers * team.pointsPerCorrect, CONFIG.MAX_TIME);
   team.remainingTime = team.maxTime - team.earnedTime;
 
   if (team.remainingTime < 0) {
@@ -579,10 +585,14 @@ function handleOscAddress(address) {
   const correctMatch = address.match(/^\/chart-toppers\/correct\/(anthems|icons)$/);
   if (correctMatch) {
     const teamId = correctMatch[1];
+    console.log(`[OSC DEBUG] Processing correct answer for team: ${teamId}`);
     const state = registerCorrectAnswer(teamId, 'osc');
     if (state) {
+      console.log(`[OSC DEBUG] Emitting stateUpdate to ${io.engine.clientsCount} clients`);
       io.emit("stateUpdate", state);
       sendQLabLoadCue(teamId, state[teamId].remainingTime);
+    } else {
+      console.log(`[OSC DEBUG] registerCorrectAnswer returned null for team: ${teamId}`);
     }
     return;
   }
@@ -692,6 +702,7 @@ function handleOscAddress(address) {
 }
 
 udpServer.on("message", (msg, rinfo) => {
+  console.log(`[OSC RAW] Received ${msg.length} bytes from ${rinfo.address}:${rinfo.port}`);
   try {
     const oscMsg = osc.readPacket(msg, { metadata: true });
     console.log(`[OSC IN] ${oscMsg.address}`, oscMsg.args || [], `from ${rinfo.address}:${rinfo.port}`);

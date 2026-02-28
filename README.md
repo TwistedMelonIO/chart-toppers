@@ -193,6 +193,6 @@ For technical support or questions:
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: 2025  
+**Version**: 2.1.0  
+**Last Updated**: 2026-02-28  
 **Compatible**: QLab 4+, Docker 20+
