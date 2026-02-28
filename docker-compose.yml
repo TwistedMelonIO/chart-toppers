@@ -4,7 +4,7 @@ services:
     container_name: chart-toppers
     ports:
       # Web dashboard
-      - "3000:3000"
+      - "3200:3000"
       # OSC input - receives from Bitfocus Companion
       - "53536:53536/udp"
       - "53536:53536/tcp"
@@ -16,7 +16,7 @@ services:
       - QLAB_CUE_ANTHEMS=ANTHEMS
       - QLAB_CUE_ICONS=ICONS
       # Bridge URL for OSC output
-      - BRIDGE_URL=http://osc-bridge:3001
+      - BRIDGE_URL=http://osc-bridge:3201
     volumes:
       # Persistent storage for activity log and pack settings
       - chart-toppers-data:/app/data
@@ -28,7 +28,7 @@ services:
     build: ./bridge
     container_name: osc-bridge
     environment:
-      - BRIDGE_PORT=3001
+      - BRIDGE_PORT=3201
       - QLAB_HOST=host.docker.internal
       - QLAB_PORT=53000
     extra_hosts:
