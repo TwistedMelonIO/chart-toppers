@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Settings modal functionality
-  const SETTINGS_PASSWORD = '0000';
+  const SETTINGS_PASSWORD = '8888';
 
   function showPasswordModal() {
     if (!elements.settings.modal) return;
