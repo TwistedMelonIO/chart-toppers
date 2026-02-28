@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chart Toppers - Scoring Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <!-- Gradient Animation Background -->
+  <div class="gradient-background" id="gradientBackground">
+    <svg class="hidden">
+      <defs>
+        <filter id="blurMe">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
+          <feBlend in="SourceGraphic" in2="goo" />
+        </filter>
+      </defs>
+    </svg>
+    
+    <div class="gradients-container">
+      <div class="gradient-circle first" data-color="18, 113, 255"></div>
+      <div class="gradient-circle second" data-color="221, 74, 255"></div>
+      <div class="gradient-circle third" data-color="100, 220, 255"></div>
+      <div class="gradient-circle fourth" data-color="200, 50, 50"></div>
+      <div class="gradient-circle fifth" data-color="180, 180, 50"></div>
+      <div class="gradient-circle pointer" data-color="140, 100, 255"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <div class="header-text">
+          <h1>Chart Toppers</h1>
+          <p class="subtitle">QLab Scoring System</p>
+          <p class="current-pack" id="currentPackDisplay">Current Pack: UK / USA / German</p>
+        </div>
+      </div>
+    </header>
+    <!-- Settings Button - Fixed Position -->
+    <button class="settings-btn" id="settingsBtn" title="Settings">
+      Settings
+    </button>
+
+    <div class="teams-grid">
+      <!-- Team Anthems -->
+      <div class="team-panel team-anthems" data-team="anthems">
+        <div class="team-header">
+          <h2>Team Anthems</h2>
+        </div>
+        <div class="score-card primary team-primary">
+          <div class="score-label">Time Earned</div>
+          <div class="score-value" id="anthems-earnedTime-main">0</div>
+          <div class="score-unit">seconds</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="anthems-progressFill"></div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn btn-reset" data-action="reset" data-team="anthems">↺ Reset</button>
+        </div>
+        <div class="history-section">
+          <h3>History</h3>
+          <div class="history-list" id="anthems-historyList">
+            <p class="empty-state">Waiting for first correct answer...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team Icons -->
+      <div class="team-panel team-icons" data-team="icons">
+        <div class="team-header">
+          <h2>Team Icons</h2>
+        </div>
+        <div class="score-card primary team-primary">
+          <div class="score-label">Time Earned</div>
+          <div class="score-value" id="icons-earnedTime-main">0</div>
+          <div class="score-unit">seconds</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="icons-progressFill"></div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn btn-reset" data-action="reset" data-team="icons">↺ Reset</button>
+        </div>
+        <div class="history-section">
+          <h3>History</h3>
+          <div class="history-list" id="icons-historyList">
+            <p class="empty-state">Waiting for first correct answer...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="global-controls">
+      <button class="btn btn-reset-all" id="btnResetAll">↺ Reset All Teams</button>
+    </div>
+
+    <footer>
+      <div class="osc-info">
+        <span>OSC In: <code>UDP :53535</code></span>
+        <span>OSC Out: <code>QLab :53000</code></span>
+      </div>
+      <div class="footer-logo">
+        <img src="twistedmelon_logo.png" alt="Twisted Melon" />
+      </div>
+    </footer>
+  </div>
+
+  <!-- Password Modal -->
+  <div class="modal-overlay" id="passwordModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Enter Password</h3>
+        <button class="modal-close" id="closeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Please enter the password to access settings:</p>
+        <input type="password" id="passwordInput" placeholder="Enter password" maxlength="4">
+        <button class="btn btn-primary" id="submitPassword">Unlock</button>
+        <p class="error-message" id="passwordError" style="display: none;">Incorrect password</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+      // Global functions for OSC-triggered animations
+      window.triggerTeamPlaying = function(teamId) {
+        try {
+          // Remove playing class from ALL team panels (turn off other team)
+          document.querySelectorAll('.team-panel').forEach(panel => {
+            panel.classList.remove('playing');
+            // Also clear direct styles
+            panel.style.border = '';
+            panel.style.boxShadow = '';
+          });
+          
+          // Add playing class to the specific team panel
+          const teamPanel = document.querySelector('.team-' + teamId);
+          if (teamPanel) {
+            teamPanel.classList.add('playing');
+            
+            // Also try direct CSS manipulation as fallback
+            teamPanel.style.border = '3px solid ' + (teamId === 'anthems' ? '#ffd700' : '#ffd700');
+            teamPanel.style.boxShadow = '0 0 15px ' + (teamId === 'anthems' ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 215, 0, 0.3)');
+          }
+        } catch (error) {
+          // Error in triggerTeamPlaying
+        }
+      };
+      
+      window.triggerTeamStop = function(teamId) {
+        try {
+          // Remove playing class from the specific team panel
+          const teamPanel = document.querySelector('.team-' + teamId);
+          if (teamPanel) {
+            teamPanel.classList.remove('playing');
+            
+            // Also try direct CSS manipulation as fallback
+            teamPanel.style.border = '';
+            teamPanel.style.boxShadow = '';
+          }
+        } catch (error) {
+          // Error in triggerTeamStop
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', function() {
+        // Setup Socket.IO connection for OSC triggers
+        const socket = io();
+        
+        socket.on("triggerPlaying", function(teamId) {
+          window.triggerTeamPlaying(teamId);
+        });
+        
+        socket.on("triggerStop", function(teamId) {
+          window.triggerTeamStop(teamId);
+        });
+        
+        socket.on("teamPlaying", function(teamId) {
+          window.triggerTeamPlaying(teamId);
+        });
+        
+        socket.on("teamStopPlaying", function(teamId) {
+          window.triggerTeamStop(teamId);
+        });
+        
+        socket.on("connect", function() {
+          // Connected to server
+        });
+        
+        socket.on("disconnect", function() {
+          // Disconnected from server
+        });
+        
+        socket.on("connect_error", function(error) {
+          // Connection error
+        });
+      });
+    </script>
+  <script src="app.js"></script>
+</body>
+</html>

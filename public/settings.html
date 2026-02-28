@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chart Toppers - Settings</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .settings-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    
+    .settings-header {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .header-title {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.2s ease;
+      align-self: flex-start;
+      margin-top: 1rem;
+    }
+    
+    .back-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+      border-color: var(--accent);
+    }
+    
+    .pack-selection {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .pack-header {
+      margin-bottom: 1.5rem;
+    }
+    
+    .pack-header h2 {
+      margin: 0 0 0.5rem 0;
+      color: var(--text-primary);
+    }
+    
+    .pack-header .subtitle {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    
+    .pack-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    
+    .pack-selector {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .pack-selector label {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    .pack-dropdown {
+      padding: 1.5rem 2rem;
+      background: var(--bg-dark);
+      border: 3px solid var(--border);
+      border-radius: 16px;
+      color: var(--text-primary);
+      cursor: pointer;
+      min-width: 300px;
+      font-size: 1.2rem;
+      min-height: 60px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      transition: all 0.3s ease;
+    }
+    
+    .pack-dropdown:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(108, 92, 231, 0.3);
+    }
+    
+    .pack-dropdown:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.2);
+    }
+    
+    .pack-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .pack-info p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+    
+    .pack-info strong {
+      color: var(--text-primary);
+    }
+    
+    /* Stats Grid - 2x2 Symmetrical Layout */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    
+    .stat-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(108, 92, 231, 0.3);
+      border-color: var(--accent);
+    }
+    
+    .stat-value {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .stat-label {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+    
+    .export-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+      background: var(--bg-dark);
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      color: var(--accent);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-left: auto;
+    }
+    
+    .export-btn:hover {
+      background: var(--accent);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+    }
+    
+    .export-btn:active {
+      transform: scale(0.98);
+    }
+    
+    .export-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .activity-log {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .activity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      gap: 2rem;
+    }
+    
+    .activity-filters {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      min-width: 350px;
+    }
+    
+    .filter-select {
+      padding: 1.5rem 2rem;
+      background: var(--bg-dark);
+      border: 3px solid var(--border);
+      border-radius: 16px;
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 1.1rem;
+      min-height: 60px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      min-width: 200px;
+      transition: all 0.3s ease;
+    }
+    
+    .filter-select:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(108, 92, 231, 0.3);
+    }
+    
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.2);
+    }
+    
+    .activity-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .activity-table th {
+      text-align: left;
+      padding: 1rem;
+      background: var(--bg-dark);
+      border-bottom: 2px solid var(--border);
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .activity-table td {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(42, 42, 74, 0.5);
+      color: var(--text-primary);
+      font-size: 1rem;
+    }
+    
+    .activity-table tr:hover {
+      background: rgba(108, 92, 231, 0.05);
+    }
+    
+    .activity-type {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 100px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .activity-type.correct {
+      background: rgba(0, 184, 148, 0.2);
+      color: var(--correct);
+    }
+    
+    .activity-type.reset {
+      background: rgba(231, 76, 60, 0.2);
+      color: var(--danger);
+    }
+    
+    .activity-type.stop {
+      background: rgba(255, 193, 7, 0.2);
+      color: #ffc107;
+    }
+    
+    .activity-type.playing {
+      background: rgba(255, 215, 0, 0.2);
+      color: #ffd700;
+    }
+    
+    .activity-type.stopPlaying {
+      background: rgba(74, 144, 226, 0.2);
+      color: #4a90e2;
+    }
+    
+    .activity-type.system {
+      background: rgba(108, 92, 231, 0.2);
+      color: var(--accent);
+    }
+    
+    .empty-activity {
+      text-align: center;
+      padding: 4rem;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+    
+    /* Responsive: Stats grid on small screens */
+    @media (max-width: 600px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        gap: 1rem;
+      }
+      
+      .stat-card {
+        min-height: 120px;
+        padding: 1.5rem;
+      }
+      
+      .stat-value {
+        font-size: 2.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Gradient Animation Background -->
+  <div class="gradient-background" id="gradientBackground">
+    <svg class="hidden">
+      <defs>
+        <filter id="blurMe">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
+          <feBlend in="SourceGraphic" in2="goo" />
+        </filter>
+      </defs>
+    </svg>
+    
+    <div class="gradients-container">
+      <div class="gradient-circle first" data-color="18, 113, 255"></div>
+      <div class="gradient-circle second" data-color="221, 74, 255"></div>
+      <div class="gradient-circle third" data-color="100, 220, 255"></div>
+      <div class="gradient-circle fourth" data-color="200, 50, 50"></div>
+      <div class="gradient-circle fifth" data-color="180, 180, 50"></div>
+      <div class="gradient-circle pointer" data-color="140, 100, 255"></div>
+    </div>
+  </div>
+
+  <div class="settings-container">
+    <div class="settings-header">
+      <div class="header-title">
+        <h1>Settings & Activity Log</h1>
+        <p class="subtitle">Game activity for the past 60 days</p>
+      </div>
+      <a href="/" class="back-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Dashboard
+      </a>
+    </div>
+
+    <!-- Pack Selection -->
+    <div class="pack-selection">
+      <div class="pack-header">
+        <h2>Question Pack Selection</h2>
+        <p class="subtitle">Select the appropriate question pack for your region</p>
+      </div>
+      <div class="pack-controls">
+        <div class="pack-selector">
+          <label for="packSelect">Current Pack:</label>
+          <select class="pack-dropdown" id="packSelect">
+            <option value="uk-usa-german">UK / USA / German</option>
+            <option value="european">European</option>
+            <option value="teens">Teens</option>
+          </select>
+          <button class="btn btn-primary" id="savePackBtn" style="min-height: var(--touch-target-size); padding: 1rem 2rem; font-size: 1rem; font-weight: 600;">Save Pack</button>
+        </div>
+        <div class="pack-info">
+          <p><strong>Current Pack:</strong> <span id="currentPackDisplay">UK / USA / German</span></p>
+          <p><strong>Last Changed:</strong> <span id="packLastChanged">Never</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-value" id="totalCorrectAnswers">0</div>
+        <div class="stat-label">Total Correct Answers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalResets">0</div>
+        <div class="stat-label">Total Resets</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalStops">0</div>
+        <div class="stat-label">Total Stops</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalGames">0</div>
+        <div class="stat-label">Total Games</div>
+      </div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="activity-log">
+      <div class="activity-header">
+        <h2>Activity Log</h2>
+        <div class="activity-filters">
+          <select class="filter-select" id="teamFilter">
+            <option value="all">All Teams</option>
+            <option value="anthems">Team Anthems</option>
+            <option value="icons">Team Icons</option>
+          </select>
+          <select class="filter-select" id="typeFilter">
+            <option value="all">All Types</option>
+            <option value="correct">Correct Answers</option>
+            <option value="reset">Resets</option>
+            <option value="stop">Stops</option>
+            <option value="playing">Playing Started</option>
+            <option value="stopPlaying">Playing Stopped</option>
+            <option value="system">System</option>
+          </select>
+          <select class="filter-select" id="dateFilter">
+            <option value="60">Past 60 Days</option>
+            <option value="30">Past 30 Days</option>
+            <option value="7">Past 7 Days</option>
+            <option value="1">Today</option>
+          </select>
+        </div>
+        <button class="export-btn" id="exportBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export Logs
+        </button>
+      </div>
+      
+      <div class="activity-table-container">
+        <table class="activity-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Team</th>
+              <th>Type</th>
+              <th>Details</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody id="activityTableBody">
+            <tr>
+              <td colspan="5" class="empty-activity">
+                Loading activity data...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

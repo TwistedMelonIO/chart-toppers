@@ -1,0 +1,39 @@
+services:
+  chart-toppers:
+    build: .
+    container_name: chart-toppers
+    ports:
+      # Web dashboard
+      - "3000:3000"
+      # OSC input - receives from Bitfocus Companion
+      - "53536:53536/udp"
+      - "53536:53536/tcp"
+    environment:
+      - WEB_PORT=3000
+      - OSC_LISTEN_PORT=53536
+      - MAX_TIME=100
+      - POINTS_PER_CORRECT=5
+      - QLAB_CUE_ANTHEMS=ANTHEMS
+      - QLAB_CUE_ICONS=ICONS
+      # Bridge URL for OSC output
+      - BRIDGE_URL=http://osc-bridge:3001
+    volumes:
+      # Persistent storage for activity log and pack settings
+      - chart-toppers-data:/app/data
+    depends_on:
+      - osc-bridge
+    restart: unless-stopped
+
+  osc-bridge:
+    build: ./bridge
+    container_name: osc-bridge
+    environment:
+      - BRIDGE_PORT=3001
+      - QLAB_HOST=host.docker.internal
+      - QLAB_PORT=53000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  chart-toppers-data:
