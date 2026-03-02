@@ -17,9 +17,13 @@ services:
       - QLAB_CUE_ICONS=ICONS
       # Bridge URL for OSC output
       - BRIDGE_URL=http://osc-bridge:3201
+      # Base folder where QLab audio files live (mapped below)
+      - TRACK_BASE_PATH=/app/qlab-audio
     volumes:
       # Persistent storage for activity log and pack settings
       - chart-toppers-data:/app/data
+      # Host QLab audio folder → inside container (update host path per machine; keep :/app/qlab-audio:ro so it matches TRACK_BASE_PATH)
+      - /Users/chrisdevlin/Library/Mobile Documents/com~apple~CloudDocs/Twisted Melon/Installs/MSC/MSC Poesia/QLab Files/Chart Toppers/audio:/app/qlab-audio:ro
     depends_on:
       - osc-bridge
     restart: unless-stopped

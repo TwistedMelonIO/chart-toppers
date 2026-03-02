@@ -80,6 +80,21 @@ environment:
 2. Set up cue names: ANTHEMS, ICONS
 3. Send OSC commands to trigger team animations
 
+### Setting the QLab audio folder (Docker-friendly)
+To keep the OSC-to-QLab audio cues working on any Mac, point the container at the folder where your media files live.
+
+1. **Find the folder** on your Mac that already holds the QLab audio (example: `/Users/chrisdevlin/Library/.../Chart Toppers/audio`).
+2. **Open `docker-compose.yml`** and locate two lines in the `chart-toppers` service:
+   ```yaml
+   - TRACK_BASE_PATH=/app/qlab-audio
+   - /Users/you/path/to/Chart Toppers/audio:/app/qlab-audio:ro
+   ```
+3. **Change only the left side** of the volume line to your folder path. Leave `:/app/qlab-audio:ro` exactly as-is so it still matches the `TRACK_BASE_PATH` environment variable above it.
+4. If you expose the folder inside the container at a different location, update `TRACK_BASE_PATH` to the same in-container path.
+5. Save the file and run `docker compose up -d` to restart the containers. The server now builds OSC file targets from the folder you mounted.
+
+> Tip: when you move to another computer, repeat steps 1–3 with that machine’s audio folder—no source code changes required.
+
 ## 📊 Activity Tracking
 
 ### Logged Events
