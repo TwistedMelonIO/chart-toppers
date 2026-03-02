@@ -62,5 +62,13 @@
     "team": "icons",
     "details": "Team stopped playing via OSC",
     "source": "osc"
+  },
+  {
+    "id": 1772462579048.23,
+    "timestamp": "2026-03-02T14:42:59.048Z",
+    "type": "system",
+    "team": "all",
+    "details": "Question pack changed from uk-usa-german to teens",
+    "source": "api"
   }
 ]
