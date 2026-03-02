@@ -24,6 +24,7 @@ class SettingsPage {
     const dateFilter = document.getElementById('dateFilter');
     const savePackBtn = document.getElementById('savePackBtn');
     const exportBtn = document.getElementById('exportBtn');
+    const resetBtn = document.getElementById('resetBtn');
 
     if (teamFilter) {
       teamFilter.addEventListener('change', () => this.applyFilters());
@@ -39,6 +40,175 @@ class SettingsPage {
     }
     if (exportBtn) {
       exportBtn.addEventListener('click', () => this.exportLogs());
+    }
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => this.showResetModal());
+    }
+
+    // Setup modal event listeners
+    this.setupModalListeners();
+  }
+
+  setupModalListeners() {
+    const modal = document.getElementById('resetModal');
+    const modalClose = document.getElementById('modalClose');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalConfirm = document.getElementById('modalConfirm');
+    const passwordInput = document.getElementById('passwordInput');
+
+    // Close modal events
+    if (modalClose) {
+      modalClose.addEventListener('click', () => this.hideResetModal());
+    }
+    if (modalCancel) {
+      modalCancel.addEventListener('click', () => this.hideResetModal());
+    }
+
+    // Confirm reset event
+    if (modalConfirm) {
+      modalConfirm.addEventListener('click', () => this.resetActivityLogs());
+    }
+
+    // Close on overlay click
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.hideResetModal();
+        }
+      });
+    }
+
+    // Enter key to submit
+    if (passwordInput) {
+      passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          this.resetActivityLogs();
+        }
+      });
+    }
+
+    // Escape key to close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        this.hideResetModal();
+      }
+    });
+  }
+
+  showResetModal() {
+    const modal = document.getElementById('resetModal');
+    const passwordInput = document.getElementById('passwordInput');
+    const passwordError = document.getElementById('passwordError');
+    
+    // Reset form
+    if (passwordInput) {
+      passwordInput.value = '';
+      passwordInput.focus();
+    }
+    if (passwordError) {
+      passwordError.style.display = 'none';
+    }
+    
+    // Show modal
+    if (modal) {
+      modal.classList.add('active');
+    }
+  }
+
+  hideResetModal() {
+    const modal = document.getElementById('resetModal');
+    const passwordInput = document.getElementById('passwordInput');
+    const passwordError = document.getElementById('passwordError');
+    
+    // Hide modal
+    if (modal) {
+      modal.classList.remove('active');
+    }
+    
+    // Reset form
+    if (passwordInput) {
+      passwordInput.value = '';
+    }
+    if (passwordError) {
+      passwordError.style.display = 'none';
+    }
+  }
+
+  async resetActivityLogs() {
+    const passwordInput = document.getElementById('passwordInput');
+    const passwordError = document.getElementById('passwordError');
+    const modalConfirm = document.getElementById('modalConfirm');
+    
+    const password = passwordInput ? passwordInput.value : '';
+    
+    if (!password) {
+      if (passwordError) {
+        passwordError.textContent = 'Please enter a password';
+        passwordError.style.display = 'block';
+      }
+      return;
+    }
+
+    // Disable confirm button during request
+    if (modalConfirm) {
+      modalConfirm.disabled = true;
+      modalConfirm.textContent = 'Resetting...';
+    }
+
+    try {
+      const response = await fetch('/api/activity/reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Success - hide modal and refresh data
+        this.hideResetModal();
+        this.loadActivityData(); // Refresh the activity log
+        
+        // Show success feedback
+        const resetBtn = document.getElementById('resetBtn');
+        if (resetBtn) {
+          const originalText = resetBtn.innerHTML;
+          resetBtn.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Reset Complete
+          `;
+          resetBtn.style.borderColor = 'var(--correct)';
+          resetBtn.style.color = 'var(--correct)';
+          
+          setTimeout(() => {
+            resetBtn.innerHTML = originalText;
+            resetBtn.style.borderColor = '';
+            resetBtn.style.color = '';
+          }, 2000);
+        }
+      } else {
+        // Error - show error message
+        if (passwordError) {
+          passwordError.textContent = result.message || 'Failed to reset logs';
+          passwordError.style.display = 'block';
+        }
+      }
+    } catch (error) {
+      console.error('Error resetting activity logs:', error);
+      if (passwordError) {
+        passwordError.textContent = 'Network error. Please try again.';
+        passwordError.style.display = 'block';
+      }
+    } finally {
+      // Re-enable confirm button
+      if (modalConfirm) {
+        modalConfirm.disabled = false;
+        modalConfirm.textContent = 'Reset Logs';
+      }
     }
   }
 
@@ -98,12 +268,13 @@ class SettingsPage {
       totalGames: 0
     };
 
-    // Calculate statistics from the past 60 days
-    const sixtyDaysAgo = new Date(Date.now() - (60 * 24 * 60 * 60 * 1000));
+    // Calculate statistics from today only
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of today
     
     this.activityData.forEach(entry => {
       const entryDate = new Date(entry.timestamp);
-      if (entryDate >= sixtyDaysAgo) {
+      if (entryDate >= today) {
         switch (entry.type) {
           case 'correct':
             stats.totalCorrectAnswers++;

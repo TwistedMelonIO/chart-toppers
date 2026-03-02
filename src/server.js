@@ -27,6 +27,9 @@ const CONFIG = {
   // QLab cue numbers for each team's LOAD time cue
   QLAB_CUE_ANTHEMS: process.env.QLAB_CUE_ANTHEMS || "ANTHEMS",
   QLAB_CUE_ICONS: process.env.QLAB_CUE_ICONS || "ICONS",
+
+  // Admin password for sensitive operations
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "8888",
 };
 
 console.log("=== Chart Toppers - QLab Scoring System ===");
@@ -246,6 +249,31 @@ app.get("/api/activity", (req, res) => {
   const { team = 'all', type = 'all', days = '60' } = req.query;
   const activities = getActivityLog(team, type, parseInt(days));
   res.json(activities);
+});
+
+// Reset activity log API endpoint (requires password)
+app.post("/api/activity/reset", (req, res) => {
+  const { password } = req.body;
+  
+  // Verify admin password
+  if (password !== CONFIG.ADMIN_PASSWORD) {
+    return res.status(401).json({ success: false, message: "Invalid password" });
+  }
+  
+  try {
+    // Clear the activity log
+    activityLog = [];
+    saveActivityLog();
+    
+    // Log the reset action itself
+    logActivity('system', 'all', 'Activity log reset by administrator', 'api');
+    
+    console.log("[API] Activity log reset by administrator");
+    res.json({ success: true, message: "Activity log reset successfully" });
+  } catch (error) {
+    console.error("[API] Error resetting activity log:", error);
+    res.status(500).json({ success: false, message: "Failed to reset activity log" });
+  }
 });
 
 // Pack settings API endpoints with persistent storage

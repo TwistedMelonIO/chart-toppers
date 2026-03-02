@@ -202,6 +202,6 @@ For technical support or questions:
 
 ---
 
-**Version**: 2.4.0
+**Version**: 2.5.0
 **Last Updated**: 2026-03-02
 **Compatible**: QLab 5+, Docker 20+
