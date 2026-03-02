@@ -38,6 +38,24 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
 
+  // Pack display name mapping
+  const packNames = {
+    'uk-usa-german': 'UK / USA / German',
+    'european': 'European',
+    'teens': 'Teens'
+  };
+
+  // Fetch current pack on page load
+  const packDisplay = document.getElementById('currentPackDisplay');
+  fetch('/api/pack-settings')
+    .then(res => res.json())
+    .then(data => {
+      if (packDisplay && data.currentPack) {
+        packDisplay.textContent = 'Current Pack: ' + (packNames[data.currentPack] || data.currentPack);
+      }
+    })
+    .catch(() => {});
+
   // Initialize Socket.IO connection
   const socket = io();
   let resetCallback = null;
@@ -62,6 +80,12 @@ document.addEventListener('DOMContentLoaded', function() {
   socket.on('stateUpdate', (state) => {
     updateTeamUI('anthems', state.anthems);
     updateTeamUI('icons', state.icons);
+  });
+
+  socket.on('packChanged', (newPack) => {
+    if (packDisplay) {
+      packDisplay.textContent = 'Current Pack: ' + (packNames[newPack] || newPack);
+    }
   });
 
   socket.on('teamReset', (teamId) => {
