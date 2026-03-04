@@ -31,14 +31,14 @@ A professional web-based scoring system for Chart Toppers game shows, integrated
 ### Installation
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/twisted-melon/chart-toppers.git
 cd chart-toppers
 
 # Start the application
 docker-compose up --build -d
 
 # Access the web interface
-open http://localhost:3000
+open http://localhost:3200
 ```
 
 ## 🎮 Usage
@@ -52,8 +52,8 @@ open http://localhost:3000
 ```
 
 ### Web Interface
-- **Main Dashboard**: http://localhost:3000
-- **Settings Panel**: Click "Settings" (password: 0000)
+- **Main Dashboard**: http://localhost:3200
+- **Settings Panel**: Click "Settings" (password: 8888)
 - **Activity Log**: View detailed game history in settings
 
 ### Team Management
@@ -115,7 +115,7 @@ To keep the OSC-to-QLab audio cues working on any Mac, point the container at th
 ## 🔐 Security
 
 ### Password Protection
-- **Settings Panel**: Protected with password (0000)
+- **Settings Panel**: Protected with password (8888)
 - **API Endpoints**: Input validation and sanitization
 - **No Debug Code**: Production-ready with clean console
 
@@ -134,7 +134,7 @@ To keep the OSC-to-QLab audio cues working on any Mac, point the container at th
 - **chart-toppers-data**: Persistent storage for logs and settings
 
 ### Ports
-- **3000**: Web interface
+- **3200**: Web interface (mapped to container port 3000)
 - **53536**: OSC input (UDP/TCP)
 
 ## 📁 Project Structure
@@ -217,6 +217,6 @@ For technical support or questions:
 
 ---
 
-**Version**: 2.5.0
-**Last Updated**: 2026-03-02
+**Version**: 2.6.0
+**Last Updated**: 2026-03-04
 **Compatible**: QLab 5+, Docker 20+
