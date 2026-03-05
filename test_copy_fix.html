@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Copy Machine ID Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .license-machine-id { 
+            color: #666; 
+            font-size: 0.9rem; 
+            cursor: pointer; 
+            padding: 8px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            display: inline-block; 
+            margin: 10px 0;
+        }
+        .license-machine-id:hover { background: #f0f0f0; }
+        .license-copy-btn {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .license-copy-btn:hover { background: #0056b3; }
+        #result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Chart Toppers - Copy Machine ID Test</h1>
+    
+    <div class="test-section">
+        <h2>Mock Footer Copy Button (like in main app)</h2>
+        <div class="license-info">
+            <span class="license-machine-id" id="footer-machine-id" 
+                  data-full-machine-id="926072d21a3d1fd0d181e1152442770388c781766fdece7bee51f1e7afde3e7a">
+                Machine ID: 926072d21a3d...
+            </span>
+            <button class="license-copy-btn" onclick="copyMachineIdFromFooter()" title="Copy Machine ID">📋 Copy ID</button>
+        </div>
+        <div id="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Manual Test</h2>
+        <button onclick="testCopy()">Test Copy Function Directly</button>
+        <div id="manual-result"></div>
+    </div>
+
+    <script>
+        // Include the same functions from the main app
+        window.copyMachineIdFromFooter = function() {
+            console.log('copyMachineIdFromFooter called');
+            const footerMid = document.getElementById('footer-machine-id');
+            const copyBtn = document.querySelector('.license-copy-btn');
+            
+            if (!footerMid) {
+                console.error('footer-machine-id element not found');
+                showResult('footer-machine-id element not found', 'error');
+                return;
+            }
+            
+            const fullMachineId = footerMid.getAttribute('data-full-machine-id');
+            console.log('fullMachineId from attribute:', fullMachineId);
+            
+            if (!fullMachineId || fullMachineId === 'Loading...') {
+                console.log('Fallback to API call');
+                showResult('Fallback to API call (simulated)', 'success');
+                // Simulate API call success
+                performCopy(fullMachineId || '926072d21a3d1fd0d181e1152442770388c781766fdece7bee51f1e7afde3e7a');
+                // Show feedback on button
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Copied!';
+                copyBtn.style.background = 'var(--correct)';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.style.background = '';
+                }, 2000);
+                return;
+            }
+            
+            console.log('Copying machine ID:', fullMachineId);
+            performCopy(fullMachineId);
+            
+            // Show feedback on button
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = '✅ Copied!';
+            copyBtn.style.background = 'var(--correct)';
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+                copyBtn.style.background = '';
+            }, 2000);
+        };
+
+        function performCopy(text) {
+            console.log('performCopy called with text:', text);
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                console.log('Using modern clipboard API');
+                navigator.clipboard.writeText(text).then(() => {
+                    console.log('Clipboard API success');
+                    showResult('✅ Successfully copied to clipboard using modern API!', 'success');
+                }).catch((err) => {
+                    console.log('Clipboard API failed, using fallback:', err);
+                    fallbackCopy(text);
+                });
+            } else {
+                console.log('Using fallback copy method');
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            console.log('fallbackCopy called with text:', text);
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const ok = document.execCommand('copy');
+                console.log('execCommand copy result:', ok);
+                if (ok) {
+                    showResult('✅ Successfully copied to clipboard using fallback method!', 'success');
+                } else {
+                    showResult('❌ Copy command failed', 'error');
+                }
+            } catch (err) {
+                console.error('execCommand copy error:', err);
+                showResult('❌ Copy failed: ' + err.message, 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function testCopy() {
+            const testText = '926072d21a3d1fd0d181e1152442770388c781766fdece7bee51f1e7afde3e7a';
+            performCopy(testText);
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = type;
+            setTimeout(() => {
+                resultDiv.textContent = '';
+                resultDiv.className = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

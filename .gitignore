@@ -7,6 +7,9 @@ npm-debug.log*
 .env.local
 .env.production
 
+# License keys (NEVER commit private key)
+license_private_key.pem
+
 # Docker
 .dockerignore
 

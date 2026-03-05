@@ -5,6 +5,7 @@ const osc = require("osc");
 const dgram = require("dgram");
 const path = require("path");
 const fs = require('fs');
+const { spawn } = require("child_process");
 
 // =============================================================================
 // Configuration
@@ -245,9 +246,17 @@ app.get("/api/state", (req, res) => {
 });
 
 // Activity log API endpoint
+const MAX_ACTIVITY_LIMIT = 1000;
+
 app.get("/api/activity", (req, res) => {
-  const { team = 'all', type = 'all', days = '60' } = req.query;
-  const activities = getActivityLog(team, type, parseInt(days));
+  const { team = 'all', type = 'all', days = '60', limit } = req.query;
+  let activities = getActivityLog(team, type, parseInt(days));
+
+  if (limit) {
+    const parsedLimit = Math.min(Math.max(parseInt(limit), 1), MAX_ACTIVITY_LIMIT);
+    activities = activities.slice(-parsedLimit);
+  }
+
   res.json(activities);
 });
 
@@ -284,7 +293,7 @@ const BRIDGE_URL = process.env.BRIDGE_URL || "http://osc-bridge:3001";
 
 // QLab Track cue configuration (T1-T4)
 const TRACK_CUE_NUMBERS = ["T1", "T2", "T3", "T4"];
-const TRACK_BASE_PATH = "/Users/chrisdevlin/Library/Mobile Documents/com~apple~CloudDocs/Twisted Melon/Installs/MSC/MSC Poesia/QLab Files/Chart Toppers/audio";
+const TRACK_BASE_PATH = process.env.TRACK_BASE_PATH || "/Users/chrisdevlin/Library/Mobile Documents/com~apple~CloudDocs/Twisted Melon/Installs/MSC/MSC Poesia/QLab Files/Chart Toppers/audio";
 
 // Pack-specific audio file mappings for each track
 const PACK_AUDIO_FILES = {
@@ -409,6 +418,20 @@ function updateQLabCueName(cueNumber, cueName) {
 }
 
 // Function to update all track cues (T1-T4) based on selected pack
+function trackBasePathAvailable() {
+  if (!TRACK_BASE_PATH) {
+    console.warn('[PACK] TRACK_BASE_PATH is not defined. Skipping cue file updates.');
+    return false;
+  }
+
+  if (!fs.existsSync(TRACK_BASE_PATH)) {
+    console.warn(`[PACK] TRACK_BASE_PATH does not exist: ${TRACK_BASE_PATH}. Skipping cue file updates.`);
+    return false;
+  }
+
+  return true;
+}
+
 function updateTrackCuesForPack(pack) {
   const packTracks = PACK_AUDIO_FILES[pack];
   if (!packTracks) {
@@ -416,19 +439,25 @@ function updateTrackCuesForPack(pack) {
     return;
   }
 
+  if (!trackBasePathAvailable()) {
+    return;
+  }
+
   console.log(`[PACK] Updating ${packTracks.length} track cues for ${pack} pack:`);
   
   packTracks.forEach((trackConfig, index) => {
     const cueNumber = TRACK_CUE_NUMBERS[index];
-    const fullFilePath = `${TRACK_BASE_PATH}/${trackConfig.fileName}`;
-    
-    console.log(`[PACK]   ${cueNumber}: File: ${fullFilePath}`);
+    const fullFilePath = path.join(TRACK_BASE_PATH, trackConfig.fileName);
+
+    if (!fs.existsSync(fullFilePath)) {
+      console.warn(`[PACK] Missing audio file for ${cueNumber}: ${fullFilePath}. Skipping file target update.`);
+    } else {
+      console.log(`[PACK]   ${cueNumber}: File: ${fullFilePath}`);
+      // Update file path only when file exists
+      updateQLabCueFilePath(cueNumber, fullFilePath);
+    }
+
     console.log(`[PACK]   ${cueNumber}: Name: ${trackConfig.cueName}`);
-    
-    // Update file path
-    updateQLabCueFilePath(cueNumber, fullFilePath);
-    
-    // Update cue name
     updateQLabCueName(cueNumber, trackConfig.cueName);
   });
 }
@@ -509,6 +538,98 @@ app.post("/api/reset", (req, res) => {
   io.emit("teamReset", "icons");
   res.json({ success: true, message: "Reset all teams - playing AT and IT cues" });
 });
+
+// =============================================================================
+// License Validation System
+// =============================================================================
+let licenseState = { valid: false, error: "License not yet checked" };
+
+async function getMachineId() {
+  return new Promise((resolve, reject) => {
+    const python = spawn("python3", ["machine_id_simple.py"]);
+    let output = "";
+    python.stdout.on("data", (data) => {
+      output += data.toString();
+    });
+    python.stderr.on("data", (data) => {
+      console.error(`[LICENSE] Machine ID error: ${data}`);
+    });
+    python.on("close", (code) => {
+      if (code === 0) {
+        resolve(output.trim());
+      } else {
+        reject(new Error(`Machine ID script failed with code ${code}`));
+      }
+    });
+  });
+}
+
+async function validateLicense() {
+  try {
+    const machineId = await getMachineId();
+    console.log(`[LICENSE] Machine ID: ${machineId}`);
+    
+    const licenseKey = process.env.LICENSE_KEY || "";
+    if (!licenseKey) {
+      return {
+        valid: false,
+        error: "No license key provided",
+        machine_id: machineId,
+      };
+    }
+
+    return new Promise((resolve) => {
+      const python = spawn("python3", ["license_validator_simple.py", machineId, licenseKey]);
+      let output = "";
+      python.stdout.on("data", (data) => {
+        output += data.toString();
+      });
+      python.stderr.on("data", (data) => {
+        console.error(`[LICENSE] Validation error: ${data}`);
+      });
+      python.on("close", (code) => {
+        try {
+          const result = JSON.parse(output.trim());
+          console.log(`[LICENSE] Validation result:`, result);
+          resolve(result);
+        } catch (e) {
+          console.error(`[LICENSE] Failed to parse validation result: ${e}`);
+          resolve({
+            valid: false,
+            error: "License validation failed",
+            machine_id: machineId,
+          });
+        }
+      });
+    });
+  } catch (error) {
+    console.error(`[LICENSE] License check failed: ${error}`);
+    return {
+      valid: false,
+      error: error.message,
+      machine_id: "unknown",
+    };
+  }
+}
+
+async function initializeLicense() {
+  console.log("[LICENSE] Initializing license validation...");
+  licenseState = await validateLicense();
+}
+
+// License status endpoint
+app.get("/api/license_status", (req, res) => {
+  res.json(licenseState);
+});
+
+// License validation endpoint (re-check)
+app.post("/api/validate_license", async (req, res) => {
+  await initializeLicense();
+  res.json(licenseState);
+});
+
+// Initialize license on startup
+initializeLicense();
 
 // Stop a specific team's cue
 app.post("/api/stop/:team", (req, res) => {

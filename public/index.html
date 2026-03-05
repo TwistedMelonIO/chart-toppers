@@ -8,9 +8,28 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Chakra+Petch:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
+  <!-- License Gate Overlay -->
+  <div id="license-gate" class="license-gate">
+    <div class="license-gate-box">
+      <h2>Chart Toppers</h2>
+      <p class="subtitle">A valid license is required to use this application.</p>
+      <div class="machine-id-label">Your Machine ID</div>
+      <div class="machine-id-value" id="gate-machine-id"
+           onclick="copyMachineId()" title="Click to copy">Loading...</div>
+      <div class="copy-hint" id="gate-copy-hint">Click to copy</div>
+      <div class="error-msg" id="gate-error">Checking license...</div>
+      <div class="instructions">
+        1. Copy the Machine ID above<br>
+        2. Send it to your license provider<br>
+        3. Run <strong>install_license.sh</strong> and paste the key you receive
+      </div>
+    </div>
+  </div>
+
   <!-- Gradient Animation Background -->
   <div class="gradient-background" id="gradientBackground">
     <svg class="hidden">
@@ -105,16 +124,53 @@
       <button class="btn btn-reset-all" id="btnResetAll">↺ Reset All Teams</button>
     </div>
 
-    <footer>
-      <div class="osc-info">
-        <span>OSC In: <code>UDP :53535</code></span>
-        <span>OSC Out: <code>QLab :53000</code></span>
+  </div>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-left">
+        <div class="footer-info">
+          <div class="footer-ports">
+            <span class="footer-port-item">
+              <i data-lucide="globe" style="width:14px;height:14px;"></i>
+              Web: <span>3200</span>
+            </span>
+            <span class="footer-port-item">
+              <i data-lucide="radio" style="width:14px;height:14px;"></i>
+              OSC In: <span>53536</span>
+            </span>
+            <span class="footer-port-item">
+              <i data-lucide="send" style="width:14px;height:14px;"></i>
+              OSC Out: <span>53000 (via bridge)</span>
+            </span>
+          </div>
+          <div class="footer-license" id="footerLicense">
+            <span class="footer-license-item" id="footer-license-status">
+              <i data-lucide="shield-check" style="width:14px;height:14px;"></i>
+              <span>Checking license...</span>
+            </span>
+            <span class="footer-license-item" id="footer-licensee">
+              <i data-lucide="user" style="width:14px;height:14px;"></i>
+              <span>—</span>
+            </span>
+            <span class="footer-license-item" id="footer-license-expiry">
+              <i data-lucide="calendar" style="width:14px;height:14px;"></i>
+              <span>—</span>
+            </span>
+          </div>
+        </div>
+        <div class="footer-status">
+          <span class="connection-status" id="connectionStatus" aria-live="polite">
+            <span class="dot"></span>
+            <span class="message">Connecting to server…</span>
+          </span>
+        </div>
       </div>
       <div class="footer-logo">
         <img src="twistedmelon_logo.png" alt="Twisted Melon" />
       </div>
-    </footer>
-  </div>
+    </div>
+  </footer>
 
   <!-- Password Modal -->
   <div class="modal-overlay" id="passwordModal">
@@ -208,6 +264,7 @@
       });
     </script>
   <script src="app.js?v=prod"></script>
+  <script>lucide.createIcons();</script>
   
   <!-- iOS-style Reset Confirmation Modal -->
   <div class="ios-alert-overlay" id="iosResetAlert">

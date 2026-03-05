@@ -29,7 +29,8 @@ document.addEventListener('DOMContentLoaded', function() {
       cancel: document.getElementById('iosAlertCancel'),
       confirm: document.getElementById('iosAlertConfirm')
     },
-    resetAll: document.getElementById('btnResetAll')
+    resetAll: document.getElementById('btnResetAll'),
+    connectionStatus: document.getElementById('connectionStatus')
   };
 
   // Validate required elements exist
@@ -37,6 +38,84 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('Required DOM elements not found');
     return;
   }
+
+  // ── License System ──────────────────────────────────────
+  async function checkLicenseStatus() {
+    console.log('checkLicenseStatus called');
+    try {
+      console.log('Fetching license status...');
+      const res = await fetch('/api/license_status');
+      const data = await res.json();
+      console.log('License status data:', data);
+      updateLicenseGate(data);
+      updateLicenseFooter(data);
+    } catch (e) {
+      console.error('License check failed:', e);
+    }
+  }
+
+  function updateLicenseGate(data) {
+    const gate = document.getElementById('license-gate');
+    const machineIdEl = document.getElementById('gate-machine-id');
+    const errorEl = document.getElementById('gate-error');
+
+    if (data.machine_id) machineIdEl.textContent = data.machine_id;
+
+    if (data.valid) {
+      gate.classList.add('hidden');
+    } else {
+      gate.classList.remove('hidden');
+      errorEl.textContent = data.error || 'License is not valid';
+    }
+  }
+
+  function updateLicenseFooter(data) {
+    const statusEl = document.getElementById('footer-license-status');
+    const licenseeEl = document.getElementById('footer-licensee');
+    const expiryEl = document.getElementById('footer-license-expiry');
+
+    if (data.valid) {
+      statusEl.querySelector('span').textContent = 'Valid License';
+      statusEl.className = 'footer-license-item';
+      licenseeEl.querySelector('span').textContent = data.licensee || 'Licensed User';
+      licenseeEl.className = 'footer-license-item';
+      expiryEl.querySelector('span').textContent = data.expiration
+        ? new Date(data.expiration).toLocaleDateString()
+        : 'No expiry';
+      expiryEl.className = 'footer-license-item';
+    } else {
+      statusEl.querySelector('span').textContent = 'Invalid License';
+      statusEl.className = 'footer-license-item invalid';
+      licenseeEl.querySelector('span').textContent = 'N/A';
+      licenseeEl.className = 'footer-license-item invalid';
+      expiryEl.querySelector('span').textContent = data.error || 'License invalid';
+      expiryEl.className = 'footer-license-item invalid';
+    }
+  }
+
+  // Click-to-copy with fallback for all browsers
+  function copyMachineId() {
+    const mid = document.getElementById('gate-machine-id').textContent;
+    if (!mid || mid === 'Loading...') return;
+
+    const hint = document.getElementById('gate-copy-hint');
+    performCopy(mid);
+    
+    // Show feedback on hint
+    if (hint) {
+      const originalText = hint.textContent;
+      hint.textContent = 'Copied!';
+      setTimeout(() => {
+        hint.textContent = originalText;
+      }, 2000);
+    }
+  }
+
+  
+  // Check license immediately and then every 30 seconds
+  console.log('Starting license check...');
+  checkLicenseStatus();
+  setInterval(checkLicenseStatus, 30000);
 
   // Pack display name mapping
   const packNames = {
@@ -59,27 +138,25 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize Socket.IO connection
   const socket = io();
   let resetCallback = null;
+  let statePollInterval = null;
+  const STATE_POLL_INTERVAL_MS = 5000;
+
+  setConnectionStatus('connecting', 'Connecting to server…');
 
   // Socket.IO event handlers
   socket.on('connect', () => {
-    const statusElement = document.getElementById("connectionStatus");
-    if (statusElement) {
-      statusElement.textContent = "Connected";
-      statusElement.style.color = "var(--correct)";
-    }
+    setConnectionStatus('connected', 'Connected to control server');
+    stopStatePolling();
+    fetchStateSnapshot();
   });
 
   socket.on('disconnect', () => {
-    const statusElement = document.getElementById("connectionStatus");
-    if (statusElement) {
-      statusElement.textContent = "Disconnected";
-      statusElement.style.color = "var(--danger)";
-    }
+    setConnectionStatus('disconnected', 'Connection lost. Attempting to reconnect…');
+    startStatePolling();
   });
 
   socket.on('stateUpdate', (state) => {
-    updateTeamUI('anthems', state.anthems);
-    updateTeamUI('icons', state.icons);
+    updateTeamsFromState(state);
   });
 
   socket.on('packChanged', (newPack) => {
@@ -88,11 +165,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  socket.on('connect_error', () => {
+    setConnectionStatus('disconnected', 'Unable to reach server. Retrying…');
+    startStatePolling();
+  });
+
   socket.on('teamReset', (teamId) => {
     if (elements[teamId] && elements[teamId].history) {
       elements[teamId].history.innerHTML = '<p class="empty-state">Waiting for first correct answer...</p>';
     }
   });
+
+  function updateTeamsFromState(state) {
+    if (!state) return;
+    updateTeamUI('anthems', state.anthems);
+    updateTeamUI('icons', state.icons);
+  }
 
   // Team UI update function
   function updateTeamUI(teamId, team) {
@@ -126,6 +214,41 @@ document.addEventListener('DOMContentLoaded', function() {
     if (teamElements.history) {
       updateHistory(teamElements.history, team.history);
     }
+  }
+
+  function setConnectionStatus(status, message) {
+    const statusPill = elements.connectionStatus;
+    if (!statusPill) return;
+
+    statusPill.classList.remove('connected', 'disconnected');
+    if (status === 'connected') {
+      statusPill.classList.add('connected');
+    } else if (status === 'disconnected') {
+      statusPill.classList.add('disconnected');
+    }
+
+    const messageEl = statusPill.querySelector('.message');
+    if (messageEl) {
+      messageEl.textContent = message;
+    }
+  }
+
+  function startStatePolling() {
+    if (statePollInterval) return;
+    statePollInterval = setInterval(fetchStateSnapshot, STATE_POLL_INTERVAL_MS);
+  }
+
+  function stopStatePolling() {
+    if (!statePollInterval) return;
+    clearInterval(statePollInterval);
+    statePollInterval = null;
+  }
+
+  function fetchStateSnapshot() {
+    fetch('/api/state')
+      .then(res => res.json())
+      .then(state => updateTeamsFromState(state))
+      .catch(() => {});
   }
 
   // History update function

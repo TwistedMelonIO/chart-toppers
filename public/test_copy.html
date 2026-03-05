@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Copy Test</title>
+    <style>
+        .license-machine-id {
+            color: #666;
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 10px;
+        }
+        .license-machine-id:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Copy Machine ID Test</h1>
+    
+    <div>
+        <span class="license-machine-id" id="footer-machine-id" 
+              onclick="copyMachineIdFromFooter()" 
+              title="Click to copy full Machine ID"
+              data-full-machine-id="65e6f6f09b7833e84015bc6e598eb0c9989d0195c8ce3bbfd3c6402c19e56dfd">
+            Machine ID: 65e6f6f09b78...
+        </span>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        function copyMachineIdFromFooter() {
+            console.log('copyMachineIdFromFooter called');
+            const footerMid = document.getElementById('footer-machine-id');
+            console.log('footerMid element:', footerMid);
+            
+            if (!footerMid) {
+                console.error('footer-machine-id element not found');
+                return;
+            }
+            
+            const fullMachineId = footerMid.getAttribute('data-full-machine-id');
+            console.log('fullMachineId from attribute:', fullMachineId);
+            
+            const originalText = footerMid.textContent;
+            console.log('Copying machine ID:', fullMachineId);
+            performCopy(fullMachineId, footerMid);
+            
+            // Show feedback
+            footerMid.textContent = 'Machine ID: Copied to clipboard!';
+            setTimeout(() => {
+                footerMid.textContent = originalText;
+            }, 2000);
+        }
+
+        function performCopy(text, feedbackElement) {
+            console.log('performCopy called with text:', text);
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                console.log('Using modern clipboard API');
+                navigator.clipboard.writeText(text).then(() => {
+                    console.log('Clipboard API success');
+                    document.getElementById('result').innerHTML = 
+                        '<div style="color: green; margin: 10px;">✅ Successfully copied to clipboard!</div>';
+                }).catch((err) => {
+                    console.log('Clipboard API failed, using fallback:', err);
+                    fallbackCopy(text, feedbackElement);
+                });
+            } else {
+                console.log('Using fallback copy method');
+                fallbackCopy(text, feedbackElement);
+            }
+        }
+
+        function fallbackCopy(text, feedbackElement) {
+            console.log('fallbackCopy called with text:', text);
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const ok = document.execCommand('copy');
+                console.log('execCommand copy result:', ok);
+                document.getElementById('result').innerHTML = 
+                    '<div style="color: ' + (ok ? 'green' : 'red') + '; margin: 10px;">' +
+                    (ok ? '✅ Successfully copied to clipboard!' : '❌ Copy failed') + '</div>';
+            } catch (err) {
+                console.error('execCommand copy error:', err);
+                document.getElementById('result').innerHTML = 
+                    '<div style="color: red; margin: 10px;">❌ Copy failed: ' + err.message + '</div>';
+            }
+            document.body.removeChild(textArea);
+        }
+    </script>
+</body>
+</html>

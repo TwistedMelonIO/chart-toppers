@@ -73,7 +73,7 @@ body {
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 3rem 3rem 8rem 3rem;
+  padding: 3rem 3rem 2rem 3rem;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -88,6 +88,48 @@ header {
   padding: 1rem 0;
   position: relative;
   animation: fadeInDown 0.8s ease both;
+}
+
+.connection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+}
+
+.connection-status .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  flex-shrink: 0;
+}
+
+.connection-status .message {
+  transition: color 0.3s ease;
+}
+
+.connection-status.connected {
+  color: var(--text-muted);
+}
+
+.connection-status.connected .dot {
+  background: var(--correct);
+  box-shadow: 0 0 6px var(--correct-glow);
+}
+
+.connection-status.disconnected {
+  color: var(--danger);
+}
+
+.connection-status.disconnected .dot {
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger-glow);
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .header-content {
@@ -778,62 +820,7 @@ header h1 {
 }
 
 /* ---------- FOOTER ---------- */
-
-footer {
-  text-align: center;
-  padding: 0.5rem 0;
-  background: transparent;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-}
-
-.osc-info {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  flex-wrap: wrap;
-  letter-spacing: 0.02em;
-}
-
-.osc-info code {
-  font-family: 'Chakra Petch', sans-serif;
-  color: var(--accent);
-  background: rgba(245, 158, 11, 0.08);
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border: 1px solid rgba(245, 158, 11, 0.15);
-  transition: all 0.2s ease;
-}
-
-.osc-info code:hover {
-  background: rgba(245, 158, 11, 0.15);
-}
-
-.footer-logo {
-  display: flex;
-  justify-content: center;
-  margin-top: 0.25rem;
-}
-
-.footer-logo img {
-  height: 35px;
-  opacity: 0.4;
-  transition: opacity 0.3s ease;
-  filter: grayscale(0.5);
-}
-
-.footer-logo img:hover {
-  opacity: 0.8;
-  filter: grayscale(0);
-}
+/* (styles defined in Footer Styles section below) */
 
 /* ---------- GRADIENT ANIMATION BACKGROUND ---------- */
 
@@ -1039,7 +1026,7 @@ footer {
 @media (max-width: 1200px) {
   .container {
     max-width: 100%;
-    padding: 1.5rem 1rem 6rem 1rem;
+    padding: 1.5rem 1rem 2rem 1rem;
   }
 
   .teams-grid {
@@ -1069,7 +1056,7 @@ footer {
 
 @media (max-width: 800px) {
   .container {
-    padding: 1rem 0.75rem 5rem 0.75rem;
+    padding: 1rem 0.75rem 2rem 0.75rem;
   }
 
   .teams-grid {
@@ -1088,16 +1075,6 @@ footer {
 
   header h1 {
     font-size: 2.5rem;
-  }
-
-  .osc-info {
-    flex-direction: column;
-    gap: 0.5rem;
-    font-size: 0.7rem;
-  }
-
-  footer {
-    padding: 0.5rem 0;
   }
 
   .history-list {
@@ -1184,7 +1161,7 @@ footer {
 
 @media (max-width: 480px) {
   .container {
-    padding: 0.75rem 0.5rem 4rem 0.5rem;
+    padding: 0.75rem 0.5rem 2rem 0.5rem;
   }
 
   header {
@@ -1222,13 +1199,9 @@ footer {
     padding: 0.75rem;
   }
 
-  .osc-info {
+  .footer-port-item,
+  .footer-license-item {
     font-size: 0.65rem;
-  }
-
-  .osc-info code {
-    font-size: 0.7rem;
-    padding: 0.1rem 0.4rem;
   }
 
   .history-list {
@@ -1240,7 +1213,7 @@ footer {
 @media (min-width: 1400px) {
   .container {
     max-width: 1400px;
-    padding: 2.5rem 2rem 10rem 2rem;
+    padding: 2.5rem 2rem 2rem 2rem;
   }
 
   .teams-grid {
@@ -1430,5 +1403,246 @@ footer {
   
   .ios-alert-cancel {
     border-right-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ==========================================================================
+   LICENSE SYSTEM UI - Chart Toppers Theme
+   ========================================================================== */
+
+/* License Gate Overlay */
+.license-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(6, 9, 26, 0.97);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', -apple-system, sans-serif;
+}
+
+.license-gate.hidden {
+  display: none;
+}
+
+.license-gate-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px;
+  max-width: 520px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.license-gate-box h2 {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.license-gate-box .subtitle {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 28px;
+  font-weight: 400;
+}
+
+.license-gate-box .machine-id-label {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.license-gate-box .machine-id-value {
+  font-family: 'Chakra Petch', monospace;
+  font-size: 0.72rem;
+  color: var(--accent);
+  background: var(--accent-glow);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px 14px;
+  word-break: break-all;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+
+.license-gate-box .machine-id-value:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.license-gate-box .copy-hint {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  margin-bottom: 24px;
+}
+
+.license-gate-box .error-msg {
+  color: var(--danger);
+  font-size: 0.8rem;
+  background: var(--danger-glow);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.license-gate-box .instructions {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+
+/* Footer Styles */
+footer {
+  margin-top: 3rem;
+  border-top: 1px solid var(--border);
+  padding: 1.25rem 2rem;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footer-ports {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.footer-port-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-family: 'Chakra Petch', monospace;
+  color: var(--text-muted);
+}
+
+.footer-port-item span {
+  color: var(--text-secondary);
+}
+
+.footer-license {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.footer-license-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-family: 'Chakra Petch', monospace;
+  color: var(--correct);
+}
+
+.footer-license-item.invalid {
+  color: var(--danger);
+}
+
+.footer-license-item span {
+  color: inherit;
+}
+
+.footer-status {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+}
+
+.footer-logo img {
+  height: 32px;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+  filter: grayscale(0.5);
+}
+
+.footer-logo img:hover {
+  opacity: 1;
+  filter: grayscale(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .license-gate-box {
+    padding: 32px 24px;
+    margin: 20px;
+  }
+
+  .license-gate-box h2 {
+    font-size: 2rem;
+  }
+
+  footer {
+    padding: 1rem 1.25rem;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .footer-info {
+    width: 100%;
+  }
+
+  .footer-ports {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .footer-license {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .footer-logo {
+    align-self: flex-end;
   }
 }

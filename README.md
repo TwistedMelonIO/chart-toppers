@@ -217,6 +217,6 @@ For technical support or questions:
 
 ---
 
-**Version**: 2.6.0
+**Version**: 3.0.0
 **Last Updated**: 2026-03-04
 **Compatible**: QLab 5+, Docker 20+
