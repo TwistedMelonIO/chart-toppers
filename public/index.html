@@ -15,17 +15,29 @@
   <!-- License Gate Overlay -->
   <div id="license-gate" class="license-gate">
     <div class="license-gate-box">
-      <h2>Chart Toppers</h2>
+      <h2>Chart Toppers v3.1.0</h2>
       <p class="subtitle">A valid license is required to use this application.</p>
       <div class="machine-id-label">Your Machine ID</div>
       <div class="machine-id-value" id="gate-machine-id"
            onclick="copyMachineId()" title="Click to copy">Loading...</div>
       <div class="copy-hint" id="gate-copy-hint">Click to copy</div>
       <div class="error-msg" id="gate-error">Checking license...</div>
+      <div class="license-input-section">
+        <div class="license-input-label">Enter License Key</div>
+        <textarea id="gate-license-input" class="license-input" rows="3"
+                  placeholder="Paste your license key here..."></textarea>
+        <button id="gate-activate-btn" class="btn-activate" onclick="activateLicense()">
+          Activate License
+        </button>
+        <div class="activate-status" id="gate-activate-status"></div>
+      </div>
+      <div class="license-divider">
+        <span>or</span>
+      </div>
       <div class="instructions">
         1. Copy the Machine ID above<br>
         2. Send it to your license provider<br>
-        3. Run <strong>install_license.sh</strong> and paste the key you receive
+        3. Paste the key above, or run <strong>install_license.sh</strong>
       </div>
     </div>
   </div>
@@ -62,6 +74,7 @@
           <h1>Chart Toppers</h1>
           <p class="subtitle">QLab Scoring System</p>
           <p class="current-pack" id="currentPackDisplay">Current Pack: UK / USA / German</p>
+          <p class="version-number">v3.1.0</p>
         </div>
       </div>
     </header>
@@ -167,7 +180,9 @@
         </div>
       </div>
       <div class="footer-logo">
-        <img src="twistedmelon_logo.png" alt="Twisted Melon" />
+        <a href="https://www.twistedmelon.io" target="_blank" rel="noopener noreferrer">
+          <img src="twistedmelon_logo.png" alt="Twisted Melon" />
+        </a>
       </div>
     </div>
   </footer>

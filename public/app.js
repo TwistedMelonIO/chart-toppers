@@ -94,13 +94,17 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Click-to-copy with fallback for all browsers
-  function copyMachineId() {
+  window.copyMachineId = function() {
     const mid = document.getElementById('gate-machine-id').textContent;
     if (!mid || mid === 'Loading...') return;
 
     const hint = document.getElementById('gate-copy-hint');
-    performCopy(mid);
-    
+
+    // Copy to clipboard with fallback
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(mid).catch(() => {});
+    }
+
     // Show feedback on hint
     if (hint) {
       const originalText = hint.textContent;
@@ -109,9 +113,52 @@ document.addEventListener('DOMContentLoaded', function() {
         hint.textContent = originalText;
       }, 2000);
     }
-  }
+  };
 
-  
+  // Activate license key from the gate UI
+  window.activateLicense = async function() {
+    const input = document.getElementById('gate-license-input');
+    const btn = document.getElementById('gate-activate-btn');
+    const status = document.getElementById('gate-activate-status');
+    const key = input ? input.value.trim() : '';
+
+    if (!key) {
+      status.textContent = 'Please paste a license key first.';
+      status.className = 'activate-status error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Activating...';
+    status.textContent = '';
+    status.className = 'activate-status';
+
+    try {
+      const res = await fetch('/api/activate_license', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ license_key: key })
+      });
+      const data = await res.json();
+
+      if (data.valid) {
+        status.textContent = 'License activated successfully!';
+        status.className = 'activate-status success';
+        updateLicenseGate(data);
+        updateLicenseFooter(data);
+      } else {
+        status.textContent = data.error || 'Invalid license key.';
+        status.className = 'activate-status error';
+      }
+    } catch (e) {
+      status.textContent = 'Failed to contact server. Please try again.';
+      status.className = 'activate-status error';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Activate License';
+  };
+
   // Check license immediately and then every 30 seconds
   console.log('Starting license check...');
   checkLicenseStatus();

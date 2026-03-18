@@ -189,6 +189,15 @@ header h1 {
   backdrop-filter: blur(10px);
 }
 
+.version-number {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+  margin-top: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
 /* ---------- SETTINGS BUTTON ---------- */
 
 .settings-btn {
@@ -1499,6 +1508,107 @@ header h1 {
   padding: 10px 14px;
   margin-bottom: 20px;
   font-weight: 500;
+}
+
+.license-gate-box .license-input-section {
+  margin-bottom: 20px;
+}
+
+.license-gate-box .license-input-label {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.license-gate-box .license-input {
+  width: 100%;
+  font-family: 'Chakra Petch', monospace;
+  font-size: 0.72rem;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.license-gate-box .license-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.license-gate-box .license-input::placeholder {
+  color: var(--text-muted);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+}
+
+.license-gate-box .btn-activate {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 10px 28px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #000;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.license-gate-box .btn-activate:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.license-gate-box .btn-activate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.license-gate-box .activate-status {
+  font-size: 0.75rem;
+  margin-top: 10px;
+  min-height: 1.2em;
+}
+
+.license-gate-box .activate-status.success {
+  color: var(--success, #22c55e);
+}
+
+.license-gate-box .activate-status.error {
+  color: var(--danger);
+}
+
+.license-gate-box .license-divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.license-gate-box .license-divider::before,
+.license-gate-box .license-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.license-gate-box .license-divider span {
+  padding: 0 12px;
 }
 
 .license-gate-box .instructions {

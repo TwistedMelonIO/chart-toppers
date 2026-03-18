@@ -568,8 +568,23 @@ async function validateLicense() {
   try {
     const machineId = await getMachineId();
     console.log(`[LICENSE] Machine ID: ${machineId}`);
-    
-    const licenseKey = process.env.LICENSE_KEY || "";
+
+    // Check env var first, then fall back to persisted file
+    let licenseKey = process.env.LICENSE_KEY || "";
+    if (!licenseKey) {
+      try {
+        const persistedKey = path.join("/app/data", "license_key");
+        if (fs.existsSync(persistedKey)) {
+          licenseKey = fs.readFileSync(persistedKey, "utf8").trim();
+          if (licenseKey) {
+            process.env.LICENSE_KEY = licenseKey;
+            console.log("[LICENSE] Loaded license key from persistent storage");
+          }
+        }
+      } catch (err) {
+        console.error("[LICENSE] Failed to read persisted license key:", err.message);
+      }
+    }
     if (!licenseKey) {
       return {
         valid: false,
@@ -624,6 +639,34 @@ app.get("/api/license_status", (req, res) => {
 
 // License validation endpoint (re-check)
 app.post("/api/validate_license", async (req, res) => {
+  await initializeLicense();
+  res.json(licenseState);
+});
+
+// Activate license key via web UI
+app.post("/api/activate_license", express.json(), async (req, res) => {
+  const { license_key } = req.body;
+  if (!license_key || !license_key.trim()) {
+    return res.status(400).json({ valid: false, error: "No license key provided" });
+  }
+
+  const key = license_key.trim();
+
+  // Set in current process environment
+  process.env.LICENSE_KEY = key;
+
+  // Persist to data directory so it survives container restarts
+  const dataDir = "/app/data";
+  try {
+    if (fs.existsSync(dataDir)) {
+      fs.writeFileSync(path.join(dataDir, "license_key"), key, "utf8");
+      console.log("[LICENSE] License key saved to persistent storage");
+    }
+  } catch (err) {
+    console.error("[LICENSE] Failed to persist license key:", err.message);
+  }
+
+  // Re-validate with the new key
   await initializeLicense();
   res.json(licenseState);
 });
