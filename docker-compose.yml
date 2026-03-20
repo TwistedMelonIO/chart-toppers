@@ -37,6 +37,9 @@ services:
       - BRIDGE_PORT=3201
       - QLAB_HOST=host.docker.internal
       - QLAB_PORT=53000
+      # Callback URL for QLab playback data (bidirectional bridge)
+      - CALLBACK_URL=http://chart-toppers:3000
+      - POLL_INTERVAL_MS=200
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

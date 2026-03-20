@@ -631,6 +631,45 @@ header h1 {
   100% { box-shadow: 0 4px 25px var(--team-glow); border-color: var(--team-color); }
 }
 
+/* ---------- COUNTDOWN MODE (score card takeover) ---------- */
+
+.score-card.countdown-mode {
+  border-color: rgba(251, 191, 36, 0.4);
+  box-shadow: 0 4px 25px rgba(251, 191, 36, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.score-card.countdown-mode .score-label {
+  color: #fbbf24;
+}
+
+.score-card.countdown-mode .score-value {
+  color: #fbbf24;
+  text-shadow: 0 0 40px rgba(251, 191, 36, 0.4);
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.score-card.countdown-mode .score-unit {
+  color: rgba(251, 191, 36, 0.6);
+}
+
+.score-card.countdown-mode .score-value.countdown-warn {
+  color: #f59e0b;
+  text-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+  animation: countdownPulse 1s ease-in-out infinite;
+}
+
+.score-card.countdown-mode .score-value.countdown-critical {
+  color: #ef4444;
+  text-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+  animation: countdownPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes countdownPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
 /* ---------- BUTTONS ---------- */
 
 .btn {

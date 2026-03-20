@@ -146,6 +146,14 @@ function getActivityLog(team = 'all', type = 'all', days = 60) {
 }
 
 // =============================================================================
+// Countdown State (QLab playback tracking)
+// =============================================================================
+const countdownState = {
+  anthems: { active: false, elapsed: 0, remaining: 0, startOffset: null },
+  icons: { active: false, elapsed: 0, remaining: 0, startOffset: null },
+};
+
+// =============================================================================
 // Game State
 // =============================================================================
 function createTeamState() {
@@ -701,9 +709,146 @@ app.post("/api/stop", (req, res) => {
   res.json({ success: true, message: "STOP command sent to both teams" });
 });
 
+// =============================================================================
+// QLab Playback Tracking (countdown from bridge)
+// =============================================================================
+
+// Receive playback data from the bridge (QLab actionElapsed)
+app.post("/api/qlab-playback", (req, res) => {
+  const { teamId, actionElapsed } = req.body;
+  if (!teamId || !TEAMS[teamId] || typeof actionElapsed !== "number") {
+    return res.status(400).json({ error: "Invalid playback data" });
+  }
+
+  const team = gameState[teamId];
+  const countdown = countdownState[teamId];
+
+  if (!countdown.active) {
+    return res.json({ ok: true, ignored: true });
+  }
+
+  // On first tick, capture the starting offset (the loadActionAt position)
+  // QLab reports actionElapsed as the absolute playhead position, so if
+  // the cue was loaded at 70s, the first actionElapsed will be ~70.
+  if (countdown.startOffset === null) {
+    countdown.startOffset = actionElapsed;
+    console.log(`[COUNTDOWN] ${TEAMS[teamId].name} baseline offset: ${actionElapsed.toFixed(2)}s`);
+  }
+
+  // Calculate remaining countdown time using the delta from the start offset
+  const playedSoFar = actionElapsed - countdown.startOffset;
+  const remaining = Math.max(0, team.earnedTime - playedSoFar);
+
+  countdown.elapsed = playedSoFar;
+  countdown.remaining = remaining;
+
+  // Emit countdown tick to all connected clients
+  io.emit("countdownTick", {
+    teamId,
+    remaining: Math.round(remaining),
+    elapsed: Math.round(playedSoFar),
+    earnedTime: team.earnedTime,
+  });
+
+  // Auto-stop when countdown reaches zero
+  if (remaining <= 0 && countdown.active) {
+    countdown.active = false;
+    io.emit("countdownComplete", teamId);
+    stopBridgePoll(teamId);
+    console.log(`[COUNTDOWN] ${TEAMS[teamId].name} countdown complete`);
+  }
+
+  res.json({ ok: true });
+});
+
+// Tell the bridge to start polling QLab for a cue's playback position
+function startBridgePoll(teamId) {
+  const cueName = TEAMS[teamId].cueName;
+  const payload = JSON.stringify({ teamId, cueName });
+
+  const bridgeUrl = new URL("/poll/start", BRIDGE_URL);
+  const options = {
+    hostname: bridgeUrl.hostname,
+    port: bridgeUrl.port,
+    path: bridgeUrl.pathname,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(payload),
+    },
+  };
+
+  const req = http.request(options, (res) => {
+    let body = "";
+    res.on("data", (chunk) => (body += chunk));
+    res.on("end", () => {
+      console.log(`[COUNTDOWN] Bridge poll started for ${teamId} (bridge: ${res.statusCode})`);
+    });
+  });
+
+  req.on("error", (err) => {
+    console.error(`[COUNTDOWN] Bridge poll start error: ${err.message}`);
+  });
+
+  req.write(payload);
+  req.end();
+
+  // Update countdown state
+  countdownState[teamId].active = true;
+  countdownState[teamId].elapsed = 0;
+  countdownState[teamId].remaining = gameState[teamId].earnedTime;
+  countdownState[teamId].startOffset = null; // Will be set on first tick from QLab
+}
+
+// Tell the bridge to stop polling
+function stopBridgePoll(teamId) {
+  const payload = JSON.stringify({ teamId });
+
+  const bridgeUrl = new URL("/poll/stop", BRIDGE_URL);
+  const options = {
+    hostname: bridgeUrl.hostname,
+    port: bridgeUrl.port,
+    path: bridgeUrl.pathname,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(payload),
+    },
+  };
+
+  const req = http.request(options, (res) => {
+    let body = "";
+    res.on("data", (chunk) => (body += chunk));
+    res.on("end", () => {
+      console.log(`[COUNTDOWN] Bridge poll stopped for ${teamId} (bridge: ${res.statusCode})`);
+    });
+  });
+
+  req.on("error", (err) => {
+    console.error(`[COUNTDOWN] Bridge poll stop error: ${err.message}`);
+  });
+
+  req.write(payload);
+  req.end();
+
+  countdownState[teamId].active = false;
+}
+
 io.on("connection", (socket) => {
   console.log("[WEB] Dashboard client connected");
   socket.emit("stateUpdate", gameState);
+
+  // Send current countdown state to newly connected clients
+  for (const teamId of Object.keys(countdownState)) {
+    if (countdownState[teamId].active) {
+      socket.emit("countdownTick", {
+        teamId,
+        remaining: countdownState[teamId].remaining,
+        elapsed: countdownState[teamId].elapsed,
+        earnedTime: gameState[teamId].earnedTime,
+      });
+    }
+  }
 
   socket.on("correct", (teamId) => {
     if (!TEAMS[teamId]) return;
@@ -855,20 +1000,29 @@ function handleOscAddress(address) {
   if (playingMatch) {
     const teamId = playingMatch[1];
     console.log(`[OSC] ${TEAMS[teamId].name} is now playing`);
-    
+
     // Broadcast to all dashboard clients with simple emit
     console.log(`[SOCKET] Emitting teamPlaying for ${teamId}`);
     io.emit("teamPlaying", teamId);
-    
+
     // Also broadcast a simple command for direct function call
     console.log(`[SOCKET] Emitting triggerPlaying for ${teamId}`);
     io.emit("triggerPlaying", teamId);
-    
+
     console.log(`[SOCKET] Events emitted to ${io.engine.clientsCount} clients`);
-    
+
+    // Start polling QLab for this cue's playback position (countdown)
+    // Only start if not already counting down (avoid double-trigger from rapid OSC)
+    if (gameState[teamId].earnedTime > 0 && !countdownState[teamId].active) {
+      startBridgePoll(teamId);
+      console.log(`[COUNTDOWN] Started countdown tracking for ${TEAMS[teamId].name} (${gameState[teamId].earnedTime}s earned)`);
+    } else if (countdownState[teamId].active) {
+      console.log(`[COUNTDOWN] Countdown already active for ${TEAMS[teamId].name}, ignoring duplicate`);
+    }
+
     // Log activity
     logActivity('playing', teamId, 'Team started playing via OSC', 'osc');
-    
+
     return;
   }
 
@@ -877,16 +1031,23 @@ function handleOscAddress(address) {
   if (stopPlayingMatch) {
     const teamId = stopPlayingMatch[1];
     console.log(`[OSC] ${TEAMS[teamId].name} stopped playing`);
-    
+
     // Broadcast to all dashboard clients
     io.emit("teamStopPlaying", teamId);
-    
+
     // Also broadcast a simple command for direct function call
     io.emit("triggerStop", teamId);
-    
+
+    // Stop polling QLab for this cue's playback position
+    if (countdownState[teamId].active) {
+      stopBridgePoll(teamId);
+      io.emit("countdownStop", teamId);
+      console.log(`[COUNTDOWN] Stopped countdown tracking for ${TEAMS[teamId].name}`);
+    }
+
     // Log activity
     logActivity('stopPlaying', teamId, 'Team stopped playing via OSC', 'osc');
-    
+
     return;
   }
 

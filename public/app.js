@@ -7,12 +7,18 @@ document.addEventListener('DOMContentLoaded', function() {
     anthems: {
       earned: document.getElementById('anthems-earnedTime-main'),
       progress: document.getElementById('anthems-progressFill'),
-      history: document.getElementById('anthems-historyList')
+      history: document.getElementById('anthems-historyList'),
+      scoreCard: document.querySelector('.team-anthems .score-card.primary'),
+      label: document.querySelector('.team-anthems .score-label'),
+      unit: document.querySelector('.team-anthems .score-unit')
     },
     icons: {
       earned: document.getElementById('icons-earnedTime-main'),
       progress: document.getElementById('icons-progressFill'),
-      history: document.getElementById('icons-historyList')
+      history: document.getElementById('icons-historyList'),
+      scoreCard: document.querySelector('.team-icons .score-card.primary'),
+      label: document.querySelector('.team-icons .score-label'),
+      unit: document.querySelector('.team-icons .score-unit')
     },
     settings: {
       btn: document.getElementById('settingsBtn'),
@@ -221,7 +227,107 @@ document.addEventListener('DOMContentLoaded', function() {
     if (elements[teamId] && elements[teamId].history) {
       elements[teamId].history.innerHTML = '<p class="empty-state">Waiting for first correct answer...</p>';
     }
+    // Hide countdown on reset
+    hideCountdown(teamId);
   });
+
+  // ── Countdown events (QLab playback tracking) ──────────────────────
+  // Track countdown state per team so we can restore earned time after
+  const countdownActive = { anthems: false, icons: false };
+  const savedEarnedTime = { anthems: 0, icons: 0 };
+
+  socket.on('countdownTick', (data) => {
+    const { teamId, remaining, earnedTime } = data;
+    if (!elements[teamId]) return;
+
+    const els = elements[teamId];
+
+    // First tick: switch the score card into countdown mode
+    if (!countdownActive[teamId]) {
+      countdownActive[teamId] = true;
+      savedEarnedTime[teamId] = earnedTime;
+      if (els.scoreCard) els.scoreCard.classList.add('countdown-mode');
+      if (els.label) els.label.textContent = 'Countdown';
+      if (els.unit) els.unit.textContent = 'seconds remaining';
+    }
+
+    // Update the main score value to show countdown
+    if (els.earned) {
+      els.earned.textContent = Math.ceil(remaining);
+
+      // Add urgency classes
+      els.earned.classList.remove('countdown-warn', 'countdown-critical');
+      if (remaining <= 5) {
+        els.earned.classList.add('countdown-critical');
+      } else if (remaining <= 15) {
+        els.earned.classList.add('countdown-warn');
+      }
+    }
+
+    // Drain the progress bar (full → empty as time runs out)
+    if (els.progress && earnedTime > 0) {
+      const pct = (remaining / earnedTime) * 100;
+      els.progress.style.width = pct + '%';
+      els.progress.style.transition = 'width 0.2s linear';
+
+      els.progress.classList.remove('warning', 'critical', 'success');
+      if (remaining <= 5) {
+        els.progress.classList.add('critical');
+      } else if (remaining <= 15) {
+        els.progress.classList.add('warning');
+      }
+    }
+  });
+
+  socket.on('countdownStop', (teamId) => {
+    restoreScoreCard(teamId);
+  });
+
+  socket.on('countdownComplete', (teamId) => {
+    if (!elements[teamId]) return;
+    const els = elements[teamId];
+
+    // Hold at zero — don't auto-restore
+    if (els.earned) {
+      els.earned.textContent = '0';
+      els.earned.classList.add('countdown-critical');
+    }
+    if (els.progress) {
+      els.progress.style.width = '0%';
+    }
+  });
+
+  function restoreScoreCard(teamId) {
+    if (!elements[teamId] || !countdownActive[teamId]) return;
+    const els = elements[teamId];
+
+    countdownActive[teamId] = false;
+
+    // Restore label and unit
+    if (els.scoreCard) els.scoreCard.classList.remove('countdown-mode');
+    if (els.label) els.label.textContent = 'Time Earned';
+    if (els.unit) els.unit.textContent = 'seconds';
+
+    // Restore earned time value
+    if (els.earned) {
+      els.earned.textContent = savedEarnedTime[teamId];
+      els.earned.classList.remove('countdown-warn', 'countdown-critical');
+    }
+
+    // Restore progress bar to earned time percentage
+    if (els.progress) {
+      const maxTime = 100; // CONFIG.MAX_TIME
+      const pct = Math.min((savedEarnedTime[teamId] / maxTime) * 100, 100);
+      els.progress.style.transition = 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+      els.progress.style.width = pct + '%';
+      els.progress.classList.remove('warning', 'critical');
+      if (pct >= 80) {
+        els.progress.classList.add('success');
+      } else if (pct >= 50) {
+        els.progress.classList.add('warning');
+      }
+    }
+  }
 
   function updateTeamsFromState(state) {
     if (!state) return;
