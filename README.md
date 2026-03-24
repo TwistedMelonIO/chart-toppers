@@ -23,6 +23,20 @@ The script will guide you through:
 
 For the full setup guide, see [INSTALL.md](INSTALL.md).
 
+## Reinstall / Update
+
+Already installed? From inside the `chart-toppers` folder, copy and paste:
+
+```bash
+git pull && docker compose up -d --build
+```
+
+Or to do a full clean reinstall (re-downloads everything):
+
+```bash
+cd ~/Desktop && rm -rf chart-toppers && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
+```
+
 ---
 
 ## Features

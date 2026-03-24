@@ -57,6 +57,28 @@ http://localhost:3200
 
 ---
 
+## Reinstall / Update
+
+### Quick update (keeps your settings)
+
+From inside the `chart-toppers` folder:
+
+```bash
+git pull && docker compose up -d --build
+```
+
+Your audio folder path and license key are preserved.
+
+### Full clean reinstall
+
+Removes everything and starts fresh. You will need to set your audio folder and license key again.
+
+```bash
+cd ~/Desktop && rm -rf chart-toppers && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
+```
+
+---
+
 ## What the Install Script Does
 
 For reference, here is what `install_license.sh` handles automatically:
