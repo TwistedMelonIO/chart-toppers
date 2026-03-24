@@ -22,7 +22,7 @@ Before you begin, ensure the following are installed and available on your Mac:
 Copy and paste this into Terminal:
 
 ```bash
-cd ~/Desktop && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
+cd ~ && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
 ```
 
 The script will walk you through the full setup:
@@ -74,7 +74,7 @@ Your audio folder path and license key are preserved.
 Removes everything and starts fresh. You will need to set your audio folder and license key again.
 
 ```bash
-cd ~/Desktop && rm -rf chart-toppers && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
+cd ~ && rm -rf chart-toppers && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
 ```
 
 ---

@@ -11,7 +11,7 @@ Requires **Docker** and a **license key** to run.
 Make sure [Docker Desktop](https://www.docker.com/products/docker-desktop/) is running, then copy and paste into Terminal:
 
 ```bash
-cd ~/Desktop && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
+cd ~ && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
 ```
 
 The script will guide you through:
@@ -34,7 +34,7 @@ git pull && docker compose up -d --build
 Or to do a full clean reinstall (re-downloads everything):
 
 ```bash
-cd ~/Desktop && rm -rf chart-toppers && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
+cd ~ && rm -rf chart-toppers && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
 ```
 
 ---
