@@ -113,7 +113,33 @@ echo ""
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" down 2>/dev/null
 
 # Start without license to get machine ID
-docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d --build 2>&1
+BUILD_OUTPUT=$(docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d --build 2>&1)
+echo "$BUILD_OUTPUT"
+
+# Check for Docker file sharing / mount errors
+if echo "$BUILD_OUTPUT" | grep -qi "mounts denied\|not shared\|not allowed"; then
+    echo ""
+    echo "  ========================================"
+    echo "    DOCKER FILE SHARING ERROR"
+    echo "  ========================================"
+    echo ""
+    echo "  Docker cannot access your QLab audio folder."
+    echo "  This usually happens with iCloud Drive or"
+    echo "  restricted folders."
+    echo ""
+    echo "  To fix this, either:"
+    echo ""
+    echo "  1. Copy your audio folder to a simpler location:"
+    echo "     cp -r /path/to/audio ~/Desktop/qlab-audio"
+    echo "     Then re-run this script and drag the new folder."
+    echo ""
+    echo "  2. Or add the folder in Docker Desktop:"
+    echo "     Settings > Resources > File Sharing"
+    echo "     Add the parent folder, then re-run this script."
+    echo ""
+    read -p "  Press Enter to exit..."
+    exit 1
+fi
 
 echo ""
 echo "  Waiting for container to start..."

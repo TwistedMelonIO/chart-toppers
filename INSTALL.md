@@ -117,6 +117,9 @@ Confirm the license key was issued for this machine. Machine IDs are hardware-sp
 **QLab is not receiving OSC commands**
 Open QLab and verify it is set to listen for OSC on port 53000. Check that no firewall is blocking local UDP traffic.
 
+**Docker "mounts denied" error**
+Docker cannot access your QLab audio folder. This happens with iCloud Drive or other restricted paths. Either copy the audio folder to a simpler location (e.g. `~/Desktop/qlab-audio`) and re-run the script, or add the folder in Docker Desktop under Settings > Resources > File Sharing.
+
 **Port 3200 is already in use**
 Another service may be running on port 3200. Stop that service or check the port assignment in `docker-compose.yml`.
 
