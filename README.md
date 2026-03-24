@@ -31,14 +31,9 @@ A professional web-based scoring system for Chart Toppers game shows, integrated
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/twisted-melon/chart-toppers.git
+git clone https://github.com/TwistedMelonIO/chart-toppers.git
 cd chart-toppers
-
-# Start the application
-docker-compose up --build -d
-
-# Access the web interface
-open http://localhost:3200
+./install_license.sh
 ```
 
 ## 🎮 Usage

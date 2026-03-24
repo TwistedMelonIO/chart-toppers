@@ -17,22 +17,13 @@ Before you begin, ensure the following are installed and available on your Mac:
 
 ## Installation
 
-### 1. Clone the Repository
+### 1. Clone and Run
+
+Copy and paste this into Terminal:
 
 ```bash
-git clone https://github.com/TwistedMelonIO/chart-toppers.git
-cd chart-toppers
+git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
 ```
-
-### 2. Run the Install Script
-
-In Terminal, run:
-
-```bash
-./install_license.sh
-```
-
-Alternatively, drag the `install_license.sh` file into a Terminal window and press Enter.
 
 The script will walk you through the full setup:
 
@@ -40,13 +31,13 @@ The script will walk you through the full setup:
 2. **Docker Build** — builds and starts the Docker containers
 3. **Machine ID** — retrieves your unique Machine ID and copies it to your clipboard
 
-### 4. Obtain Your License Key
+### 2. Obtain Your License Key
 
 Send your Machine ID to [hello@twistedmelon.com](mailto:hello@twistedmelon.com) to request a license key.
 
 Chart Toppers will not run without a valid license key tied to your machine.
 
-### 5. Apply the License Key
+### 3. Apply the License Key
 
 Once you receive your license key, run the install script again:
 
@@ -56,7 +47,7 @@ Once you receive your license key, run the install script again:
 
 When prompted, paste your license key and press Enter. The script will validate the key and restart the application with the license applied.
 
-### 6. Open the Web Interface
+### 4. Open the Web Interface
 
 Once running, open a browser and go to:
 
