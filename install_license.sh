@@ -41,11 +41,16 @@ fi
 # Read the current audio path from docker-compose.yml
 CURRENT_AUDIO_PATH=$(grep ':/app/qlab-audio:ro' "$SCRIPT_DIR/docker-compose.yml" | sed 's|^[[:space:]]*- ||' | sed 's|:/app/qlab-audio:ro$||')
 
+# Treat the placeholder as empty (fresh install)
+if [ "$CURRENT_AUDIO_PATH" = "/path/to/qlab-audio" ]; then
+    CURRENT_AUDIO_PATH=""
+fi
+
 echo "  ========================================"
 echo "    QLab Audio Folder"
 echo "  ========================================"
 echo ""
-if [ -n "$CURRENT_AUDIO_PATH" ]; then
+if [ -n "$CURRENT_AUDIO_PATH" ] && [ -d "$CURRENT_AUDIO_PATH" ]; then
     echo "  Current path:"
     echo "  $CURRENT_AUDIO_PATH"
     echo ""
