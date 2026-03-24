@@ -66,6 +66,16 @@ cd ~/Desktop && rm -rf chart-toppers && git clone https://github.com/TwistedMelo
 | `/chart-toppers/stopPlaying/anthems` | Deactivate Anthems team |
 | `/chart-toppers/stopPlaying/icons` | Deactivate Icons team |
 
+## Uninstall
+
+To completely remove Chart Toppers from a machine (containers, images, volumes, and project files):
+
+```bash
+./uninstall.sh
+```
+
+You will be asked to type `YES` to confirm. This cannot be undone.
+
 ## Docker Commands
 
 | Task | Command |

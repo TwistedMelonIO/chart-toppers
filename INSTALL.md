@@ -125,6 +125,18 @@ OSC input from Bitfocus Companion is accepted on **port 53536** (UDP/TCP).
 
 ---
 
+## Uninstall
+
+To completely remove Chart Toppers from a machine, run from inside the project folder:
+
+```bash
+./uninstall.sh
+```
+
+This removes all Docker containers, images, volumes (including license and activity logs), and the project folder itself. You will be asked to type `YES` to confirm.
+
+---
+
 ## Troubleshooting
 
 **Docker is not running**
