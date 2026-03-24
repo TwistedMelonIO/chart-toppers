@@ -22,7 +22,7 @@ Before you begin, ensure the following are installed and available on your Mac:
 Copy and paste this into Terminal:
 
 ```bash
-git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
+cd ~/Desktop && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
 ```
 
 The script will walk you through the full setup:

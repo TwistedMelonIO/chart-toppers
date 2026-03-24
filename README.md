@@ -11,7 +11,7 @@ Requires **Docker** and a **license key** to run.
 Make sure [Docker Desktop](https://www.docker.com/products/docker-desktop/) is running, then copy and paste into Terminal:
 
 ```bash
-git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
+cd ~/Desktop && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
 ```
 
 The script will guide you through:
