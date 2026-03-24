@@ -24,23 +24,7 @@ git clone https://github.com/TwistedMelonIO/chart-toppers.git
 cd chart-toppers
 ```
 
-### 2. Configure the QLab Audio Folder
-
-Open `docker-compose.yml` in a text editor and locate the volume mount line for the QLab audio folder. It will look similar to this:
-
-```yaml
-- /path/to/your/qlab-audio:/app/qlab-audio:ro
-```
-
-Change the left side (before the first colon) to the full path of your local QLab audio folder. Leave `:/app/qlab-audio:ro` on the right side exactly as it is.
-
-For example:
-
-```yaml
-- /Users/yourname/Music/QLab/Audio:/app/qlab-audio:ro
-```
-
-### 3. Run the Install Script
+### 2. Run the Install Script
 
 In Terminal, run:
 
@@ -50,11 +34,11 @@ In Terminal, run:
 
 Alternatively, drag the `install_license.sh` file into a Terminal window and press Enter.
 
-The script will:
+The script will walk you through the full setup:
 
-1. Verify Docker is running
-2. Build and start the Docker containers
-3. Retrieve your unique **Machine ID** and copy it to your clipboard
+1. **QLab Audio Folder** — drag your QLab audio folder into the Terminal window when prompted. The script updates `docker-compose.yml` automatically. On subsequent runs it shows the current path and lets you press Enter to keep it.
+2. **Docker Build** — builds and starts the Docker containers
+3. **Machine ID** — retrieves your unique Machine ID and copies it to your clipboard
 
 ### 4. Obtain Your License Key
 
@@ -87,6 +71,7 @@ http://localhost:3200
 For reference, here is what `install_license.sh` handles automatically:
 
 - Checks that Docker Desktop is running
+- Prompts for your QLab audio folder (drag and drop) and updates `docker-compose.yml`
 - Builds and starts the `chart-toppers` and `osc-bridge` Docker services
 - Retrieves the Machine ID from the running container
 - Optionally accepts and validates a license key
