@@ -61,16 +61,17 @@ else
     echo "  Terminal window and press Enter."
 fi
 echo ""
-read -p "  Audio folder: " AUDIO_INPUT
+read -r -p "  Audio folder: " AUDIO_INPUT
 
-# Strip leading/trailing whitespace and any trailing slash
-AUDIO_INPUT=$(echo "$AUDIO_INPUT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s|/$||')
-
-# Remove surrounding quotes (drag-and-drop sometimes adds them)
-AUDIO_INPUT=$(echo "$AUDIO_INPUT" | sed "s/^['\"]//;s/['\"]$//")
-
-# Unescape spaces (drag-and-drop escapes spaces with backslash)
-AUDIO_INPUT=$(echo "$AUDIO_INPUT" | sed 's/\\ / /g')
+# Clean the input:
+# 1. Strip leading/trailing whitespace
+AUDIO_INPUT="$(echo "$AUDIO_INPUT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+# 2. Remove surrounding quotes (copy-paste or drag-drop may add them)
+AUDIO_INPUT="$(echo "$AUDIO_INPUT" | sed "s/^['\"]//;s/['\"]$//")"
+# 3. Unescape backslash-spaces (drag-drop escapes spaces)
+AUDIO_INPUT="$(echo "$AUDIO_INPUT" | sed 's/\\ / /g')"
+# 4. Remove trailing slash
+AUDIO_INPUT="$(echo "$AUDIO_INPUT" | sed 's|/$||')"
 
 if [ -z "$AUDIO_INPUT" ] && [ -n "$CURRENT_AUDIO_PATH" ]; then
     echo "  Keeping existing audio path."
@@ -80,24 +81,30 @@ elif [ -z "$AUDIO_INPUT" ] && [ -z "$CURRENT_AUDIO_PATH" ]; then
     echo "  You can set this later by re-running the script."
     echo ""
 elif [ -d "$AUDIO_INPUT" ]; then
-    # Escape special characters for sed replacement
-    ESCAPED_OLD=$(printf '%s\n' "$CURRENT_AUDIO_PATH" | sed 's/[&/\]/\\&/g; s/|/\\|/g')
-    ESCAPED_NEW=$(printf '%s\n' "$AUDIO_INPUT" | sed 's/[&/\]/\\&/g; s/|/\\|/g')
+    # Write the path directly into docker-compose.yml using python
+    # to avoid sed escaping issues with special characters in paths
+    python3 -c "
+import sys
+path = sys.argv[1]
+compose = sys.argv[2]
+with open(compose, 'r') as f:
+    lines = f.readlines()
+new_lines = []
+for line in lines:
+    if ':/app/qlab-audio:ro' in line:
+        indent = line[:len(line) - len(line.lstrip())]
+        new_lines.append(indent + '- ' + path + ':/app/qlab-audio:ro\n')
+    else:
+        new_lines.append(line)
+with open(compose, 'w') as f:
+    f.writelines(new_lines)
+" "$AUDIO_INPUT" "$SCRIPT_DIR/docker-compose.yml"
 
-    if [ -n "$CURRENT_AUDIO_PATH" ]; then
-        # Replace the existing path
-        sed -i '' "s|${CURRENT_AUDIO_PATH}:/app/qlab-audio:ro|${AUDIO_INPUT}:/app/qlab-audio:ro|" "$SCRIPT_DIR/docker-compose.yml"
-    else
-        # Insert a new volume line after the comment line
-        sed -i '' "/chart-toppers-data:\/app\/data/a\\
-\\      # Host QLab audio folder → inside container\\
-\\      - ${AUDIO_INPUT}:/app/qlab-audio:ro
-" "$SCRIPT_DIR/docker-compose.yml"
-    fi
     echo "  Audio folder updated to:"
     echo "  $AUDIO_INPUT"
     echo ""
 else
+    echo ""
     echo "  Folder not found: $AUDIO_INPUT"
     echo "  Please check the path and try again."
     echo ""
