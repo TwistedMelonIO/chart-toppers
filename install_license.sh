@@ -19,6 +19,33 @@ echo ""
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Detect host hardware UUID and write to .env for stable machine ID
+echo "  Detecting hardware ID..."
+HW_UUID=""
+if [ "$(uname)" = "Darwin" ]; then
+    HW_UUID=$(ioreg -rd1 -c IOPlatformExpertDevice 2>/dev/null | awk -F'"' '/IOPlatformUUID/{print $4}')
+elif [ -f /etc/machine-id ]; then
+    HW_UUID=$(cat /etc/machine-id 2>/dev/null)
+elif [ -f /var/lib/dbus/machine-id ]; then
+    HW_UUID=$(cat /var/lib/dbus/machine-id 2>/dev/null)
+fi
+
+if [ -n "$HW_UUID" ]; then
+    # Write/update HOST_HARDWARE_ID in .env (preserve other vars)
+    ENV_FILE="$SCRIPT_DIR/.env"
+    if [ -f "$ENV_FILE" ]; then
+        # Remove old HOST_HARDWARE_ID line if present
+        grep -v '^HOST_HARDWARE_ID=' "$ENV_FILE" > "$ENV_FILE.tmp" 2>/dev/null || true
+        mv "$ENV_FILE.tmp" "$ENV_FILE"
+    fi
+    echo "HOST_HARDWARE_ID=$HW_UUID" >> "$ENV_FILE"
+    echo "  Hardware ID locked: ${HW_UUID:0:8}..."
+else
+    echo "  Warning: Could not detect hardware UUID."
+    echo "  Machine ID will fall back to container-based (not stable across reinstalls)."
+fi
+echo ""
+
 # Check Docker is running
 if ! docker info > /dev/null 2>&1; then
     echo "  Docker is not running!"

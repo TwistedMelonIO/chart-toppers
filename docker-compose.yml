@@ -21,6 +21,7 @@ services:
       - TRACK_BASE_PATH=/app/qlab-audio
       # License key (empty by default, set during installation)
       - LICENSE_KEY=${LICENSE_KEY:-}
+      - HOST_HARDWARE_ID=${HOST_HARDWARE_ID:-}
     volumes:
       # Persistent storage for activity log and pack settings
       - chart-toppers-data:/app/data
