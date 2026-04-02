@@ -11,6 +11,7 @@ class SettingsPage {
     this.setupEventListeners();
     this.loadActivityData();
     this.loadPackSettings();
+    this.loadAudioPath();
   }
 
   setupGradientBackground() {
@@ -38,6 +39,12 @@ class SettingsPage {
     if (savePackBtn) {
       savePackBtn.addEventListener('click', () => this.savePackSettings());
     }
+
+    const saveAudioPathBtn = document.getElementById('saveAudioPathBtn');
+    if (saveAudioPathBtn) {
+      saveAudioPathBtn.addEventListener('click', () => this.saveAudioPath());
+    }
+
     if (exportBtn) {
       exportBtn.addEventListener('click', () => this.exportLogs());
     }
@@ -364,6 +371,53 @@ class SettingsPage {
     `;
   }
 
+  async loadAudioPath() {
+    try {
+      const res = await fetch('/api/audio-path');
+      const data = await res.json();
+      const input = document.getElementById('audioBasePath');
+      if (input && data.audioBasePath) {
+        input.value = data.audioBasePath;
+      }
+    } catch (e) {
+      console.error('Failed to load audio path:', e);
+    }
+  }
+
+  async saveAudioPath() {
+    const input = document.getElementById('audioBasePath');
+    const status = document.getElementById('audioPathStatus');
+    const btn = document.getElementById('saveAudioPathBtn');
+    if (!input) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    status.textContent = '';
+
+    try {
+      const res = await fetch('/api/audio-path', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audioBasePath: input.value.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        status.textContent = 'Path saved and cues retargeted.';
+        status.style.color = '#4ade80';
+      } else {
+        status.textContent = data.error || 'Failed to save.';
+        status.style.color = '#f87171';
+      }
+    } catch (e) {
+      status.textContent = 'Failed to save path.';
+      status.style.color = '#f87171';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Save Path';
+    setTimeout(() => { status.textContent = ''; }, 5000);
+  }
+
   async loadPackSettings() {
     try {
       const response = await fetch('/api/pack-settings');
@@ -397,11 +451,11 @@ class SettingsPage {
     }
     if (currentPackDisplay) {
       const packNames = {
-        'uk-usa-german': 'UK / USA / German',
-        'european': 'European',
-        'teens': 'Teens'
+        'uk-usa-german': 'Pack 1: UK / USA / Germany',
+        'european': 'Pack 2: Europe Med',
+        'teens': 'Pack 3: Teens'
       };
-      currentPackDisplay.textContent = packNames[settings.currentPack] || 'UK / USA / German';
+      currentPackDisplay.textContent = packNames[settings.currentPack] || 'Pack 1: UK / USA / Germany';
     }
     if (packLastChanged) {
       if (settings.lastChanged) {

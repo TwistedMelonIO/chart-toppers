@@ -18,6 +18,7 @@ echo ""
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/.env"
 
 # Detect host hardware UUID and write to .env for stable machine ID
 echo "  Detecting hardware ID..."
@@ -32,7 +33,6 @@ fi
 
 if [ -n "$HW_UUID" ]; then
     # Write/update HOST_HARDWARE_ID in .env (preserve other vars)
-    ENV_FILE="$SCRIPT_DIR/.env"
     if [ -f "$ENV_FILE" ]; then
         # Remove old HOST_HARDWARE_ID line if present
         grep -v '^HOST_HARDWARE_ID=' "$ENV_FILE" > "$ENV_FILE.tmp" 2>/dev/null || true
@@ -65,12 +65,10 @@ if [ ! -f "$SCRIPT_DIR/docker-compose.yml" ]; then
 fi
 
 # ── QLab Audio Folder ──────────────────────────────────────
-# Read the current audio path from docker-compose.yml
-CURRENT_AUDIO_PATH=$(grep ':/app/qlab-audio:ro' "$SCRIPT_DIR/docker-compose.yml" | sed 's|^[[:space:]]*- ||' | sed 's|:/app/qlab-audio:ro$||')
-
-# Treat the placeholder as empty (fresh install)
-if [ "$CURRENT_AUDIO_PATH" = "/path/to/qlab-audio" ]; then
-    CURRENT_AUDIO_PATH=""
+# Read the current audio path from .env (persists across updates)
+CURRENT_AUDIO_PATH=""
+if [ -f "$ENV_FILE" ]; then
+    CURRENT_AUDIO_PATH=$(grep '^QLAB_AUDIO_PATH=' "$ENV_FILE" 2>/dev/null | sed 's/^QLAB_AUDIO_PATH=//')
 fi
 
 echo "  ========================================"
@@ -108,27 +106,17 @@ elif [ -z "$AUDIO_INPUT" ] && [ -z "$CURRENT_AUDIO_PATH" ]; then
     echo "  You can set this later by re-running the script."
     echo ""
 elif [ -d "$AUDIO_INPUT" ]; then
-    # Write the path directly into docker-compose.yml using python
-    # to avoid sed escaping issues with special characters in paths
-    python3 -c "
-import sys
-path = sys.argv[1]
-compose = sys.argv[2]
-with open(compose, 'r') as f:
-    lines = f.readlines()
-new_lines = []
-for line in lines:
-    if ':/app/qlab-audio:ro' in line:
-        indent = line[:len(line) - len(line.lstrip())]
-        new_lines.append(indent + '- ' + path + ':/app/qlab-audio:ro\n')
-    else:
-        new_lines.append(line)
-with open(compose, 'w') as f:
-    f.writelines(new_lines)
-" "$AUDIO_INPUT" "$SCRIPT_DIR/docker-compose.yml"
+    # Write the path to .env so it persists across version updates
+    # (docker-compose.yml reads it via ${QLAB_AUDIO_PATH} variable)
+    if [ -f "$ENV_FILE" ]; then
+        grep -v '^QLAB_AUDIO_PATH=' "$ENV_FILE" > "$ENV_FILE.tmp" 2>/dev/null || true
+        mv "$ENV_FILE.tmp" "$ENV_FILE"
+    fi
+    echo "QLAB_AUDIO_PATH=$AUDIO_INPUT" >> "$ENV_FILE"
 
-    echo "  Audio folder updated to:"
+    echo "  Audio folder saved to .env:"
     echo "  $AUDIO_INPUT"
+    echo "  (This path persists across version updates)"
     echo ""
 else
     echo ""
@@ -265,6 +253,59 @@ if [ "$LICENSE_STATUS" = "VALID" ]; then
     echo "  ========================================"
     echo ""
     echo "  The app is now running at: ${API_URL}"
+    echo ""
+
+    # ── Docforge Export ──────────────────────────────────────
+    echo "  Would you like to generate a .docforge file"
+    echo "  for PDF certificate generation?"
+    echo ""
+    read -p "  Generate .docforge file? (y/N): " DOCFORGE_CHOICE
+
+    if [ "$DOCFORGE_CHOICE" = "y" ] || [ "$DOCFORGE_CHOICE" = "Y" ]; then
+        echo ""
+        read -p "  Licensee name (e.g. MSC Poesia): " LICENSEE_NAME
+        read -p "  Expiry days (leave blank for permanent): " EXPIRY_DAYS
+
+        TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+        DOCFORGE_FILE="$HOME/Desktop/chart-toppers-license.docforge"
+
+        python3 -c "
+import json, sys
+
+data = {
+    'docforge_version': '1.0',
+    'type': 'license',
+    'name': 'chart-toppers',
+    'created_at': sys.argv[1],
+    'updated_at': sys.argv[1],
+    'data': {
+        'project_id': 'chart-toppers',
+        'machine_id': sys.argv[2],
+        'licensee': sys.argv[3],
+        'expiry_days': sys.argv[4] if sys.argv[4] else '',
+        'license_key': sys.argv[5]
+    }
+}
+
+with open(sys.argv[6], 'w') as f:
+    json.dump(data, f, indent=2)
+" "$TIMESTAMP" "$MACHINE_ID" "$LICENSEE_NAME" "$EXPIRY_DAYS" "$LICENSE_KEY" "$DOCFORGE_FILE"
+
+        if [ -f "$DOCFORGE_FILE" ]; then
+            echo ""
+            echo "  ========================================"
+            echo "    DOCFORGE FILE CREATED"
+            echo "  ========================================"
+            echo ""
+            echo "  $DOCFORGE_FILE"
+            echo ""
+            echo "  Drag this file into Docforge to generate"
+            echo "  the license PDF certificate."
+        else
+            echo ""
+            echo "  Failed to create .docforge file."
+        fi
+    fi
 else
     echo "  ========================================"
     echo "    LICENSE ACTIVATION FAILED"

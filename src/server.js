@@ -25,6 +25,14 @@ const CONFIG = {
   MAX_TIME: parseInt(process.env.MAX_TIME) || 100,
   POINTS_PER_CORRECT: parseInt(process.env.POINTS_PER_CORRECT) || 5,
 
+  // Round-based scoring: seconds earned per correct answer per round (Round 4 = points, not seconds)
+  ROUND_SCORING: {
+    1: 2,   // Round 1 — Name It In Five: 6 clips, 1 pt = 2 secs, max 12 secs
+    2: 5,   // Round 2 — On Track: 4 tracks, 1 pt = 5 secs, max 20 secs
+    3: 8,   // Round 3 — Mash Up Mayhem: 4 mashups, 1 pt = 8 secs, max 64 secs
+    4: 1,   // Round 4 — 1 point per correct (points only, no time added)
+  },
+
   // QLab cue numbers for each team's LOAD time cue
   QLAB_CUE_ANTHEMS: process.env.QLAB_CUE_ANTHEMS || "ANTHEMS",
   QLAB_CUE_ICONS: process.env.QLAB_CUE_ICONS || "ICONS",
@@ -163,6 +171,7 @@ function createTeamState() {
     remainingTime: CONFIG.MAX_TIME,
     maxTime: CONFIG.MAX_TIME,
     pointsPerCorrect: CONFIG.POINTS_PER_CORRECT,
+    points: 0,
     isActive: true,
     history: [],
   };
@@ -172,6 +181,44 @@ let gameState = {
   anthems: createTeamState(),
   icons: createTeamState(),
 };
+
+// =============================================================================
+// Round Tracking
+// =============================================================================
+const TOTAL_ROUNDS = 4; // Tracks T1-T4
+
+let roundState = {
+  currentRound: 0,  // 0 = no round active, 1-4 = active round
+  completedRounds: [], // Array of completed round numbers
+};
+
+function setRound(roundNum, source = 'system') {
+  const prev = roundState.currentRound;
+
+  // Mark previous round as completed if it was active
+  if (prev > 0 && !roundState.completedRounds.includes(prev)) {
+    roundState.completedRounds.push(prev);
+  }
+
+  roundState.currentRound = roundNum;
+  console.log(`[ROUND] Round changed: ${prev} → ${roundNum} (${source})`);
+
+  // Broadcast to all connected clients
+  io.emit("roundUpdate", roundState);
+
+  // Log activity
+  logActivity('round', 'all', `Round changed to ${roundNum === 0 ? 'none' : 'Track ' + roundNum}`, source);
+}
+
+function resetRounds(source = 'system') {
+  roundState = {
+    currentRound: 0,
+    completedRounds: [],
+  };
+  console.log(`[ROUND] Rounds reset (${source})`);
+  io.emit("roundUpdate", roundState);
+  logActivity('round', 'all', 'Rounds reset', source);
+}
 
 function resetTeam(teamId, source = 'system') {
   gameState[teamId] = createTeamState();
@@ -195,6 +242,8 @@ function resetAll(source = 'system') {
   
   // Log activity
   logActivity('reset', 'all', 'All teams reset', source);
+
+  resetRounds(source);
 }
 
 function registerCorrectAnswer(teamId, source = 'system') {
@@ -204,37 +253,75 @@ function registerCorrectAnswer(teamId, source = 'system') {
     return null;
   }
 
-  // Check if team has already reached the maximum time limit
-  if (team.earnedTime >= CONFIG.MAX_TIME) {
-    console.log(`[GAME] ${TEAMS[teamId].name} has already reached ${CONFIG.MAX_TIME}s limit, ignoring correct answer`);
+  // Require an active round before accepting correct answers
+  if (roundState.currentRound === 0) {
+    console.log(`[GAME] No active round, ignoring correct answer for ${TEAMS[teamId].name}`);
     return null;
   }
 
-  team.correctAnswers += 1;
-  team.earnedTime = Math.min(team.correctAnswers * team.pointsPerCorrect, CONFIG.MAX_TIME);
-  team.remainingTime = team.maxTime - team.earnedTime;
+  const currentRound = roundState.currentRound;
 
-  if (team.remainingTime < 0) {
-    team.remainingTime = 0;
+  if (currentRound !== 4) {
+    // Rounds 1-3: check if team has already reached the maximum time limit
+    if (team.earnedTime >= CONFIG.MAX_TIME) {
+      console.log(`[GAME] ${TEAMS[teamId].name} has already reached ${CONFIG.MAX_TIME}s limit, ignoring correct answer`);
+      return null;
+    }
   }
 
-  const entry = {
-    timestamp: new Date().toISOString(),
-    answer: team.correctAnswers,
-    earnedTime: team.earnedTime,
-    remainingTime: team.remainingTime,
-  };
-  team.history.push(entry);
+  const pointsThisAnswer = CONFIG.ROUND_SCORING[currentRound] || CONFIG.POINTS_PER_CORRECT;
 
-  // Log activity
-  logActivity('correct', teamId, `Correct answer #${team.correctAnswers} (+${team.pointsPerCorrect}s, ${team.earnedTime}s total)`, source);
+  team.correctAnswers += 1;
 
-  console.log(
-    `[GAME] ${TEAMS[teamId].name} Correct #${team.correctAnswers} | Earned: ${team.earnedTime}s | Remaining: ${team.remainingTime}s`
-  );
+  if (currentRound === 4) {
+    // Round 4: award points only — do not modify earnedTime or remainingTime
+    team.points += pointsThisAnswer;
 
-  // Update QLab text cue with current earned time
-  updateQLabTextCue(teamId, team.earnedTime);
+    const entry = {
+      timestamp: new Date().toISOString(),
+      answer: team.correctAnswers,
+      earnedTime: team.earnedTime,
+      remainingTime: team.remainingTime,
+      round: currentRound,
+      pointsAwarded: pointsThisAnswer,
+      type: 'points',
+    };
+    team.history.push(entry);
+
+    logActivity('correct', teamId, `Correct answer #${team.correctAnswers} (+${pointsThisAnswer} point, ${team.points} points total, round ${currentRound})`, source);
+    console.log(
+      `[GAME] ${TEAMS[teamId].name} Correct #${team.correctAnswers} | +${pointsThisAnswer} point (R${currentRound}) | Points: ${team.points}`
+    );
+
+    // Update QLab text cue with current points value
+    updateQLabTextCue(teamId, team.points);
+  } else {
+    // Rounds 1-3: add seconds to earnedTime
+    team.earnedTime = Math.min(team.earnedTime + pointsThisAnswer, CONFIG.MAX_TIME);
+    team.remainingTime = team.maxTime - team.earnedTime;
+
+    if (team.remainingTime < 0) {
+      team.remainingTime = 0;
+    }
+
+    const entry = {
+      timestamp: new Date().toISOString(),
+      answer: team.correctAnswers,
+      earnedTime: team.earnedTime,
+      remainingTime: team.remainingTime,
+      round: currentRound,
+      pointsAwarded: pointsThisAnswer,
+    };
+    team.history.push(entry);
+
+    logActivity('correct', teamId, `Correct answer #${team.correctAnswers} (+${pointsThisAnswer}s, ${team.earnedTime}s total, round ${currentRound})`, source);
+    console.log(
+      `[GAME] ${TEAMS[teamId].name} Correct #${team.correctAnswers} | +${pointsThisAnswer}s (R${currentRound}) | Earned: ${team.earnedTime}s | Remaining: ${team.remainingTime}s`
+    );
+
+    // Update QLab text cue with current earned time
+    updateQLabTextCue(teamId, team.earnedTime);
+  }
 
   return gameState;
 }
@@ -250,7 +337,35 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 
 app.get("/api/state", (req, res) => {
-  res.json(gameState);
+  res.json({ ...gameState, round: roundState });
+});
+
+// Round tracking API endpoints
+app.get("/api/round", (req, res) => {
+  res.json(roundState);
+});
+
+app.post("/api/round/next", (req, res) => {
+  const next = roundState.currentRound + 1;
+  if (next > TOTAL_ROUNDS) {
+    return res.json({ success: false, message: "Already at final round" });
+  }
+  setRound(next, 'api');
+  res.json({ success: true, round: roundState });
+});
+
+app.post("/api/round/reset", (req, res) => {
+  resetRounds('api');
+  res.json({ success: true, round: roundState });
+});
+
+app.post("/api/round/:num", (req, res) => {
+  const num = parseInt(req.params.num);
+  if (isNaN(num) || num < 0 || num > TOTAL_ROUNDS) {
+    return res.status(400).json({ success: false, message: `Invalid round. Use 0-${TOTAL_ROUNDS}.` });
+  }
+  setRound(num, 'api');
+  res.json({ success: true, round: roundState });
 });
 
 // Activity log API endpoint
@@ -299,35 +414,32 @@ const PACK_SETTINGS_FILE = path.join(__dirname, "../data/pack-settings.json");
 // QLab OSC bridge URL for sending commands
 const BRIDGE_URL = process.env.BRIDGE_URL || "http://osc-bridge:3001";
 
-// QLab Track cue configuration (T1-T4)
-const TRACK_CUE_NUMBERS = ["T1", "T2", "T3", "T4"];
-const TRACK_BASE_PATH = process.env.TRACK_BASE_PATH || "/Users/chrisdevlin/Library/Mobile Documents/com~apple~CloudDocs/Twisted Melon/Installs/MSC/MSC Poesia/QLab Files/Chart Toppers/audio";
-
-// Pack-specific audio file mappings for each track
-const PACK_AUDIO_FILES = {
-  'uk-usa-german': [
-    { fileName: 'Track 1 - American.mp3', cueName: 'Track 1 - USA / UK' },
-    { fileName: 'Track 2 - American.mp3', cueName: 'Track 2 - USA / UK' },
-    { fileName: 'Track 3 - American.mp3', cueName: 'Track 3 - USA / UK' },
-    { fileName: 'Track 4 - American.mp3', cueName: 'Track 4 - USA / UK' }
-  ],
-  'european': [
-    { fileName: 'Track 1 - American.mp3', cueName: 'Track 1 - USA / UK' },
-    { fileName: 'Track 2 - American.mp3', cueName: 'Track 2 - USA / UK' },
-    { fileName: 'Track 3 - American.mp3', cueName: 'Track 3 - USA / UK' },
-    { fileName: 'Track 4 - American.mp3', cueName: 'Track 4 - USA / UK' }
-  ],
-  'teens': [
-    { fileName: 'Track 1 - Asian.mp3', cueName: 'Track 1 - Asian' },
-    { fileName: 'Track 2 - Asian.mp3', cueName: 'Track 2 - Asian' },
-    { fileName: 'Track 3 - Asian.mp3', cueName: 'Track 3 - Asian' },
-    { fileName: 'Track 4 - Asian.mp3', cueName: 'Track 4 - Asian' }
-  ]
-};
+// Load pack track data from JSON files
+const PACKS_DIR = path.join(__dirname, '../data/packs');
+function loadPackData() {
+  const packs = {};
+  try {
+    const files = fs.readdirSync(PACKS_DIR).filter(f => f.endsWith('.json'));
+    files.forEach(file => {
+      try {
+        const data = JSON.parse(fs.readFileSync(path.join(PACKS_DIR, file), 'utf8'));
+        packs[data.packId] = data;
+      } catch (e) {
+        console.error(`[PACKS] Failed to load ${file}:`, e.message);
+      }
+    });
+  } catch (e) {
+    console.warn(`[PACKS] Could not read packs directory (${PACKS_DIR}):`, e.message);
+  }
+  return packs;
+}
+let packData = loadPackData();
+console.log(`[PACKS] Loaded ${Object.keys(packData).length} pack(s): ${Object.keys(packData).join(', ') || 'none'}`);
 
 // Load pack settings from file or use defaults
 let packSettings = {
   currentPack: 'uk-usa-german',
+  audioBasePath: '',
   lastChanged: null
 };
 
@@ -336,8 +448,15 @@ function loadPackSettings() {
   try {
     if (fs.existsSync(PACK_SETTINGS_FILE)) {
       const data = fs.readFileSync(PACK_SETTINGS_FILE, 'utf8');
-      packSettings = JSON.parse(data);
-      console.log(`[PACK] Loaded pack settings: ${packSettings.currentPack}`);
+      const loaded = JSON.parse(data);
+      // Merge loaded settings with defaults so new fields always exist
+      packSettings = {
+        currentPack: 'uk-usa-german',
+        audioBasePath: '',
+        lastChanged: null,
+        ...loaded
+      };
+      console.log(`[PACK] Loaded pack settings: ${packSettings.currentPack}, audioBasePath: "${packSettings.audioBasePath || 'not set'}"`);
     } else {
       console.log('[PACK] No settings file found, using defaults');
     }
@@ -425,48 +544,28 @@ function updateQLabCueName(cueNumber, cueName) {
   req.end();
 }
 
-// Function to update all track cues (T1-T4) based on selected pack
-function trackBasePathAvailable() {
-  if (!TRACK_BASE_PATH) {
-    console.warn('[PACK] TRACK_BASE_PATH is not defined. Skipping cue file updates.');
-    return false;
-  }
-
-  if (!fs.existsSync(TRACK_BASE_PATH)) {
-    console.warn(`[PACK] TRACK_BASE_PATH does not exist: ${TRACK_BASE_PATH}. Skipping cue file updates.`);
-    return false;
-  }
-
-  return true;
-}
-
-function updateTrackCuesForPack(pack) {
-  const packTracks = PACK_AUDIO_FILES[pack];
-  if (!packTracks) {
-    console.log(`[PACK] No audio configuration for pack: ${pack}`);
+// Function to update all track cues based on selected pack using JSON pack data
+function updateTrackCuesForPack(packId) {
+  const pack = packData[packId];
+  if (!pack) {
+    console.warn(`[PACK] No track data found for pack: ${packId}`);
     return;
   }
 
-  if (!trackBasePathAvailable()) {
-    return;
-  }
+  const basePath = packSettings.audioBasePath || '';
+  console.log(`[PACK] Updating track cues for ${pack.name} (base path: ${basePath || 'not set'})`);
 
-  console.log(`[PACK] Updating ${packTracks.length} track cues for ${pack} pack:`);
-  
-  packTracks.forEach((trackConfig, index) => {
-    const cueNumber = TRACK_CUE_NUMBERS[index];
-    const fullFilePath = path.join(TRACK_BASE_PATH, trackConfig.fileName);
+  Object.keys(pack.rounds).forEach(roundNum => {
+    const round = pack.rounds[roundNum];
+    round.tracks.forEach(track => {
+      const fullPath = basePath ? path.join(basePath, track.fileName) : track.fileName;
+      const cueName = `${track.band} - ${track.track}`;
 
-    if (!fs.existsSync(fullFilePath)) {
-      console.warn(`[PACK] Missing audio file for ${cueNumber}: ${fullFilePath}. Skipping file target update.`);
-    } else {
-      console.log(`[PACK]   ${cueNumber}: File: ${fullFilePath}`);
-      // Update file path only when file exists
-      updateQLabCueFilePath(cueNumber, fullFilePath);
-    }
-
-    console.log(`[PACK]   ${cueNumber}: Name: ${trackConfig.cueName}`);
-    updateQLabCueName(cueNumber, trackConfig.cueName);
+      // Send file target to QLab
+      updateQLabCueFilePath(track.cue, fullPath);
+      // Send cue name to QLab
+      updateQLabCueName(track.cue, cueName);
+    });
   });
 }
 
@@ -477,12 +576,14 @@ app.get("/api/pack-settings", (req, res) => {
 app.post("/api/pack-settings", (req, res) => {
   const { currentPack, lastChanged } = req.body;
   
-  if (!currentPack || !['uk-usa-german', 'european', 'teens'].includes(currentPack)) {
+  const validPacks = Object.keys(packData).length > 0 ? Object.keys(packData) : ['uk-usa-german', 'european', 'teens'];
+  if (!currentPack || !validPacks.includes(currentPack)) {
     return res.status(400).json({ success: false, message: "Invalid pack selection" });
   }
-  
+
   const oldPack = packSettings.currentPack;
   packSettings = {
+    ...packSettings,
     currentPack,
     lastChanged: lastChanged || new Date().toISOString()
   };
@@ -501,6 +602,42 @@ app.post("/api/pack-settings", (req, res) => {
   console.log(`[PACK] Question pack changed to: ${currentPack}`);
   
   res.json({ success: true, ...packSettings });
+});
+
+// Audio base path API endpoints
+app.get('/api/audio-path', (req, res) => {
+  res.json({ audioBasePath: packSettings.audioBasePath || '' });
+});
+
+app.post('/api/audio-path', express.json(), (req, res) => {
+  const { audioBasePath } = req.body;
+  if (audioBasePath === undefined) {
+    return res.status(400).json({ error: 'audioBasePath required' });
+  }
+  packSettings.audioBasePath = audioBasePath;
+  packSettings.lastChanged = new Date().toISOString();
+  savePackSettings();
+
+  // Re-target all cues with new base path
+  if (packSettings.currentPack) {
+    updateTrackCuesForPack(packSettings.currentPack);
+  }
+
+  logActivity('system', 'all', `Audio base path updated to: ${audioBasePath}`, 'api');
+  res.json({ success: true, audioBasePath });
+});
+
+// GET /api/pack-tracks/:packId — returns track data for a pack
+app.get('/api/pack-tracks/:packId', (req, res) => {
+  const pack = packData[req.params.packId];
+  if (!pack) return res.status(404).json({ error: 'Pack not found' });
+  res.json(pack);
+});
+
+// POST /api/reload-packs — reload pack data from disk
+app.post('/api/reload-packs', (req, res) => {
+  packData = loadPackData();
+  res.json({ success: true, packs: Object.keys(packData) });
 });
 
 // Team-specific correct answer
@@ -838,6 +975,9 @@ io.on("connection", (socket) => {
   console.log("[WEB] Dashboard client connected");
   socket.emit("stateUpdate", gameState);
 
+  // Send current round state to newly connected clients
+  socket.emit("roundUpdate", roundState);
+
   // Send current countdown state to newly connected clients
   for (const teamId of Object.keys(countdownState)) {
     if (countdownState[teamId].active) {
@@ -896,6 +1036,24 @@ io.on("connection", (socket) => {
       // Log activity
       logActivity('stop', 'all', 'Stop command sent to both teams', 'socket');
     }
+  });
+
+  socket.on("setRound", (roundNum) => {
+    const num = parseInt(roundNum);
+    if (!isNaN(num) && num >= 0 && num <= TOTAL_ROUNDS) {
+      setRound(num, 'socket');
+    }
+  });
+
+  socket.on("nextRound", () => {
+    const next = roundState.currentRound + 1;
+    if (next <= TOTAL_ROUNDS) {
+      setRound(next, 'socket');
+    }
+  });
+
+  socket.on("resetRounds", () => {
+    resetRounds('socket');
   });
 });
 
@@ -1048,6 +1206,35 @@ function handleOscAddress(address) {
     // Log activity
     logActivity('stopPlaying', teamId, 'Team stopped playing via OSC', 'osc');
 
+    return;
+  }
+
+  // Round control: /chart-toppers/round/1 through /chart-toppers/round/4
+  const roundMatch = address.match(/^\/chart-toppers\/round\/(\d+)$/);
+  if (roundMatch) {
+    const roundNum = parseInt(roundMatch[1]);
+    if (roundNum >= 0 && roundNum <= TOTAL_ROUNDS) {
+      setRound(roundNum, 'osc');
+    } else {
+      console.log(`[OSC] Invalid round number: ${roundNum}`);
+    }
+    return;
+  }
+
+  // Round next: /chart-toppers/round/next
+  if (address === "/chart-toppers/round/next") {
+    const next = roundState.currentRound + 1;
+    if (next <= TOTAL_ROUNDS) {
+      setRound(next, 'osc');
+    } else {
+      console.log("[OSC] Already at final round, ignoring next");
+    }
+    return;
+  }
+
+  // Round reset: /chart-toppers/round/reset
+  if (address === "/chart-toppers/round/reset") {
+    resetRounds('osc');
     return;
   }
 

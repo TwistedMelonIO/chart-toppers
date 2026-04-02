@@ -19,14 +19,16 @@ services:
       - BRIDGE_URL=http://osc-bridge:3201
       # Base folder where QLab audio files live (mapped below)
       - TRACK_BASE_PATH=/app/qlab-audio
+      # App version
+      - APP_VERSION=3.4.0
       # License key (empty by default, set during installation)
       - LICENSE_KEY=${LICENSE_KEY:-}
       - HOST_HARDWARE_ID=${HOST_HARDWARE_ID:-}
     volumes:
       # Persistent storage for activity log and pack settings
       - chart-toppers-data:/app/data
-      # Host QLab audio folder → inside container (set by install_license.sh)
-      - /path/to/qlab-audio:/app/qlab-audio:ro
+      # Host QLab audio folder → inside container (set in .env by install_license.sh)
+      - ${QLAB_AUDIO_PATH:-/path/to/qlab-audio}:/app/qlab-audio:ro
     depends_on:
       - osc-bridge
     restart: unless-stopped

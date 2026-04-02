@@ -10,7 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
       history: document.getElementById('anthems-historyList'),
       scoreCard: document.querySelector('.team-anthems .score-card.primary'),
       label: document.querySelector('.team-anthems .score-label'),
-      unit: document.querySelector('.team-anthems .score-unit')
+      unit: document.querySelector('.team-anthems .score-unit'),
+      points: document.getElementById('anthems-points'),
+      pointsCard: document.getElementById('anthems-points-card')
     },
     icons: {
       earned: document.getElementById('icons-earnedTime-main'),
@@ -18,7 +20,9 @@ document.addEventListener('DOMContentLoaded', function() {
       history: document.getElementById('icons-historyList'),
       scoreCard: document.querySelector('.team-icons .score-card.primary'),
       label: document.querySelector('.team-icons .score-label'),
-      unit: document.querySelector('.team-icons .score-unit')
+      unit: document.querySelector('.team-icons .score-unit'),
+      points: document.getElementById('icons-points'),
+      pointsCard: document.getElementById('icons-points-card')
     },
     settings: {
       btn: document.getElementById('settingsBtn'),
@@ -170,11 +174,28 @@ document.addEventListener('DOMContentLoaded', function() {
   checkLicenseStatus();
   setInterval(checkLicenseStatus, 30000);
 
+  // ── Round Tracker ──────────────────────────────────────
+  const roundPills = document.querySelectorAll('.round-pill');
+
+  function updateRoundUI(roundState) {
+    if (!roundState) return;
+    roundPills.forEach(pill => {
+      const num = parseInt(pill.dataset.round);
+      pill.classList.remove('active', 'completed');
+
+      if (num === roundState.currentRound) {
+        pill.classList.add('active');
+      } else if (roundState.completedRounds && roundState.completedRounds.includes(num)) {
+        pill.classList.add('completed');
+      }
+    });
+  }
+
   // Pack display name mapping
   const packNames = {
-    'uk-usa-german': 'UK / USA / German',
-    'european': 'European',
-    'teens': 'Teens'
+    'uk-usa-german': 'Pack 1: UK / USA / Germany',
+    'european': 'Pack 2: Europe Med',
+    'teens': 'Pack 3: Teens'
   };
 
   // Fetch current pack on page load
@@ -186,6 +207,12 @@ document.addEventListener('DOMContentLoaded', function() {
         packDisplay.textContent = 'Current Pack: ' + (packNames[data.currentPack] || data.currentPack);
       }
     })
+    .catch(() => {});
+
+  // Fetch current round state on page load
+  fetch('/api/round')
+    .then(res => res.json())
+    .then(data => updateRoundUI(data))
     .catch(() => {});
 
   // Initialize Socket.IO connection
@@ -218,6 +245,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  socket.on('roundUpdate', (roundState) => {
+    updateRoundUI(roundState);
+  });
+
   socket.on('connect_error', () => {
     setConnectionStatus('disconnected', 'Unable to reach server. Retrying…');
     startStatePolling();
@@ -226,6 +257,11 @@ document.addEventListener('DOMContentLoaded', function() {
   socket.on('teamReset', (teamId) => {
     if (elements[teamId] && elements[teamId].history) {
       elements[teamId].history.innerHTML = '<p class="empty-state">Waiting for first correct answer...</p>';
+    }
+    // Hide points card on reset
+    if (elements[teamId] && elements[teamId].pointsCard) {
+      elements[teamId].pointsCard.style.display = 'none';
+      if (elements[teamId].points) elements[teamId].points.textContent = '0';
     }
     // Hide countdown on reset
     hideCountdown(teamId);
@@ -363,6 +399,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    // Update points display (Round 4)
+    if (teamElements.pointsCard && teamElements.points) {
+      if (team.points > 0) {
+        teamElements.pointsCard.style.display = 'block';
+        teamElements.points.textContent = team.points;
+      } else {
+        teamElements.pointsCard.style.display = 'none';
+      }
+    }
+
     // Update history
     if (teamElements.history) {
       updateHistory(teamElements.history, team.history);
@@ -400,7 +446,10 @@ document.addEventListener('DOMContentLoaded', function() {
   function fetchStateSnapshot() {
     fetch('/api/state')
       .then(res => res.json())
-      .then(state => updateTeamsFromState(state))
+      .then(state => {
+        updateTeamsFromState(state);
+        if (state.round) updateRoundUI(state.round);
+      })
       .catch(() => {});
   }
 
@@ -414,10 +463,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const recentHistory = history.slice().reverse().slice(0, 5);
     el.innerHTML = recentHistory.map(entry => {
       const timestamp = new Date(entry.timestamp).toLocaleTimeString();
+      const detail = entry.type === 'points'
+        ? `+${entry.pointsAwarded || 1} point`
+        : `+${entry.pointsAwarded || 5} seconds earned`;
       return `
         <div class="history-entry">
           <span class="entry-num">#${entry.answer}</span>
-          <span class="entry-detail">+5 seconds earned</span>
+          <span class="entry-detail">${detail}</span>
           <span class="entry-time">${timestamp}</span>
         </div>
       `;

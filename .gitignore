@@ -9,6 +9,7 @@ npm-debug.log*
 
 # License keys (NEVER commit private key)
 license_private_key.pem
+*.docforge
 
 # Docker
 .dockerignore

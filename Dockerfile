@@ -1,5 +1,9 @@
 FROM node:20-alpine
 
+LABEL org.opencontainers.image.version="3.4.0" \
+      org.opencontainers.image.title="Chart Toppers" \
+      org.opencontainers.image.description="QLab Scoring System"
+
 # Add Python for license validation
 RUN apk add --no-cache python3 py3-cryptography
 
