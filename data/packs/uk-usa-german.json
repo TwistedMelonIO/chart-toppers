@@ -1616,6 +1616,20 @@
           "band": "ZZ Top",
           "track": "Sharp Dressed Man",
           "genre": "Power Ballads"
+        },
+        {
+          "cue": "R4T39",
+          "fileName": "PACK_A_ROUND 4_TRACK_39_XX",
+          "band": "XX",
+          "track": "XX",
+          "genre": "XX"
+        },
+        {
+          "cue": "R4T40",
+          "fileName": "PACK_A_ROUND 4_TRACK_40_XX",
+          "band": "XX",
+          "track": "XX",
+          "genre": "XX"
         }
       ]
     }

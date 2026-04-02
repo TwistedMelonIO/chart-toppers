@@ -322,7 +322,7 @@ class SettingsPage {
 
   renderActivityTable() {
     const tbody = document.getElementById('activityTableBody');
-    
+
     if (!this.filteredData || this.filteredData.length === 0) {
       tbody.innerHTML = `
         <tr>
@@ -334,10 +334,35 @@ class SettingsPage {
       return;
     }
 
-    tbody.innerHTML = this.filteredData
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .map(entry => this.createActivityRow(entry))
-      .join('');
+    const sorted = this.filteredData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const display = sorted.slice(0, 10);
+    const hasMore = sorted.length > 10;
+
+    let html = display.map(entry => this.createActivityRow(entry)).join('');
+
+    if (hasMore) {
+      html += `
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 1.25rem;">
+            <button id="viewAllLogsBtn" style="background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 0.6rem 1.5rem; border-radius: 8px; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.85rem; transition: all 0.3s ease;">
+              View All ${sorted.length} Entries
+            </button>
+          </td>
+        </tr>
+      `;
+    }
+
+    tbody.innerHTML = html;
+
+    // Bind view all button
+    if (hasMore) {
+      const viewAllBtn = document.getElementById('viewAllLogsBtn');
+      if (viewAllBtn) {
+        viewAllBtn.addEventListener('click', () => {
+          tbody.innerHTML = sorted.map(entry => this.createActivityRow(entry)).join('');
+        });
+      }
+    }
   }
 
   createActivityRow(entry) {

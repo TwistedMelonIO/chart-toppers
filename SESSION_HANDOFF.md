@@ -46,6 +46,8 @@ Bitfocus Companion (OSC UDP :53536)
 
 Both containers run in Docker. The bridge exists because Docker on macOS can't reliably send UDP to host.docker.internal from within a container.
 
+Bitfocus Companion receives custom variable updates via HTTP API on port 8000 (genre names, track names).
+
 ---
 
 ## Show Structure & Scoring
@@ -198,10 +200,46 @@ docker compose logs -f osc-bridge
 3. **`POINTS_PER_CORRECT` config (default 5)** is unused — `ROUND_SCORING` overrides it entirely
 4. **Test files:** `test_copy.html`, `test_copy_fix.html` in root and public — dev artifacts, can be removed
 5. **Settings password (`8888`)** is client-side only — no server-side guard on the settings page
+6. **Countdown UI disabled** — commented out in app.js, needs re-syncing with QLab playback before re-enabling
 
 ---
 
 ## Session Log
+
+### 2026-04-02 (Session 2) — Genre System, Companion Integration, Track Randomization
+
+**What was done:**
+- Added QLab pack arming: when a pack is selected, arms the selected pack cue group (P1/P2/P3) and disarms the others via `/cue/{group}/armed`
+- Added genre cue system: G1-G9 text cues in QLab updated on pack change, SG1-SG3 start cues retarget to correct G cues on round change via `/cue/{sg}/cueTargetNumber`
+- Integrated Companion HTTP API (port 8000): pushes `genre_g1`-`genre_g3` custom variables on round/pack change, `track_1`-`track_6` on genre load
+- Companion API uses POST to `/api/custom-variable/{name}/value` with plain text body
+- Added genre track randomization system: `/chart-toppers/loadgenre/{1-3}` OSC command randomly selects tracks from genre pool and retargets fixed QLab cue slots
+- Round 1: picks 6 random track pairs (.1 hook + .2 reveal) from ~19 available
+- Round 2/3: picks 4 random tracks from pool
+- Also available as REST API: `POST /api/loadgenre/:index`
+- Added VIDEO_OFFSET config (3s) to account for countdown video intro when sending loadActionAt to QLab
+- Fixed packs directory: moved from data/packs/ to /app/packs/ in Docker to avoid named volume mount hiding the files
+- Fixed Dockerfile to COPY data/packs/ to ./packs/
+- Reset now clears playing state on dashboard for both teams
+- Disabled countdown UI in dashboard (commented out, easy to re-enable when synced with QLab)
+- Built AppleScript for replacing Stream Deck IDs in QLab Network cues (runs as QLab Script cue)
+
+**Decisions made:**
+- Companion custom variables approach (not direct button targeting) for flexibility
+- Companion URL: `http://host.docker.internal:8000` from Docker container
+- Genre OSC uses index (1-3) not name — server looks up genre name from current pack/round
+- VIDEO_OFFSET = 3 seconds (calibrated by testing against actual countdown video)
+- Only send loadActionAt on play when earnedTime > 0 (prevents jumping to end of video after reset)
+- Pack JSON files live at /app/packs/ (outside the /app/data volume mount)
+
+**What's next / pending:**
+- Create `track_1` through `track_6` custom variables in Companion
+- Re-sync countdown UI with QLab playback (disabled for now)
+- Round 4 track loading works via pack change (all 38 tracks, no randomization needed)
+- Test full show flow: pack select → round advance → genre load → play → score → countdown
+- Address remaining known issues from previous session (hideCountdown bug, test file cleanup)
+
+---
 
 ### 2026-04-02 — Pack Data & Scoring Overhaul (v3.3.0 -> v3.4.0)
 

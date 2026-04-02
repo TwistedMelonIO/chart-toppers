@@ -23,6 +23,7 @@ const CONFIG = {
 
   // Game defaults
   MAX_TIME: parseInt(process.env.MAX_TIME) || 100,
+  VIDEO_OFFSET: parseFloat(process.env.VIDEO_OFFSET) || 3, // seconds of intro before countdown starts
   POINTS_PER_CORRECT: parseInt(process.env.POINTS_PER_CORRECT) || 5,
 
   // Round-based scoring: seconds earned per correct answer per round (Round 4 = points, not seconds)
@@ -202,6 +203,15 @@ function setRound(roundNum, source = 'system') {
 
   roundState.currentRound = roundNum;
   console.log(`[ROUND] Round changed: ${prev} → ${roundNum} (${source})`);
+
+  // Clear any currently playing team state on the dashboard
+  io.emit("teamStopPlaying", "anthems");
+  io.emit("teamStopPlaying", "icons");
+  io.emit("triggerStop", "anthems");
+  io.emit("triggerStop", "icons");
+
+  // Retarget SG1-SG3 to the correct G cues for this round
+  updateGenreTargets(roundNum);
 
   // Broadcast to all connected clients
   io.emit("roundUpdate", roundState);
@@ -415,7 +425,7 @@ const PACK_SETTINGS_FILE = path.join(__dirname, "../data/pack-settings.json");
 const BRIDGE_URL = process.env.BRIDGE_URL || "http://osc-bridge:3001";
 
 // Load pack track data from JSON files
-const PACKS_DIR = path.join(__dirname, '../data/packs');
+const PACKS_DIR = path.join(__dirname, '../packs');
 function loadPackData() {
   const packs = {};
   try {
@@ -544,6 +554,321 @@ function updateQLabCueName(cueNumber, cueName) {
   req.end();
 }
 
+// Map pack IDs to QLab cue group names
+const PACK_CUE_GROUPS = {
+  'uk-usa-german': 'P1',
+  'european':      'P2',
+  'teens':         'P3'
+};
+
+// Arm the selected pack's cue group and disarm the others in QLab
+function updateQLabPackArming(packId) {
+  const selectedGroup = PACK_CUE_GROUPS[packId];
+  if (!selectedGroup) {
+    console.warn(`[QLAB OUT] No cue group mapping for pack: ${packId}`);
+    return;
+  }
+
+  Object.entries(PACK_CUE_GROUPS).forEach(([id, group]) => {
+    const armed = id === packId ? 1 : 0;
+    const address = `/cue/${group}/armed`;
+    const payload = JSON.stringify({ address, value: armed });
+
+    const bridgeUrl = new URL("/send", BRIDGE_URL);
+    const options = {
+      hostname: bridgeUrl.hostname,
+      port: bridgeUrl.port,
+      path: bridgeUrl.pathname,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(payload),
+      },
+    };
+
+    const req = http.request(options, (res) => {
+      let body = "";
+      res.on("data", (chunk) => (body += chunk));
+      res.on("end", () => {
+        console.log(`[QLAB OUT] ${address} → ${armed} (${armed ? 'armed' : 'disarmed'}) (bridge: ${res.statusCode})`);
+      });
+    });
+
+    req.on("error", (err) => {
+      console.error(`[QLAB OUT] Bridge error (arm/disarm ${group}): ${err.message}`);
+    });
+
+    req.write(payload);
+    req.end();
+  });
+}
+
+// Companion HTTP API for custom variables
+const COMPANION_URL = process.env.COMPANION_URL || "http://host.docker.internal:8000";
+
+// Genre system: G1-G9 are text cues in QLab (3 per round, names set on pack change).
+// SG1-SG3 are start cues that retarget to the correct G cues on round change.
+const GENRE_CUE_MAP = {
+  '1': ['G1', 'G2', 'G3'],   // Round 1 genres
+  '2': ['G4', 'G5', 'G6'],   // Round 2 genres
+  '3': ['G7', 'G8', 'G9'],   // Round 3 genres
+};
+const START_CUES = ['SG1', 'SG2', 'SG3'];
+
+// Update all G1-G9 genre text cue names in QLab + all Companion variables (called on pack change)
+function updateAllGenreCues(packId) {
+  const pack = packData[packId || packSettings.currentPack];
+  if (!pack || !pack.genres) {
+    console.warn(`[GENRE] No genre data found for pack: ${packId || packSettings.currentPack}`);
+    return;
+  }
+
+  console.log(`[GENRE] Updating G1-G9 for ${pack.name}`);
+
+  Object.entries(GENRE_CUE_MAP).forEach(([round, cues]) => {
+    const genres = pack.genres[round];
+    if (!genres) return;
+
+    cues.forEach((cue, i) => {
+      const genreName = genres[i] || '';
+      updateQLabCueName(cue, genreName);
+    });
+  });
+
+  // Also update Companion variables + SG targets for the current round
+  updateGenreTargets(roundState.currentRound);
+}
+
+// Retarget SG1-SG3 to the correct G cues for the given round + update Companion variables
+function updateGenreTargets(roundNum) {
+  const pack = packData[packSettings.currentPack];
+  const targets = GENRE_CUE_MAP[String(roundNum)];
+
+  if (!targets || roundNum < 1 || roundNum > 3) {
+    console.log(`[GENRE] Round ${roundNum} has no genre picker — clearing SG targets and Companion`);
+    START_CUES.forEach((sg, i) => {
+      setCompanionVariable(`genre_g${i + 1}`, '');
+    });
+    return;
+  }
+
+  console.log(`[GENRE] Retargeting SG1-SG3 → ${targets.join(', ')} for Round ${roundNum}`);
+
+  START_CUES.forEach((sg, i) => {
+    const targetCue = targets[i];
+
+    // Retarget the start cue to point at the correct genre cue
+    updateQLabCueTarget(sg, targetCue);
+
+    // Update Companion custom variable with the genre name
+    if (pack && pack.genres && pack.genres[String(roundNum)]) {
+      const genreName = pack.genres[String(roundNum)][i] || '';
+      setCompanionVariable(`genre_g${i + 1}`, genreName);
+    }
+  });
+}
+
+// Send OSC to QLab to retarget a cue's target cue number
+function updateQLabCueTarget(cueNumber, targetCueNumber) {
+  const address = `/cue/${cueNumber}/cueTargetNumber`;
+  const payload = JSON.stringify({ address, value: targetCueNumber });
+
+  const bridgeUrl = new URL("/send", BRIDGE_URL);
+  const options = {
+    hostname: bridgeUrl.hostname,
+    port: bridgeUrl.port,
+    path: bridgeUrl.pathname,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(payload),
+    },
+  };
+
+  const req = http.request(options, (res) => {
+    let body = "";
+    res.on("data", (chunk) => (body += chunk));
+    res.on("end", () => {
+      console.log(`[QLAB OUT] ${address} → "${targetCueNumber}" (bridge: ${res.statusCode})`);
+    });
+  });
+
+  req.on("error", (err) => {
+    console.error(`[QLAB OUT] Bridge error (cueTarget ${cueNumber}): ${err.message}`);
+  });
+
+  req.write(payload);
+  req.end();
+}
+
+// Set a Companion custom variable via HTTP API (Companion 3.x)
+function setCompanionVariable(varName, value) {
+  const url = new URL(`/api/custom-variable/${varName}/value`, COMPANION_URL);
+  const payload = String(value);
+
+  const options = {
+    hostname: url.hostname,
+    port: url.port,
+    path: url.pathname,
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain",
+      "Content-Length": Buffer.byteLength(payload),
+    },
+  };
+
+  const req = http.request(options, (res) => {
+    let body = "";
+    res.on("data", (chunk) => (body += chunk));
+    res.on("end", () => {
+      console.log(`[COMPANION] ${varName} → "${value}" (${res.statusCode})`);
+    });
+  });
+
+  req.on("error", (err) => {
+    console.error(`[COMPANION] Error setting ${varName}: ${err.message}`);
+  });
+
+  req.write(payload);
+  req.end();
+}
+
+// =============================================================================
+// Genre Track Randomization
+// =============================================================================
+
+// Number of tracks to randomly select per round when a genre is loaded
+const GENRE_SLOTS = {
+  '1': 6,  // 6 track pairs for Round 1 (hook + reveal = 12 cue retargets)
+  '2': 4,  // 4 tracks for Round 2
+  '3': 4,  // 4 tracks for Round 3
+};
+
+// Fisher-Yates shuffle
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Load random tracks for a genre into fixed QLab cue slots
+// genreIndex: 1, 2, or 3 (position in the current round's genre list)
+function loadGenreTracks(genreIndex) {
+  const currentRound = String(roundState.currentRound);
+  const pack = packData[packSettings.currentPack];
+
+  if (!pack) {
+    console.warn(`[GENRE LOAD] No pack data for: ${packSettings.currentPack}`);
+    return { success: false, error: 'No pack data' };
+  }
+
+  if (!pack.genres[currentRound]) {
+    console.warn(`[GENRE LOAD] No genres for round ${currentRound}`);
+    return { success: false, error: `No genres for round ${currentRound}` };
+  }
+
+  const genreName = pack.genres[currentRound][genreIndex - 1];
+  if (!genreName) {
+    console.warn(`[GENRE LOAD] No genre at index ${genreIndex} for round ${currentRound}`);
+    return { success: false, error: `Invalid genre index ${genreIndex}` };
+  }
+
+  const slotsNeeded = GENRE_SLOTS[currentRound];
+  if (!slotsNeeded) {
+    console.warn(`[GENRE LOAD] No slot config for round ${currentRound}`);
+    return { success: false, error: `Round ${currentRound} has no genre slots` };
+  }
+
+  const allTracks = pack.rounds[currentRound]?.tracks || [];
+  const basePath = packSettings.audioBasePath || '';
+
+  console.log(`[GENRE LOAD] Loading "${genreName}" for Round ${currentRound} (${slotsNeeded} slots needed)`);
+
+  if (currentRound === '1') {
+    // Round 1: tracks come in .1/.2 pairs — group by track number, pick 6 groups
+    const genreTracks = allTracks.filter(t => t.genre === genreName);
+
+    // Group into pairs by track number (e.g. R1T5.1 and R1T5.2 → group "5")
+    const pairs = {};
+    genreTracks.forEach(t => {
+      const num = t.cue.replace('R1T', '').split('.')[0];
+      if (!pairs[num]) pairs[num] = {};
+      if (t.cue.endsWith('.1')) pairs[num].hook = t;
+      if (t.cue.endsWith('.2')) pairs[num].reveal = t;
+    });
+
+    // Only use complete pairs
+    const completePairs = Object.values(pairs).filter(p => p.hook && p.reveal);
+    const selected = shuffle(completePairs).slice(0, slotsNeeded);
+
+    if (selected.length < slotsNeeded) {
+      console.warn(`[GENRE LOAD] Only ${selected.length} complete pairs available for "${genreName}" (need ${slotsNeeded})`);
+    }
+
+    console.log(`[GENRE LOAD] Selected ${selected.length} pairs from ${completePairs.length} available`);
+
+    selected.forEach((pair, i) => {
+      const slotNum = i + 1;
+      const hookSlot = `R1T${slotNum}.1`;
+      const revealSlot = `R1T${slotNum}.2`;
+
+      // Retarget hook slot
+      const hookPath = basePath ? path.join(basePath, pair.hook.fileName) : pair.hook.fileName;
+      updateQLabCueFilePath(hookSlot, hookPath);
+      updateQLabCueName(hookSlot, `${pair.hook.band} - ${pair.hook.track}`);
+
+      // Retarget reveal slot
+      const revealPath = basePath ? path.join(basePath, pair.reveal.fileName) : pair.reveal.fileName;
+      updateQLabCueFilePath(revealSlot, revealPath);
+      updateQLabCueName(revealSlot, `${pair.reveal.band} - ${pair.reveal.track}`);
+
+      // Push to Companion
+      setCompanionVariable(`track_${slotNum}`, `${pair.hook.band} - ${pair.hook.track}`);
+
+      console.log(`[GENRE LOAD] Slot ${slotNum}: ${pair.hook.band} - ${pair.hook.track}`);
+    });
+
+  } else {
+    // Rounds 2 & 3: single cues, pick required number
+    const genreTracks = allTracks.filter(t => t.genre === genreName);
+    const selected = shuffle(genreTracks).slice(0, slotsNeeded);
+
+    if (selected.length < slotsNeeded) {
+      console.warn(`[GENRE LOAD] Only ${selected.length} tracks available for "${genreName}" (need ${slotsNeeded})`);
+    }
+
+    console.log(`[GENRE LOAD] Selected ${selected.length} tracks from ${genreTracks.length} available`);
+
+    selected.forEach((track, i) => {
+      const slotNum = i + 1;
+      const slot = `R${currentRound}T${slotNum}`;
+      const fullPath = basePath ? path.join(basePath, track.fileName) : track.fileName;
+
+      updateQLabCueFilePath(slot, fullPath);
+      updateQLabCueName(slot, `${track.band} - ${track.track}`);
+      setCompanionVariable(`track_${slotNum}`, `${track.band} - ${track.track}`);
+
+      console.log(`[GENRE LOAD] Slot ${slot}: ${track.band} - ${track.track}`);
+    });
+  }
+
+  // Clear any unused Companion track variables
+  const maxSlots = 6;
+  for (let i = (GENRE_SLOTS[currentRound] || 0) + 1; i <= maxSlots; i++) {
+    setCompanionVariable(`track_${i}`, '');
+  }
+
+  logActivity('genre', 'all', `Loaded "${genreName}" for Round ${currentRound} (${slotsNeeded} random tracks)`, 'system');
+
+  return { success: true, genre: genreName, round: currentRound, tracksLoaded: slotsNeeded };
+}
+
+// OSC stagger delay (ms) between messages to avoid network overload
+const OSC_STAGGER_MS = 20;
+
 // Function to update all track cues based on selected pack using JSON pack data
 function updateTrackCuesForPack(packId) {
   const pack = packData[packId];
@@ -555,18 +880,22 @@ function updateTrackCuesForPack(packId) {
   const basePath = packSettings.audioBasePath || '';
   console.log(`[PACK] Updating track cues for ${pack.name} (base path: ${basePath || 'not set'})`);
 
+  let delay = 0;
   Object.keys(pack.rounds).forEach(roundNum => {
     const round = pack.rounds[roundNum];
     round.tracks.forEach(track => {
       const fullPath = basePath ? path.join(basePath, track.fileName) : track.fileName;
       const cueName = `${track.band} - ${track.track}`;
 
-      // Send file target to QLab
-      updateQLabCueFilePath(track.cue, fullPath);
-      // Send cue name to QLab
-      updateQLabCueName(track.cue, cueName);
+      setTimeout(() => {
+        updateQLabCueFilePath(track.cue, fullPath);
+        updateQLabCueName(track.cue, cueName);
+      }, delay);
+      delay += OSC_STAGGER_MS;
     });
   });
+
+  console.log(`[PACK] Queued ${delay / OSC_STAGGER_MS} cue updates over ${(delay / 1000).toFixed(1)}s`);
 }
 
 app.get("/api/pack-settings", (req, res) => {
@@ -593,7 +922,13 @@ app.post("/api/pack-settings", (req, res) => {
   
   // Update QLab track cues (T1-T4) file paths and names based on selected pack
   updateTrackCuesForPack(currentPack);
-  
+
+  // Arm selected pack cue group, disarm the others in QLab
+  updateQLabPackArming(currentPack);
+
+  // Update all genre text cue names (G1-G9) in QLab and Companion for current round
+  updateAllGenreCues(currentPack);
+
   // Broadcast pack change to all connected dashboard clients
   io.emit("packChanged", currentPack);
   
@@ -638,6 +973,16 @@ app.get('/api/pack-tracks/:packId', (req, res) => {
 app.post('/api/reload-packs', (req, res) => {
   packData = loadPackData();
   res.json({ success: true, packs: Object.keys(packData) });
+});
+
+// POST /api/loadgenre/:index — load random tracks for a genre (1-3)
+app.post('/api/loadgenre/:index', (req, res) => {
+  const genreIndex = parseInt(req.params.index);
+  if (isNaN(genreIndex) || genreIndex < 1 || genreIndex > 3) {
+    return res.status(400).json({ success: false, error: 'Genre index must be 1, 2, or 3' });
+  }
+  const result = loadGenreTracks(genreIndex);
+  res.json(result);
 });
 
 // Team-specific correct answer
@@ -1169,6 +1514,12 @@ function handleOscAddress(address) {
 
     console.log(`[SOCKET] Events emitted to ${io.engine.clientsCount} clients`);
 
+    // Re-send loadActionAt in case the group reset the cue position (only if team has earned time)
+    if (gameState[teamId].earnedTime > 0) {
+      sendQLabLoadCue(teamId, gameState[teamId].remainingTime);
+      console.log(`[COUNTDOWN] Re-sent loadActionAt for ${TEAMS[teamId].name} (${gameState[teamId].remainingTime}s remaining)`);
+    }
+
     // Start polling QLab for this cue's playback position (countdown)
     // Only start if not already counting down (avoid double-trigger from rapid OSC)
     if (gameState[teamId].earnedTime > 0 && !countdownState[teamId].active) {
@@ -1238,6 +1589,19 @@ function handleOscAddress(address) {
     return;
   }
 
+  // Load genre tracks: /chart-toppers/loadgenre/1, /2, /3
+  const genreMatch = address.match(/^\/chart-toppers\/loadgenre\/(\d+)$/);
+  if (genreMatch) {
+    const genreIndex = parseInt(genreMatch[1]);
+    if (genreIndex >= 1 && genreIndex <= 3) {
+      const result = loadGenreTracks(genreIndex);
+      console.log(`[OSC] Load genre ${genreIndex}: ${result.success ? result.genre : result.error}`);
+    } else {
+      console.log(`[OSC] Invalid genre index: ${genreIndex} (must be 1-3)`);
+    }
+    return;
+  }
+
   console.log(`[OSC] Unhandled address: ${address}`);
 }
 
@@ -1271,11 +1635,14 @@ udpServer.bind(CONFIG.OSC_LISTEN_PORT, "0.0.0.0");
 // =============================================================================
 
 console.log(`[QLAB] Will send OSC via bridge at ${BRIDGE_URL}`);
+console.log(`[COMPANION] HTTP API at ${COMPANION_URL}`);
 
 function sendQLabLoadCue(teamId, remainingSeconds) {
   const cueName = TEAMS[teamId].cueName;
   const address = `/cue/${cueName}/loadActionAt`;
-  const payload = JSON.stringify({ address, value: remainingSeconds });
+  // Add video offset to account for intro before countdown starts
+  const loadPosition = remainingSeconds + CONFIG.VIDEO_OFFSET;
+  const payload = JSON.stringify({ address, value: loadPosition });
 
   const bridgeUrl = new URL("/send", BRIDGE_URL);
   const options = {
@@ -1293,7 +1660,7 @@ function sendQLabLoadCue(teamId, remainingSeconds) {
     let body = "";
     res.on("data", (chunk) => (body += chunk));
     res.on("end", () => {
-      console.log(`[QLAB OUT] ${address} → ${remainingSeconds}s (bridge: ${res.statusCode})`);
+      console.log(`[QLAB OUT] ${address} → ${loadPosition}s (${remainingSeconds}s remaining + ${CONFIG.VIDEO_OFFSET}s offset) (bridge: ${res.statusCode})`);
     });
   });
 

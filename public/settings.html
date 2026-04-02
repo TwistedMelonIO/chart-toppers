@@ -680,7 +680,7 @@
       <div class="header-title">
         <h1>Settings & Activity Log</h1>
         <p class="subtitle">Game activity for today</p>
-        <p class="version-number">v3.4.0</p>
+        <p class="version-number">v3.5.0</p>
       </div>
       <a href="/" class="back-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -695,15 +695,6 @@
       <div class="pack-header">
         <h2>Question Pack Selection</h2>
         <p class="subtitle">Select the appropriate question pack for your region</p>
-      </div>
-      <div class="settings-row" style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.07);">
-        <label class="settings-label" style="display: block; color: var(--text-secondary); font-weight: 500; margin-bottom: 0.4rem;">QLab Audio Folder Path</label>
-        <p class="settings-description" style="margin: 0 0 0.75rem 0; color: var(--text-muted); font-size: 0.85rem;">Full path to the folder containing audio files on the QLab machine. Used when retargeting cue file paths.</p>
-        <div class="audio-path-row" style="display: flex; gap: 8px; align-items: center;">
-          <input type="text" id="audioBasePath" class="settings-input" placeholder="/path/to/QLab/audio/folder" style="flex: 1; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; background: rgba(0,0,0,0.3); color: #fff; font-family: 'Outfit', sans-serif; font-size: 0.9rem;">
-          <button class="btn btn-primary" id="saveAudioPathBtn" style="white-space: nowrap; padding: 0.75rem 1.25rem;">Save Path</button>
-        </div>
-        <div id="audioPathStatus" class="settings-status" style="margin-top: 6px; font-size: 0.85rem;"></div>
       </div>
       <div class="pack-controls">
         <div class="pack-selector">
@@ -720,6 +711,17 @@
           <p><strong>Last Changed:</strong> <span id="packLastChanged">Never</span></p>
         </div>
       </div>
+      <details style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.07);">
+        <summary style="color: var(--text-muted); font-size: 0.85rem; cursor: pointer; font-weight: 500; font-family: 'Outfit', sans-serif;">Advanced: QLab Audio Folder Path</summary>
+        <div style="margin-top: 1rem;">
+          <p class="settings-description" style="margin: 0 0 0.75rem 0; color: var(--text-muted); font-size: 0.85rem;">Full path to the folder containing audio files on the QLab machine. Used when retargeting cue file paths.</p>
+          <div class="audio-path-row" style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="audioBasePath" class="settings-input" placeholder="/path/to/QLab/audio/folder" style="flex: 1; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; background: rgba(0,0,0,0.3); color: #fff; font-family: 'Outfit', sans-serif; font-size: 0.9rem;">
+            <button class="btn btn-primary" id="saveAudioPathBtn" style="white-space: nowrap; padding: 0.75rem 1.25rem;">Save Path</button>
+          </div>
+          <div id="audioPathStatus" class="settings-status" style="margin-top: 6px; font-size: 0.85rem;"></div>
+        </div>
+      </details>
     </div>
 
     <!-- Statistics Overview -->

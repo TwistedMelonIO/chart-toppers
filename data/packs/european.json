@@ -3,7 +3,7 @@
   "name": "Pack 2: Europe Med",
   "genres": {
     "1": ["Latin", "Boy Bands", "Mediterranean Classics"],
-    "2": ["Grammy Winners", "Girl Groups", "EuroPop"],
+    "2": ["Grammy Winners", "Girl Groups", "Euro Pop"],
     "3": ["World Pop", "One Hit Wonders", "Ultimate Singalong"],
     "4": ["Latin", "Boy Bands", "Ultimate Singalong", "Grammy Winners"]
   },
@@ -146,14 +146,14 @@
         { "cue": "R2T14", "fileName": "PACK2_Round2_Girl Groups_Sugababes", "band": "Sugababes", "track": "Freak Like Me", "genre": "Girl Groups" },
         { "cue": "R2T15", "fileName": "PACK2_Round2_Girl Groups_Atomic Kitten", "band": "Atomic Kitten", "track": "Right Now", "genre": "Girl Groups" },
         { "cue": "R2T16", "fileName": "PACK2_Round2_Girl Groups_B*Witched", "band": "B*Witched", "track": "Rollercoaster", "genre": "Girl Groups" },
-        { "cue": "R2T17", "fileName": "PACK2_Round2_EuroPop_Abba", "band": "Abba", "track": "Gimme! Gimme! Gimme!", "genre": "EuroPop" },
-        { "cue": "R2T18", "fileName": "PACK2_Round2_EuroPop_Aqua", "band": "Aqua", "track": "Doctor Jones", "genre": "EuroPop" },
-        { "cue": "R2T19", "fileName": "PACK2_Round2_EuroPop_Roxette", "band": "Roxette", "track": "The Look", "genre": "EuroPop" },
-        { "cue": "R2T20", "fileName": "PACK2_Round2_EuroPop_Ace of Base", "band": "Ace of Base", "track": "The Sign", "genre": "EuroPop" },
-        { "cue": "R2T21", "fileName": "PACK2_Round2_EuroPop_Cascada", "band": "Cascada", "track": "Everytime We Touch", "genre": "EuroPop" },
-        { "cue": "R2T22", "fileName": "PACK2_Round2_EuroPop_Gigi D'Agostino", "band": "Gigi D'Agostino", "track": "L'Amour Toujours", "genre": "EuroPop" },
-        { "cue": "R2T23", "fileName": "PACK2_Round2_EuroPop_A-ha", "band": "A-ha", "track": "Take On Me", "genre": "EuroPop" },
-        { "cue": "R2T24", "fileName": "PACK2_Round2_EuroPop_Alphaville", "band": "Alphaville", "track": "Forever Young", "genre": "EuroPop" }
+        { "cue": "R2T17", "fileName": "PACK2_Round2_Euro Pop_Abba", "band": "Abba", "track": "Gimme! Gimme! Gimme!", "genre": "Euro Pop" },
+        { "cue": "R2T18", "fileName": "PACK2_Round2_Euro Pop_Aqua", "band": "Aqua", "track": "Doctor Jones", "genre": "Euro Pop" },
+        { "cue": "R2T19", "fileName": "PACK2_Round2_Euro Pop_Roxette", "band": "Roxette", "track": "The Look", "genre": "Euro Pop" },
+        { "cue": "R2T20", "fileName": "PACK2_Round2_Euro Pop_Ace of Base", "band": "Ace of Base", "track": "The Sign", "genre": "Euro Pop" },
+        { "cue": "R2T21", "fileName": "PACK2_Round2_Euro Pop_Cascada", "band": "Cascada", "track": "Everytime We Touch", "genre": "Euro Pop" },
+        { "cue": "R2T22", "fileName": "PACK2_Round2_Euro Pop_Gigi D'Agostino", "band": "Gigi D'Agostino", "track": "L'Amour Toujours", "genre": "Euro Pop" },
+        { "cue": "R2T23", "fileName": "PACK2_Round2_Euro Pop_A-ha", "band": "A-ha", "track": "Take On Me", "genre": "Euro Pop" },
+        { "cue": "R2T24", "fileName": "PACK2_Round2_Euro Pop_Alphaville", "band": "Alphaville", "track": "Forever Young", "genre": "Euro Pop" }
       ]
     },
     "3": {
