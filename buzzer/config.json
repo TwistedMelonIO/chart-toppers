@@ -1,0 +1,9 @@
+{
+  "qlab_version": 5,
+  "key_mappings": {
+    "1": {"action": "start", "cue": "IBUZZ", "lockout_ms": 3000},
+    "2": {"action": "start", "cue": "ABUZZ", "lockout_ms": 3000}
+  },
+  "debounce_ms": 150,
+  "log_all_keys": false
+}

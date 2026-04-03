@@ -39,6 +39,11 @@ coverage/
 *.swp
 *.swo
 
+# Buzzer
+buzzer/venv/
+buzzer/.pid
+buzzer/buzzer.log
+
 # OS generated files
 .DS_Store
 .DS_Store?

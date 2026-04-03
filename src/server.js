@@ -196,6 +196,14 @@ let roundState = {
   completedRounds: [], // Array of completed round numbers
 };
 
+// Round 4 track play state — tracks which R4 tracks have been triggered
+let r4TracksPlayed = { 1: false, 2: false, 3: false, 4: false };
+
+function resetR4Tracks() {
+  r4TracksPlayed = { 1: false, 2: false, 3: false, 4: false };
+  console.log('[ROUND 4] Track play state reset');
+}
+
 function setRound(roundNum, source = 'system') {
   const prev = roundState.currentRound;
 
@@ -206,6 +214,11 @@ function setRound(roundNum, source = 'system') {
 
   roundState.currentRound = roundNum;
   console.log(`[ROUND] Round changed: ${prev} → ${roundNum} (${source})`);
+
+  // Reset R4 track play state when entering Round 4
+  if (roundNum === 4) {
+    resetR4Tracks();
+  }
 
   // Clear any currently playing team state on the dashboard
   io.emit("teamStopPlaying", "anthems");
@@ -228,6 +241,7 @@ function resetRounds(source = 'system') {
     currentRound: 0,
     completedRounds: [],
   };
+  resetR4Tracks();
   console.log(`[ROUND] Rounds reset (${source})`);
   io.emit("roundUpdate", roundState);
   logActivity('round', 'all', 'Rounds reset', source);
@@ -384,6 +398,59 @@ function activateGoldenRecord(teamId, source = 'system') {
   console.log(`[GAME] Golden Record ARMED for ${TEAMS[teamId].name} (${source})`);
 
   return gameState;
+}
+
+function playR4Track(trackNum, source = 'system') {
+  if (trackNum < 1 || trackNum > 4) {
+    console.log(`[ROUND 4] Invalid track number: ${trackNum}`);
+    return null;
+  }
+
+  if (roundState.currentRound !== 4) {
+    console.log(`[ROUND 4] Not in Round 4 (current: ${roundState.currentRound}), ignoring R4T${trackNum}`);
+    return null;
+  }
+
+  if (r4TracksPlayed[trackNum]) {
+    console.log(`[ROUND 4] Track R4T${trackNum} already played, rejecting (${source})`);
+    return null;
+  }
+
+  r4TracksPlayed[trackNum] = true;
+
+  // Fire QLab cue R4T{n}
+  const cueName = `R4T${trackNum}`;
+  const address = `/cue/${cueName}/start`;
+  const payload = JSON.stringify({ address, value: 0 });
+
+  const bridgeUrl = new URL("/send", BRIDGE_URL);
+  const options = {
+    hostname: bridgeUrl.hostname,
+    port: bridgeUrl.port,
+    path: bridgeUrl.pathname,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  };
+
+  const req = http.request(options, (res) => {
+    let body = "";
+    res.on("data", (chunk) => (body += chunk));
+    res.on("end", () => {
+      console.log(`[ROUND 4] Cue ${cueName} started (${source}): ${body}`);
+    });
+  });
+
+  req.on("error", (err) => {
+    console.error(`[ROUND 4] Error starting cue ${cueName}:`, err.message);
+  });
+
+  req.write(payload);
+  req.end();
+
+  logActivity('r4_track', 'all', `Round 4 track ${trackNum} played`, source);
+  console.log(`[ROUND 4] Track R4T${trackNum} played (${source}) — played: ${JSON.stringify(r4TracksPlayed)}`);
+
+  return r4TracksPlayed;
 }
 
 // =============================================================================
@@ -1550,6 +1617,17 @@ function handleOscAddress(address) {
       sendQLabLoadCue(teamId, state[teamId].remainingTime);
     } else {
       console.log(`[OSC DEBUG] registerCorrectAnswer returned null for team: ${teamId}`);
+    }
+    return;
+  }
+
+  // Round 4 track play: /chart-toppers/r4/1 through /chart-toppers/r4/4
+  const r4Match = address.match(/^\/chart-toppers\/r4\/([1-4])$/);
+  if (r4Match) {
+    const trackNum = parseInt(r4Match[1]);
+    const result = playR4Track(trackNum, 'osc');
+    if (!result) {
+      console.log(`[OSC] Round 4 track ${trackNum} rejected`);
     }
     return;
   }

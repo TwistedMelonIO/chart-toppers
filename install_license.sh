@@ -163,6 +163,63 @@ if echo "$BUILD_OUTPUT" | grep -qi "mounts denied\|not shared\|not allowed"; the
     exit 1
 fi
 
+# ── Buzzer Setup ──────────────────────────────────────────
+echo ""
+echo "  ========================================"
+echo "    QLab Buzzer Setup"
+echo "  ========================================"
+echo ""
+
+BUZZER_DIR="$SCRIPT_DIR/buzzer"
+
+if [ -d "$BUZZER_DIR" ] && [ -f "$BUZZER_DIR/qlab_buzzer.py" ]; then
+    if [ ! -d "$BUZZER_DIR/venv" ]; then
+        echo "  Setting up QLab Buzzer environment..."
+
+        # Find suitable Python
+        PYTHON_BIN=""
+        if command -v /opt/homebrew/bin/python3.12 > /dev/null 2>&1; then
+            PYTHON_BIN="/opt/homebrew/bin/python3.12"
+        elif command -v /opt/homebrew/bin/python3 > /dev/null 2>&1; then
+            PYTHON_BIN="/opt/homebrew/bin/python3"
+        elif command -v python3 > /dev/null 2>&1; then
+            PYTHON_BIN="python3"
+        fi
+
+        if [ -n "$PYTHON_BIN" ]; then
+            "$PYTHON_BIN" -m venv "$BUZZER_DIR/venv" 2>/dev/null
+            "$BUZZER_DIR/venv/bin/pip" install --upgrade pip > /dev/null 2>&1
+            "$BUZZER_DIR/venv/bin/pip" install -r "$BUZZER_DIR/requirements.txt" > /dev/null 2>&1
+
+            if [ $? -eq 0 ]; then
+                echo "  Buzzer environment ready."
+            else
+                echo "  Warning: Failed to install buzzer dependencies."
+                echo "  Try: brew install python@3.12"
+                echo "  Then delete buzzer/venv and run ./start.sh"
+            fi
+        else
+            echo "  Warning: Python 3 not found."
+            echo "  Install with: brew install python@3.12"
+        fi
+    else
+        echo "  Buzzer environment already exists."
+    fi
+
+    echo ""
+    echo "  IMPORTANT: The buzzer needs Accessibility"
+    echo "  permissions to read keypresses globally."
+    echo ""
+    echo "  Go to: System Settings > Privacy & Security"
+    echo "         > Accessibility"
+    echo "  Add your Terminal app and enable the toggle."
+    echo ""
+    echo "  Use ./start.sh to launch everything together."
+    echo ""
+else
+    echo "  Buzzer files not found — skipping."
+fi
+
 echo ""
 echo "  Waiting for container to start..."
 sleep 5
