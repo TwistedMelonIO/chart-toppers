@@ -5,7 +5,10 @@ import json
 import signal
 import subprocess
 import sys
+import threading
 import time
+import urllib.request
+import urllib.error
 from pathlib import Path
 
 from pynput import keyboard
@@ -142,6 +145,25 @@ def make_handler(config, bundle_id):
     return on_press
 
 
+def start_heartbeat(config):
+    """Send periodic heartbeat to Chart Toppers server so dashboard knows buzzer is alive."""
+    heartbeat_url = config.get("heartbeat_url", "http://localhost:3200/api/buzzer/heartbeat")
+    interval = config.get("heartbeat_interval", 5)
+
+    def heartbeat_loop():
+        while True:
+            try:
+                req = urllib.request.Request(heartbeat_url, method="POST",
+                    data=b'{}', headers={"Content-Type": "application/json"})
+                urllib.request.urlopen(req, timeout=3)
+            except (urllib.error.URLError, OSError):
+                pass  # Server not available yet — keep trying
+            time.sleep(interval)
+
+    thread = threading.Thread(target=heartbeat_loop, daemon=True)
+    thread.start()
+
+
 def main():
     config = load_config()
     version = config.get("qlab_version", 5)
@@ -160,6 +182,10 @@ def main():
     print()
 
     check_qlab_running(bundle_id)
+
+    # Start heartbeat to Chart Toppers dashboard
+    start_heartbeat(config)
+    print(f"  Heartbeat: every {config.get('heartbeat_interval', 5)}s → {config.get('heartbeat_url', 'http://localhost:3200/api/buzzer/heartbeat')}")
 
     print("\nListening for keypresses... (Ctrl+C to quit)\n")
 

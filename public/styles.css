@@ -1849,6 +1849,41 @@ footer {
   color: inherit;
 }
 
+/* Buzzer Status */
+.footer-buzzer {
+  display: flex;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.buzzer-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.buzzer-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  flex-shrink: 0;
+}
+
+.buzzer-dot.connected {
+  background: var(--correct);
+  box-shadow: 0 0 6px var(--correct-glow);
+}
+
+.buzzer-dot.disconnected {
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger-glow);
+}
+
 .footer-status {
   display: flex;
   align-items: center;

@@ -463,6 +463,40 @@ const io = new Server(server);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 
+// =============================================================================
+// Buzzer Heartbeat
+// =============================================================================
+let lastBuzzerHeartbeat = 0;
+const BUZZER_TIMEOUT_MS = 10000; // Consider disconnected after 10s
+
+app.post("/api/buzzer/heartbeat", (req, res) => {
+  const wasConnected = (Date.now() - lastBuzzerHeartbeat) < BUZZER_TIMEOUT_MS;
+  lastBuzzerHeartbeat = Date.now();
+  if (!wasConnected) {
+    console.log("[BUZZER] Connected");
+    io.emit("buzzerStatus", { connected: true });
+  }
+  res.json({ ok: true });
+});
+
+app.get("/api/buzzer/status", (req, res) => {
+  const connected = (Date.now() - lastBuzzerHeartbeat) < BUZZER_TIMEOUT_MS;
+  res.json({ connected });
+});
+
+// Periodically check if buzzer has gone away
+setInterval(() => {
+  const connected = (Date.now() - lastBuzzerHeartbeat) < BUZZER_TIMEOUT_MS;
+  if (!connected && lastBuzzerHeartbeat > 0) {
+    // Only emit disconnect once (when it transitions from connected to disconnected)
+    const timeSince = Date.now() - lastBuzzerHeartbeat;
+    if (timeSince >= BUZZER_TIMEOUT_MS && timeSince < BUZZER_TIMEOUT_MS + 6000) {
+      console.log("[BUZZER] Disconnected");
+      io.emit("buzzerStatus", { connected: false });
+    }
+  }
+}, 5000);
+
 app.get("/api/state", (req, res) => {
   res.json({ ...gameState, round: roundState });
 });

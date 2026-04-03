@@ -258,6 +258,28 @@ document.addEventListener('DOMContentLoaded', function() {
     startStatePolling();
   });
 
+  // Buzzer status
+  const buzzerDot = document.querySelector('.buzzer-dot');
+  const buzzerText = document.getElementById('buzzerStatusText');
+
+  function updateBuzzerUI(connected) {
+    if (buzzerDot && buzzerText) {
+      buzzerDot.classList.toggle('connected', connected);
+      buzzerDot.classList.toggle('disconnected', !connected);
+      buzzerText.textContent = connected ? 'Connected' : 'Disconnected';
+    }
+  }
+
+  socket.on("buzzerStatus", (data) => {
+    updateBuzzerUI(data.connected);
+  });
+
+  // Check buzzer status on initial load
+  fetch('/api/buzzer/status')
+    .then(r => r.json())
+    .then(data => updateBuzzerUI(data.connected))
+    .catch(() => updateBuzzerUI(false));
+
   socket.on("goldenRecordActivated", (teamId) => {
     const grEl = elements[teamId]?.goldenRecord;
     if (grEl) {
