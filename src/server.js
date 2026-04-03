@@ -175,6 +175,9 @@ function createTeamState() {
     points: 0,
     isActive: true,
     history: [],
+    goldenRecordAvailable: true,
+    goldenRecordArmed: false,
+    goldenRecordUsed: false,
   };
 }
 
@@ -279,7 +282,18 @@ function registerCorrectAnswer(teamId, source = 'system') {
     }
   }
 
-  const pointsThisAnswer = CONFIG.ROUND_SCORING[currentRound] || CONFIG.POINTS_PER_CORRECT;
+  let pointsThisAnswer = CONFIG.ROUND_SCORING[currentRound] || CONFIG.POINTS_PER_CORRECT;
+
+  // Golden Record: double points if armed (R1-R3 only)
+  let goldenRecordApplied = false;
+  if (team.goldenRecordArmed && currentRound !== 4) {
+    pointsThisAnswer *= 2;
+    team.goldenRecordArmed = false;
+    team.goldenRecordUsed = true;
+    team.goldenRecordAvailable = false;
+    goldenRecordApplied = true;
+    console.log(`[GAME] Golden Record applied for ${TEAMS[teamId].name} — doubled to ${pointsThisAnswer}s`);
+  }
 
   team.correctAnswers += 1;
 
@@ -295,6 +309,7 @@ function registerCorrectAnswer(teamId, source = 'system') {
       round: currentRound,
       pointsAwarded: pointsThisAnswer,
       type: 'points',
+      goldenRecord: goldenRecordApplied,
     };
     team.history.push(entry);
 
@@ -321,17 +336,49 @@ function registerCorrectAnswer(teamId, source = 'system') {
       remainingTime: team.remainingTime,
       round: currentRound,
       pointsAwarded: pointsThisAnswer,
+      goldenRecord: goldenRecordApplied,
     };
     team.history.push(entry);
 
-    logActivity('correct', teamId, `Correct answer #${team.correctAnswers} (+${pointsThisAnswer}s, ${team.earnedTime}s total, round ${currentRound})`, source);
+    logActivity('correct', teamId, `Correct answer #${team.correctAnswers} (+${pointsThisAnswer}s${goldenRecordApplied ? ' GOLDEN RECORD 2x' : ''}, ${team.earnedTime}s total, round ${currentRound})`, source);
     console.log(
-      `[GAME] ${TEAMS[teamId].name} Correct #${team.correctAnswers} | +${pointsThisAnswer}s (R${currentRound}) | Earned: ${team.earnedTime}s | Remaining: ${team.remainingTime}s`
+      `[GAME] ${TEAMS[teamId].name} Correct #${team.correctAnswers} | +${pointsThisAnswer}s (R${currentRound})${goldenRecordApplied ? ' [GOLDEN RECORD 2x]' : ''} | Earned: ${team.earnedTime}s | Remaining: ${team.remainingTime}s`
     );
 
     // Update QLab text cue with current earned time
     updateQLabTextCue(teamId, team.earnedTime);
   }
+
+  return gameState;
+}
+
+function activateGoldenRecord(teamId, source = 'system') {
+  const team = gameState[teamId];
+  if (!team || !team.isActive) {
+    console.log(`[GAME] ${teamId} is not active, ignoring Golden Record`);
+    return null;
+  }
+
+  if (roundState.currentRound === 0 || roundState.currentRound === 4) {
+    console.log(`[GAME] Golden Record not available in round ${roundState.currentRound} for ${TEAMS[teamId].name}`);
+    return null;
+  }
+
+  if (!team.goldenRecordAvailable || team.goldenRecordUsed) {
+    console.log(`[GAME] Golden Record already used by ${TEAMS[teamId].name}`);
+    return null;
+  }
+
+  if (team.goldenRecordArmed) {
+    console.log(`[GAME] Golden Record already armed for ${TEAMS[teamId].name}`);
+    return null;
+  }
+
+  team.goldenRecordArmed = true;
+  playGoldenRecordCue(teamId);
+
+  logActivity('golden_record', teamId, `Golden Record activated for ${TEAMS[teamId].name}`, source);
+  console.log(`[GAME] Golden Record ARMED for ${TEAMS[teamId].name} (${source})`);
 
   return gameState;
 }
@@ -1001,6 +1048,22 @@ app.post("/api/correct/:team", (req, res) => {
   }
 });
 
+// Golden Record activation
+app.post("/api/golden-record/:team", (req, res) => {
+  const teamId = req.params.team.toLowerCase();
+  if (!TEAMS[teamId]) {
+    return res.status(400).json({ success: false, message: "Invalid team. Use 'anthems' or 'icons'." });
+  }
+  const state = activateGoldenRecord(teamId, 'api');
+  if (state) {
+    io.emit("stateUpdate", state);
+    io.emit("goldenRecordActivated", teamId);
+    res.json({ success: true, state });
+  } else {
+    res.json({ success: false, message: "Golden Record not available" });
+  }
+});
+
 // Reset a specific team
 app.post("/api/reset/:team", (req, res) => {
   const teamId = req.params.team.toLowerCase();
@@ -1344,6 +1407,16 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("goldenRecord", (teamId) => {
+    if (teamId && TEAMS[teamId]) {
+      const state = activateGoldenRecord(teamId, 'socket');
+      if (state) {
+        io.emit("stateUpdate", state);
+        io.emit("goldenRecordActivated", teamId);
+      }
+    }
+  });
+
   socket.on("reset", (teamId) => {
     if (teamId && TEAMS[teamId]) {
       playResetCue(teamId);
@@ -1433,6 +1506,19 @@ function handleOscAddress(address) {
       sendQLabLoadCue(teamId, state[teamId].remainingTime);
     } else {
       console.log(`[OSC DEBUG] registerCorrectAnswer returned null for team: ${teamId}`);
+    }
+    return;
+  }
+
+  // Golden Record: /chart-toppers/golden-record/anthems or /chart-toppers/golden-record/icons
+  const goldenMatch = address.match(/^\/chart-toppers\/golden-record\/(anthems|icons)$/);
+  if (goldenMatch) {
+    const teamId = goldenMatch[1];
+    console.log(`[OSC] Golden Record activation for ${TEAMS[teamId].name}`);
+    const state = activateGoldenRecord(teamId, 'osc');
+    if (state) {
+      io.emit("stateUpdate", state);
+      io.emit("goldenRecordActivated", teamId);
     }
     return;
   }
@@ -1805,6 +1891,36 @@ function playResetCue(teamId) {
 
   req.on("error", (err) => {
     console.error(`[QLAB OUT] Bridge error: ${err.message}`);
+  });
+
+  req.write(payload);
+  req.end();
+}
+
+function playGoldenRecordCue(teamId) {
+  const cueName = teamId === "anthems" ? "GRA" : "GRI";
+  const address = `/cue/${cueName}/start`;
+  const payload = JSON.stringify({ address, value: 0 });
+
+  const bridgeUrl = new URL("/send", BRIDGE_URL);
+  const options = {
+    hostname: bridgeUrl.hostname,
+    port: bridgeUrl.port,
+    path: bridgeUrl.pathname,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  };
+
+  const req = http.request(options, (res) => {
+    let body = "";
+    res.on("data", (chunk) => (body += chunk));
+    res.on("end", () => {
+      console.log(`[QLAB] Golden Record cue ${cueName} fired for ${TEAMS[teamId].name}: ${body}`);
+    });
+  });
+
+  req.on("error", (err) => {
+    console.error(`[QLAB] Error firing Golden Record cue ${cueName}:`, err.message);
   });
 
   req.write(payload);

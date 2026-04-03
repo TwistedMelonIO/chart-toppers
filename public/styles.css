@@ -1915,3 +1915,133 @@ footer {
     align-self: flex-end;
   }
 }
+
+/* =============================================================================
+   Golden Record Indicator
+   ============================================================================= */
+
+.golden-record-indicator {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.4s ease;
+}
+
+.golden-record-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.golden-record-icon {
+  font-size: 1.2rem;
+  filter: grayscale(0);
+  transition: filter 0.4s ease;
+}
+
+.golden-record-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  font-weight: 600;
+  flex: 1;
+}
+
+.golden-record-status {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 215, 0, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Armed state - pulsing gold glow */
+.golden-record-armed {
+  border-color: rgba(255, 215, 0, 0.5);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.03));
+  animation: goldenPulse 1.5s ease-in-out infinite;
+}
+
+.golden-record-armed .golden-record-status {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.golden-record-armed .golden-record-icon {
+  animation: goldenSpin 2s ease-in-out infinite;
+}
+
+/* Used state - greyed out */
+.golden-record-used {
+  border-color: rgba(148, 163, 184, 0.08);
+  background: rgba(255, 255, 255, 0.01);
+  opacity: 0.4;
+}
+
+.golden-record-used .golden-record-icon {
+  filter: grayscale(1);
+}
+
+.golden-record-used .golden-record-status {
+  color: var(--text-muted);
+  text-shadow: none;
+}
+
+/* Flash animation on activation */
+.golden-record-flash {
+  animation: goldenFlash 1.5s ease-out;
+}
+
+/* History badge for Golden Record entries */
+.golden-record-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #ffd700, #f59e0b);
+  color: #06091a;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  margin-right: 0.35rem;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@keyframes goldenPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.1), inset 0 0 15px rgba(255, 215, 0, 0.03);
+    border-color: rgba(255, 215, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.25), inset 0 0 20px rgba(255, 215, 0, 0.06);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+}
+
+@keyframes goldenSpin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-5deg) scale(1.1); }
+  75% { transform: rotate(5deg) scale(1.1); }
+}
+
+@keyframes goldenFlash {
+  0% {
+    box-shadow: 0 0 0 rgba(255, 215, 0, 0);
+    background: rgba(255, 215, 0, 0);
+  }
+  20% {
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.4), 0 0 100px rgba(255, 215, 0, 0.2);
+    background: rgba(255, 215, 0, 0.15);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.03));
+  }
+}

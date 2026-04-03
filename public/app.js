@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
       label: document.querySelector('.team-anthems .score-label'),
       unit: document.querySelector('.team-anthems .score-unit'),
       points: document.getElementById('anthems-points'),
-      pointsCard: document.getElementById('anthems-points-card')
+      pointsCard: document.getElementById('anthems-points-card'),
+      goldenRecord: document.querySelector("#anthems-golden-record"),
+      goldenRecordStatus: document.querySelector("#anthems-golden-record-status"),
     },
     icons: {
       earned: document.getElementById('icons-earnedTime-main'),
@@ -22,7 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
       label: document.querySelector('.team-icons .score-label'),
       unit: document.querySelector('.team-icons .score-unit'),
       points: document.getElementById('icons-points'),
-      pointsCard: document.getElementById('icons-points-card')
+      pointsCard: document.getElementById('icons-points-card'),
+      goldenRecord: document.querySelector("#icons-golden-record"),
+      goldenRecordStatus: document.querySelector("#icons-golden-record-status"),
     },
     settings: {
       btn: document.getElementById('settingsBtn'),
@@ -254,6 +258,14 @@ document.addEventListener('DOMContentLoaded', function() {
     startStatePolling();
   });
 
+  socket.on("goldenRecordActivated", (teamId) => {
+    const grEl = elements[teamId]?.goldenRecord;
+    if (grEl) {
+      grEl.classList.add('golden-record-flash');
+      setTimeout(() => grEl.classList.remove('golden-record-flash'), 1500);
+    }
+  });
+
   socket.on('teamReset', (teamId) => {
     if (elements[teamId] && elements[teamId].history) {
       elements[teamId].history.innerHTML = '<p class="empty-state">Waiting for first correct answer...</p>';
@@ -323,6 +335,25 @@ document.addEventListener('DOMContentLoaded', function() {
     if (teamElements.history) {
       updateHistory(teamElements.history, team.history);
     }
+
+    // Golden Record indicator
+    const grEl = elements[teamId].goldenRecord;
+    const grStatus = elements[teamId].goldenRecordStatus;
+    if (grEl && grStatus) {
+      grEl.classList.remove('golden-record-armed', 'golden-record-used');
+      if (team.goldenRecordArmed) {
+        grEl.classList.add('golden-record-armed');
+        grStatus.textContent = 'Armed';
+      } else if (team.goldenRecordUsed) {
+        grEl.classList.add('golden-record-used');
+        grStatus.textContent = 'Used';
+      } else if (team.goldenRecordAvailable) {
+        grStatus.textContent = 'Available';
+      } else {
+        grEl.classList.add('golden-record-used');
+        grStatus.textContent = 'Used';
+      }
+    }
   }
 
   function setConnectionStatus(status, message) {
@@ -373,13 +404,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const recentHistory = history.slice().reverse().slice(0, 5);
     el.innerHTML = recentHistory.map(entry => {
       const timestamp = new Date(entry.timestamp).toLocaleTimeString();
+      const isGolden = entry.goldenRecord;
       const detail = entry.type === 'points'
         ? `+${entry.pointsAwarded || 1} point`
         : `+${entry.pointsAwarded || 5} seconds earned`;
+      const goldenBadge = isGolden ? '<span class="golden-record-badge">2x</span>' : '';
       return `
         <div class="history-entry">
           <span class="entry-num">#${entry.answer}</span>
-          <span class="entry-detail">${detail}</span>
+          <span class="entry-detail">${goldenBadge}${detail}</span>
           <span class="entry-time">${timestamp}</span>
         </div>
       `;
