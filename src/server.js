@@ -256,6 +256,9 @@ function resetAll(source = 'system') {
   // Log activity
   logActivity('reset', 'all', 'All teams reset', source);
 
+  // Arm all QLab cues on full reset
+  armAllQLabCues();
+
   resetRounds(source);
 }
 
@@ -601,6 +604,39 @@ function updateQLabCueName(cueNumber, cueName) {
   req.end();
 }
 
+// Function to send OSC command to update QLab cue notes
+function updateQLabCueNotes(cueNumber, notes) {
+  const address = `/cue/${cueNumber}/notes`;
+  const payload = JSON.stringify({ address, value: notes });
+
+  const bridgeUrl = new URL("/send", BRIDGE_URL);
+  const options = {
+    hostname: bridgeUrl.hostname,
+    port: bridgeUrl.port,
+    path: bridgeUrl.pathname,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(payload),
+    },
+  };
+
+  const req = http.request(options, (res) => {
+    let body = "";
+    res.on("data", (chunk) => (body += chunk));
+    res.on("end", () => {
+      console.log(`[QLAB OUT] ${address} → "${notes}" (bridge: ${res.statusCode})`);
+    });
+  });
+
+  req.on("error", (err) => {
+    console.error(`[QLAB OUT] Bridge error: ${err.message}`);
+  });
+
+  req.write(payload);
+  req.end();
+}
+
 // Map pack IDs to QLab cue group names
 const PACK_CUE_GROUPS = {
   'uk-usa-german': 'P1',
@@ -865,12 +901,13 @@ function loadGenreTracks(genreIndex) {
       // Retarget hook slot
       const hookPath = basePath ? path.join(basePath, pair.hook.fileName) : pair.hook.fileName;
       updateQLabCueFilePath(hookSlot, hookPath);
-      updateQLabCueName(hookSlot, `${pair.hook.band} - ${pair.hook.track}`);
+      updateQLabCueName(hookSlot, `${pair.hook.band} - ${pair.hook.track} [SHORT]`);
+      updateQLabCueNotes(hookSlot, `Correct Answer: ${pair.hook.band} - ${pair.hook.track}`);
 
       // Retarget reveal slot
       const revealPath = basePath ? path.join(basePath, pair.reveal.fileName) : pair.reveal.fileName;
       updateQLabCueFilePath(revealSlot, revealPath);
-      updateQLabCueName(revealSlot, `${pair.reveal.band} - ${pair.reveal.track}`);
+      updateQLabCueName(revealSlot, `${pair.reveal.band} - ${pair.reveal.track} [LONG]`);
 
       // Push to Companion
       setCompanionVariable(`track_${slotNum}`, `${pair.hook.band} - ${pair.hook.track}`);
@@ -932,11 +969,18 @@ function updateTrackCuesForPack(packId) {
     const round = pack.rounds[roundNum];
     round.tracks.forEach(track => {
       const fullPath = basePath ? path.join(basePath, track.fileName) : track.fileName;
-      const cueName = `${track.band} - ${track.track}`;
+      let cueName = `${track.band} - ${track.track}`;
+      // Round 1 pairs: .1 = hook (short clip), .2 = reveal (long clip)
+      if (roundNum === '1' && track.cue.endsWith('.1')) cueName += ' [SHORT]';
+      if (roundNum === '1' && track.cue.endsWith('.2')) cueName += ' [LONG]';
 
       setTimeout(() => {
         updateQLabCueFilePath(track.cue, fullPath);
         updateQLabCueName(track.cue, cueName);
+        // Add answer notes to Round 1 short clips
+        if (roundNum === '1' && track.cue.endsWith('.1')) {
+          updateQLabCueNotes(track.cue, `Correct Answer: ${track.band} - ${track.track}`);
+        }
       }, delay);
       delay += OSC_STAGGER_MS;
     });
@@ -1921,6 +1965,35 @@ function playGoldenRecordCue(teamId) {
 
   req.on("error", (err) => {
     console.error(`[QLAB] Error firing Golden Record cue ${cueName}:`, err.message);
+  });
+
+  req.write(payload);
+  req.end();
+}
+
+function armAllQLabCues() {
+  const address = `/cue/*/armed`;
+  const payload = JSON.stringify({ address, value: 1 });
+
+  const bridgeUrl = new URL("/send", BRIDGE_URL);
+  const options = {
+    hostname: bridgeUrl.hostname,
+    port: bridgeUrl.port,
+    path: bridgeUrl.pathname,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  };
+
+  const req = http.request(options, (res) => {
+    let body = "";
+    res.on("data", (chunk) => (body += chunk));
+    res.on("end", () => {
+      console.log(`[QLAB] Armed all cues in workspace: ${body}`);
+    });
+  });
+
+  req.on("error", (err) => {
+    console.error(`[QLAB] Error arming all cues:`, err.message);
   });
 
   req.write(payload);
