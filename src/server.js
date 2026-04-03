@@ -484,6 +484,14 @@ app.get("/api/buzzer/status", (req, res) => {
   res.json({ connected });
 });
 
+app.post("/api/buzzer/trigger", (req, res) => {
+  const { action, cue, key } = req.body || {};
+  const detail = cue ? `Buzzer: ${action} cue ${cue} (key: ${key})` : `Buzzer: ${action} (key: ${key})`;
+  console.log(`[BUZZER] ${detail}`);
+  logActivity('buzzer', 'all', detail, 'buzzer');
+  res.json({ ok: true });
+});
+
 // Periodically check if buzzer has gone away
 setInterval(() => {
   const connected = (Date.now() - lastBuzzerHeartbeat) < BUZZER_TIMEOUT_MS;

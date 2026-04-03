@@ -1,8 +1,11 @@
 #!/bin/bash
 
 # ============================================================
-#  Chart Toppers — License Installer
-#  Drag this file into a Terminal window and press Enter.
+#  Chart Toppers — Full Installer
+#  One script does everything: dependencies, Docker, buzzer,
+#  license activation. Just run it and follow the prompts.
+#
+#  Usage: cd ~/chart-toppers && ./install_license.sh
 # ============================================================
 
 PROJECT_NAME="chart-toppers"
@@ -12,16 +15,109 @@ API_URL="http://localhost:${WEB_PORT}"
 
 echo ""
 echo "  ========================================"
-echo "    Chart Toppers - License Setup"
+echo "    Chart Toppers — Full Setup"
+echo "    Engineering the live experience."
 echo "  ========================================"
 echo ""
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/.env"
+BUZZER_DIR="$SCRIPT_DIR/buzzer"
 
-# Detect host hardware UUID and write to .env for stable machine ID
-echo "  Detecting hardware ID..."
+# ══════════════════════════════════════════════════════════════
+#  STEP 1: Prerequisites
+# ══════════════════════════════════════════════════════════════
+echo "  ── Step 1: Checking prerequisites ──────"
+echo ""
+
+# ── 1a. Homebrew ───────────────────────────────────────────
+if command -v /opt/homebrew/bin/brew > /dev/null 2>&1; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    echo "  ✓ Homebrew installed"
+elif command -v /usr/local/bin/brew > /dev/null 2>&1; then
+    eval "$(/usr/local/bin/brew shellenv)"
+    echo "  ✓ Homebrew installed"
+else
+    echo "  Installing Homebrew (required for Python)..."
+    echo "  You may be asked for your password."
+    echo ""
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    # Add to path for this session
+    if [ -f /opt/homebrew/bin/brew ]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [ -f /usr/local/bin/brew ]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+
+    if command -v brew > /dev/null 2>&1; then
+        echo "  ✓ Homebrew installed"
+    else
+        echo "  ✗ Homebrew installation failed."
+        echo "    Install manually: https://brew.sh"
+        echo ""
+        read -p "  Press Enter to exit..."
+        exit 1
+    fi
+fi
+
+# ── 1b. Python 3.12 ───────────────────────────────────────
+PYTHON_BIN=""
+if command -v /opt/homebrew/bin/python3.12 > /dev/null 2>&1; then
+    PYTHON_BIN="/opt/homebrew/bin/python3.12"
+elif command -v /opt/homebrew/bin/python3 > /dev/null 2>&1; then
+    PY_VER=$(/opt/homebrew/bin/python3 --version 2>&1 | awk '{print $2}' | cut -d. -f1,2)
+    if [ "$(echo "$PY_VER >= 3.10" | bc 2>/dev/null)" = "1" ] 2>/dev/null; then
+        PYTHON_BIN="/opt/homebrew/bin/python3"
+    fi
+fi
+
+if [ -z "$PYTHON_BIN" ]; then
+    echo "  Installing Python 3.12 (required for buzzers)..."
+    brew install python@3.12 2>&1 | tail -3
+    if command -v /opt/homebrew/bin/python3.12 > /dev/null 2>&1; then
+        PYTHON_BIN="/opt/homebrew/bin/python3.12"
+        echo "  ✓ Python 3.12 installed"
+    else
+        echo "  ✗ Python installation failed."
+        echo "    Install manually: brew install python@3.12"
+        echo "    Docker setup will continue without buzzer support."
+        echo ""
+    fi
+else
+    echo "  ✓ Python ready ($($PYTHON_BIN --version 2>&1))"
+fi
+
+# ── 1c. Docker ─────────────────────────────────────────────
+if ! docker info > /dev/null 2>&1; then
+    echo ""
+    echo "  ✗ Docker is not running!"
+    echo "    Please start Docker Desktop and try again."
+    echo ""
+    read -p "  Press Enter to exit..."
+    exit 1
+fi
+echo "  ✓ Docker is running"
+
+# ── 1d. docker-compose.yml ─────────────────────────────────
+if [ ! -f "$SCRIPT_DIR/docker-compose.yml" ]; then
+    echo ""
+    echo "  ✗ docker-compose.yml not found!"
+    echo "    Make sure this script is in the project root."
+    echo ""
+    read -p "  Press Enter to exit..."
+    exit 1
+fi
+
+echo ""
+
+# ══════════════════════════════════════════════════════════════
+#  STEP 2: Hardware ID
+# ══════════════════════════════════════════════════════════════
+echo "  ── Step 2: Hardware ID ─────────────────"
+echo ""
+
 HW_UUID=""
 if [ "$(uname)" = "Darwin" ]; then
     HW_UUID=$(ioreg -rd1 -c IOPlatformExpertDevice 2>/dev/null | awk -F'"' '/IOPlatformUUID/{print $4}')
@@ -32,55 +128,34 @@ elif [ -f /var/lib/dbus/machine-id ]; then
 fi
 
 if [ -n "$HW_UUID" ]; then
-    # Write/update HOST_HARDWARE_ID in .env (preserve other vars)
     if [ -f "$ENV_FILE" ]; then
-        # Remove old HOST_HARDWARE_ID line if present
         grep -v '^HOST_HARDWARE_ID=' "$ENV_FILE" > "$ENV_FILE.tmp" 2>/dev/null || true
         mv "$ENV_FILE.tmp" "$ENV_FILE"
     fi
     echo "HOST_HARDWARE_ID=$HW_UUID" >> "$ENV_FILE"
-    echo "  Hardware ID locked: ${HW_UUID:0:8}..."
+    echo "  ✓ Hardware ID locked: ${HW_UUID:0:8}..."
 else
-    echo "  Warning: Could not detect hardware UUID."
-    echo "  Machine ID will fall back to container-based (not stable across reinstalls)."
+    echo "  ⚠ Could not detect hardware UUID."
 fi
+
 echo ""
 
-# Check Docker is running
-if ! docker info > /dev/null 2>&1; then
-    echo "  Docker is not running!"
-    echo "  Please start Docker Desktop and try again."
-    echo ""
-    read -p "  Press Enter to exit..."
-    exit 1
-fi
+# ══════════════════════════════════════════════════════════════
+#  STEP 3: QLab Audio Folder
+# ══════════════════════════════════════════════════════════════
+echo "  ── Step 3: QLab Audio Folder ───────────"
+echo ""
 
-# Check if docker-compose.yml exists
-if [ ! -f "$SCRIPT_DIR/docker-compose.yml" ]; then
-    echo "  docker-compose.yml not found!"
-    echo "  Make sure this script is in the project root."
-    echo ""
-    read -p "  Press Enter to exit..."
-    exit 1
-fi
-
-# ── QLab Audio Folder ──────────────────────────────────────
-# Read the current audio path from .env (persists across updates)
 CURRENT_AUDIO_PATH=""
 if [ -f "$ENV_FILE" ]; then
     CURRENT_AUDIO_PATH=$(grep '^QLAB_AUDIO_PATH=' "$ENV_FILE" 2>/dev/null | sed 's/^QLAB_AUDIO_PATH=//')
 fi
 
-echo "  ========================================"
-echo "    QLab Audio Folder"
-echo "  ========================================"
-echo ""
 if [ -n "$CURRENT_AUDIO_PATH" ] && [ -d "$CURRENT_AUDIO_PATH" ]; then
     echo "  Current path:"
     echo "  $CURRENT_AUDIO_PATH"
     echo ""
-    echo "  Press Enter to keep this path, or drag"
-    echo "  your QLab audio folder here to change it."
+    echo "  Press Enter to keep, or drag a new folder."
 else
     echo "  Drag your QLab audio folder into this"
     echo "  Terminal window and press Enter."
@@ -88,144 +163,124 @@ fi
 echo ""
 read -r -p "  Audio folder: " AUDIO_INPUT
 
-# Clean the input:
-# 1. Strip leading/trailing whitespace
 AUDIO_INPUT="$(echo "$AUDIO_INPUT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-# 2. Remove surrounding quotes (copy-paste or drag-drop may add them)
 AUDIO_INPUT="$(echo "$AUDIO_INPUT" | sed "s/^['\"]//;s/['\"]$//")"
-# 3. Unescape backslash-spaces (drag-drop escapes spaces)
 AUDIO_INPUT="$(echo "$AUDIO_INPUT" | sed 's/\\ / /g')"
-# 4. Remove trailing slash
 AUDIO_INPUT="$(echo "$AUDIO_INPUT" | sed 's|/$||')"
 
 if [ -z "$AUDIO_INPUT" ] && [ -n "$CURRENT_AUDIO_PATH" ]; then
-    echo "  Keeping existing audio path."
-    echo ""
+    echo "  ✓ Keeping existing audio path."
 elif [ -z "$AUDIO_INPUT" ] && [ -z "$CURRENT_AUDIO_PATH" ]; then
-    echo "  No audio folder provided."
-    echo "  You can set this later by re-running the script."
-    echo ""
+    echo "  ⚠ No audio folder provided. Set later in Settings."
 elif [ -d "$AUDIO_INPUT" ]; then
-    # Write the path to .env so it persists across version updates
-    # (docker-compose.yml reads it via ${QLAB_AUDIO_PATH} variable)
     if [ -f "$ENV_FILE" ]; then
         grep -v '^QLAB_AUDIO_PATH=' "$ENV_FILE" > "$ENV_FILE.tmp" 2>/dev/null || true
         mv "$ENV_FILE.tmp" "$ENV_FILE"
     fi
     echo "QLAB_AUDIO_PATH=$AUDIO_INPUT" >> "$ENV_FILE"
-
-    echo "  Audio folder saved to .env:"
-    echo "  $AUDIO_INPUT"
-    echo "  (This path persists across version updates)"
-    echo ""
+    echo "  ✓ Audio folder saved."
 else
-    echo ""
-    echo "  Folder not found: $AUDIO_INPUT"
-    echo "  Please check the path and try again."
-    echo ""
-    read -p "  Press Enter to exit..."
-    exit 1
+    echo "  ✗ Folder not found: $AUDIO_INPUT"
+    echo "    You can set this later in Settings."
 fi
 
-# ── Build & Start ──────────────────────────────────────────
-echo "  Building and starting the container..."
 echo ""
 
-# Stop any existing container
-docker compose -f "$SCRIPT_DIR/docker-compose.yml" down 2>/dev/null
+# ══════════════════════════════════════════════════════════════
+#  STEP 4: Build & Start Docker
+# ══════════════════════════════════════════════════════════════
+echo "  ── Step 4: Building Docker containers ──"
+echo ""
 
-# Start without license to get machine ID
+docker compose -f "$SCRIPT_DIR/docker-compose.yml" down 2>/dev/null
 BUILD_OUTPUT=$(docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d --build 2>&1)
 echo "$BUILD_OUTPUT"
 
-# Check for Docker file sharing / mount errors
 if echo "$BUILD_OUTPUT" | grep -qi "mounts denied\|not shared\|not allowed"; then
     echo ""
-    echo "  ========================================"
-    echo "    DOCKER FILE SHARING ERROR"
-    echo "  ========================================"
-    echo ""
-    echo "  Docker cannot access your QLab audio folder."
-    echo "  This usually happens with iCloud Drive or"
-    echo "  restricted folders."
-    echo ""
-    echo "  To fix this, either:"
-    echo ""
-    echo "  1. Copy your audio folder to a simpler location:"
-    echo "     cp -r /path/to/audio ~/Desktop/qlab-audio"
-    echo "     Then re-run this script and drag the new folder."
-    echo ""
-    echo "  2. Or add the folder in Docker Desktop:"
-    echo "     Settings > Resources > File Sharing"
-    echo "     Add the parent folder, then re-run this script."
+    echo "  ✗ Docker cannot access your audio folder."
+    echo "    Copy it to ~/Desktop/qlab-audio and re-run."
     echo ""
     read -p "  Press Enter to exit..."
     exit 1
 fi
 
-# ── Buzzer Setup ──────────────────────────────────────────
 echo ""
-echo "  ========================================"
-echo "    QLab Buzzer Setup"
-echo "  ========================================"
+echo "  ✓ Docker containers started"
+
+# ══════════════════════════════════════════════════════════════
+#  STEP 5: Buzzer Setup
+# ══════════════════════════════════════════════════════════════
+echo ""
+echo "  ── Step 5: QLab Buzzer Setup ───────────"
 echo ""
 
-BUZZER_DIR="$SCRIPT_DIR/buzzer"
+BUZZER_OK=false
 
-if [ -d "$BUZZER_DIR" ] && [ -f "$BUZZER_DIR/qlab_buzzer.py" ]; then
+if [ -d "$BUZZER_DIR" ] && [ -f "$BUZZER_DIR/qlab_buzzer.py" ] && [ -n "$PYTHON_BIN" ]; then
+    # Create venv if needed
     if [ ! -d "$BUZZER_DIR/venv" ]; then
-        echo "  Setting up QLab Buzzer environment..."
+        echo "  Creating buzzer environment..."
+        "$PYTHON_BIN" -m venv "$BUZZER_DIR/venv" 2>/dev/null
+        "$BUZZER_DIR/venv/bin/pip" install --upgrade pip > /dev/null 2>&1
+        echo "  Installing dependencies..."
+        "$BUZZER_DIR/venv/bin/pip" install -r "$BUZZER_DIR/requirements.txt" 2>&1 | tail -3
 
-        # Find suitable Python
-        PYTHON_BIN=""
-        if command -v /opt/homebrew/bin/python3.12 > /dev/null 2>&1; then
-            PYTHON_BIN="/opt/homebrew/bin/python3.12"
-        elif command -v /opt/homebrew/bin/python3 > /dev/null 2>&1; then
-            PYTHON_BIN="/opt/homebrew/bin/python3"
-        elif command -v python3 > /dev/null 2>&1; then
-            PYTHON_BIN="python3"
-        fi
-
-        if [ -n "$PYTHON_BIN" ]; then
-            "$PYTHON_BIN" -m venv "$BUZZER_DIR/venv" 2>/dev/null
-            "$BUZZER_DIR/venv/bin/pip" install --upgrade pip > /dev/null 2>&1
-            "$BUZZER_DIR/venv/bin/pip" install -r "$BUZZER_DIR/requirements.txt" > /dev/null 2>&1
-
-            if [ $? -eq 0 ]; then
-                echo "  Buzzer environment ready."
-            else
-                echo "  Warning: Failed to install buzzer dependencies."
-                echo "  Try: brew install python@3.12"
-                echo "  Then delete buzzer/venv and run ./start.sh"
-            fi
+        if [ $? -eq 0 ]; then
+            echo "  ✓ Buzzer environment ready"
+            BUZZER_OK=true
         else
-            echo "  Warning: Python 3 not found."
-            echo "  Install with: brew install python@3.12"
+            echo "  ✗ Failed to install buzzer dependencies."
         fi
     else
-        echo "  Buzzer environment already exists."
+        echo "  ✓ Buzzer environment already exists"
+        BUZZER_OK=true
     fi
 
+    # Install launchd service
+    if [ "$BUZZER_OK" = true ] && [ -f "$BUZZER_DIR/com.twistedmelon.qlab-buzzer.plist" ]; then
+        PLIST_DST="$HOME/Library/LaunchAgents/com.twistedmelon.qlab-buzzer.plist"
+        launchctl unload "$PLIST_DST" 2>/dev/null
+        cp "$BUZZER_DIR/com.twistedmelon.qlab-buzzer.plist" "$PLIST_DST"
+        launchctl load "$PLIST_DST"
+        echo "  ✓ Buzzer service installed (starts on login)"
+    fi
+
+    # Accessibility permissions
     echo ""
-    echo "  IMPORTANT: The buzzer needs Accessibility"
-    echo "  permissions to read keypresses globally."
+    echo "  ========================================"
+    echo "    ACCESSIBILITY PERMISSION REQUIRED"
+    echo "  ========================================"
     echo ""
-    echo "  Go to: System Settings > Privacy & Security"
-    echo "         > Accessibility"
-    echo "  Add your Terminal app and enable the toggle."
+    echo "  The buzzer needs permission to read keypresses."
     echo ""
-    echo "  Use ./start.sh to launch everything together."
+    echo "  A System Settings window will open."
+    echo "  1. Click the + button"
+    echo "  2. Add 'Terminal' (or your terminal app)"
+    echo "  3. Make sure the toggle is ON"
     echo ""
+    read -p "  Press Enter to open System Settings..."
+    open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility" 2>/dev/null
+    echo ""
+    echo "  After granting permission, the buzzer will"
+    echo "  work automatically — no restart needed."
+    echo ""
+elif [ -z "$PYTHON_BIN" ]; then
+    echo "  ⚠ Skipping buzzer (Python not available)."
+    echo "    Install Python and re-run to enable buzzers."
 else
-    echo "  Buzzer files not found — skipping."
+    echo "  ⚠ Buzzer files not found — skipping."
 fi
 
+# ══════════════════════════════════════════════════════════════
+#  STEP 6: License Activation
+# ══════════════════════════════════════════════════════════════
+echo ""
+echo "  ── Step 6: License Activation ──────────"
 echo ""
 echo "  Waiting for container to start..."
 sleep 5
 
-# Get the machine ID from the API
-echo "  Retrieving Machine ID..."
 MACHINE_ID=""
 for i in {1..10}; do
     MACHINE_ID=$(curl -s "${API_URL}/api/license_status" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('machine_id',''))" 2>/dev/null)
@@ -236,9 +291,9 @@ for i in {1..10}; do
 done
 
 if [ -z "$MACHINE_ID" ]; then
-    echo "  Could not retrieve Machine ID."
-    echo "  The container may still be starting up."
-    echo "  Try running this script again in a moment."
+    echo "  ✗ Could not retrieve Machine ID."
+    echo "    The container may still be starting."
+    echo "    Try running this script again."
     echo ""
     read -p "  Press Enter to exit..."
     exit 1
@@ -254,46 +309,48 @@ echo ""
 echo "  ========================================"
 echo ""
 
-# Copy machine ID to clipboard if possible
 echo "$MACHINE_ID" | pbcopy 2>/dev/null
 if [ $? -eq 0 ]; then
-    echo "  Machine ID has been copied to your clipboard!"
+    echo "  ✓ Copied to clipboard!"
     echo ""
 fi
 
-echo "  Send this Machine ID to your license provider."
-echo "  They will send you a license key."
-echo ""
-echo "  If you already have a license key, paste it below."
-echo "  Otherwise, press Enter to skip for now."
+echo "  Send this to your license provider."
+echo "  If you have a key, paste it below."
+echo "  Otherwise, press Enter to skip."
 echo ""
 read -p "  License Key: " LICENSE_KEY
 
 if [ -z "$LICENSE_KEY" ]; then
     echo ""
     echo "  No license key entered."
-    echo "  The app is running at: ${API_URL}"
-    echo "  Re-run this script when you have your license key."
+    echo "  Re-run this script when you have one."
+    echo ""
+    echo "  ========================================"
+    echo "    SETUP COMPLETE"
+    echo "  ========================================"
+    echo ""
+    echo "  Dashboard:  http://localhost:3200"
+    echo "  Settings:   Password 8888"
+    echo "  Buzzers:    Key 1 = Icon, Key 2 = Anthem"
+    echo ""
+    echo "  To start:   ./start.sh"
+    echo "  To stop:    ./stop.sh"
     echo ""
     read -p "  Press Enter to exit..."
     exit 0
 fi
 
-# Stop the container and restart with the license key
 echo ""
 echo "  Applying license key..."
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" down 2>/dev/null
-
-# Set the LICENSE_KEY environment variable and restart
 export LICENSE_KEY="$LICENSE_KEY"
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d 2>&1
 
 echo ""
-echo "  Waiting for container to start with license..."
+echo "  Verifying license..."
 sleep 5
 
-# Verify the license
-echo "  Verifying license..."
 LICENSE_STATUS=""
 for i in {1..10}; do
     LICENSE_STATUS=$(curl -s "${API_URL}/api/license_status" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('VALID' if d.get('valid') else d.get('error','UNKNOWN'))" 2>/dev/null)
@@ -306,22 +363,24 @@ done
 echo ""
 if [ "$LICENSE_STATUS" = "VALID" ]; then
     echo "  ========================================"
-    echo "    LICENSE ACTIVATED SUCCESSFULLY!"
+    echo "    SETUP COMPLETE — LICENSE ACTIVE!"
     echo "  ========================================"
     echo ""
-    echo "  The app is now running at: ${API_URL}"
+    echo "  Dashboard:  http://localhost:3200"
+    echo "  Settings:   Password 8888"
+    echo "  Buzzers:    Key 1 = Icon, Key 2 = Anthem"
+    echo ""
+    echo "  Everything starts automatically on login."
+    echo "  To manually start/stop: ./start.sh ./stop.sh"
     echo ""
 
     # ── Docforge Export ──────────────────────────────────────
-    echo "  Would you like to generate a .docforge file"
-    echo "  for PDF certificate generation?"
-    echo ""
     read -p "  Generate .docforge file? (y/N): " DOCFORGE_CHOICE
 
     if [ "$DOCFORGE_CHOICE" = "y" ] || [ "$DOCFORGE_CHOICE" = "Y" ]; then
         echo ""
         read -p "  Licensee name (e.g. MSC Poesia): " LICENSEE_NAME
-        read -p "  Expiry days (leave blank for permanent): " EXPIRY_DAYS
+        read -p "  Expiry days (blank = permanent): " EXPIRY_DAYS
 
         TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
         DOCFORGE_FILE="$HOME/Desktop/chart-toppers-license.docforge"
@@ -350,17 +409,9 @@ with open(sys.argv[6], 'w') as f:
 
         if [ -f "$DOCFORGE_FILE" ]; then
             echo ""
-            echo "  ========================================"
-            echo "    DOCFORGE FILE CREATED"
-            echo "  ========================================"
-            echo ""
-            echo "  $DOCFORGE_FILE"
-            echo ""
-            echo "  Drag this file into Docforge to generate"
-            echo "  the license PDF certificate."
+            echo "  ✓ Docforge file: $DOCFORGE_FILE"
         else
-            echo ""
-            echo "  Failed to create .docforge file."
+            echo "  ✗ Failed to create .docforge file."
         fi
     fi
 else
@@ -369,8 +420,7 @@ else
     echo "  ========================================"
     echo ""
     echo "  Error: $LICENSE_STATUS"
-    echo ""
-    echo "  Please check your license key and try again."
+    echo "  Check your key and re-run this script."
 fi
 
 echo ""

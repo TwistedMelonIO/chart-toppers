@@ -142,7 +142,23 @@ def make_handler(config, bundle_id):
 
         send_to_qlab(bundle_id, action, cue)
 
+        # Notify Chart Toppers server for activity log
+        notify_server(action, cue, char)
+
     return on_press
+
+
+def notify_server(action, cue, key):
+    """POST buzzer trigger to Chart Toppers so it appears in the activity log."""
+    try:
+        data = json.dumps({"action": action, "cue": cue or "", "key": key}).encode()
+        req = urllib.request.Request(
+            "http://localhost:3200/api/buzzer/trigger",
+            method="POST", data=data,
+            headers={"Content-Type": "application/json"})
+        urllib.request.urlopen(req, timeout=2)
+    except (urllib.error.URLError, OSError):
+        pass  # Server not available — silent fail
 
 
 def start_heartbeat(config):

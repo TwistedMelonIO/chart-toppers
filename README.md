@@ -2,36 +2,49 @@
 
 A live gameshow scoring system by [Twisted Melon](https://twistedmelon.com), with real-time QLab integration via OSC.
 
-Requires **Docker** and a **license key** to run.
+Requires **Docker Desktop** and a **license key** to run.
 
 ---
 
-## Quick Install
+## Install (New Machine)
 
-Make sure [Docker Desktop](https://www.docker.com/products/docker-desktop/) is running, then copy and paste into Terminal:
+**Prerequisites:** Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and make sure it's running.
+
+**One command — copy and paste into Terminal:**
 
 ```bash
 cd ~ && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
 ```
 
-The script will guide you through:
+The installer handles everything automatically:
 
-1. Setting your **QLab audio folder** (drag and drop into Terminal)
-2. Building and starting the Docker containers
-3. Retrieving your **Machine ID** (copied to clipboard)
-4. Entering your **license key** (or skip and add later)
+1. Installs **Homebrew** (if not present)
+2. Installs **Python 3.12** (if not present)
+3. Detects your **hardware ID**
+4. Sets your **QLab audio folder** (drag and drop)
+5. Builds and starts **Docker containers**
+6. Sets up the **QLab Buzzer** (background service)
+7. Opens **Accessibility permissions** (required for buzzers)
+8. Retrieves your **Machine ID** and activates your **license**
 
-For the full setup guide, see [INSTALL.md](INSTALL.md).
+After install, everything starts automatically on login.
 
-## Reinstall / Update
+## Daily Use
 
-Already installed? From inside the `chart-toppers` folder, copy and paste:
+| Task | Command |
+|---|---|
+| **Start everything** | `cd ~/chart-toppers && ./start.sh` |
+| **Stop everything** | `cd ~/chart-toppers && ./stop.sh` |
+| **Dashboard** | http://localhost:3200 |
+| **Settings** | Click Settings on dashboard (password: `8888`) |
+
+## Update
 
 ```bash
-git pull && docker compose up -d --build
+cd ~/chart-toppers && git pull && ./start.sh
 ```
 
-Or to do a full clean reinstall (re-downloads everything):
+## Full Clean Reinstall
 
 ```bash
 cd ~ && rm -rf chart-toppers && git clone https://github.com/TwistedMelonIO/chart-toppers.git && cd chart-toppers && ./install_license.sh
@@ -42,47 +55,49 @@ cd ~ && rm -rf chart-toppers && git clone https://github.com/TwistedMelonIO/char
 ## Features
 
 - Real-time scoring for two teams (Anthems and Icons)
+- Golden Record power-up (one-time 2x boost per team)
 - QLab 5 integration via OSC commands
-- Visual team indicators with animated borders
+- USB buzzer support (works when QLab isn't focused)
+- Buzzer connection status in dashboard
+- Round 4 track play control with replay prevention
 - Activity logging with detailed event tracking
 - Docker containerized deployment
 - Socket.IO real-time updates
-- Password-protected settings panel
 
-## Usage
-
-| | |
-|---|---|
-| **Web Dashboard** | http://localhost:3200 |
-| **Settings Panel** | Click Settings on the dashboard (password: `8888`) |
-| **OSC Input** | Port 53536 (UDP/TCP) from Bitfocus Companion |
-
-### OSC Commands
+## OSC Commands (Bitfocus Companion)
 
 | Command | Action |
 |---|---|
+| `/chart-toppers/correct/anthems` | Register correct answer for Anthems |
+| `/chart-toppers/correct/icons` | Register correct answer for Icons |
+| `/chart-toppers/golden-record/anthems` | Activate Golden Record for Anthems |
+| `/chart-toppers/golden-record/icons` | Activate Golden Record for Icons |
+| `/chart-toppers/r4/1` to `/r4/4` | Play Round 4 track (one-shot) |
 | `/chart-toppers/playing/anthems` | Activate Anthems team |
 | `/chart-toppers/playing/icons` | Activate Icons team |
 | `/chart-toppers/stopPlaying/anthems` | Deactivate Anthems team |
 | `/chart-toppers/stopPlaying/icons` | Deactivate Icons team |
+| `/chart-toppers/reset/anthems` | Reset Anthems team |
+| `/chart-toppers/reset/icons` | Reset Icons team |
+| `/chart-toppers/reset` | Reset all teams |
+| `/chart-toppers/round/1` to `/round/4` | Set active round |
+
+## Buzzer Keys
+
+| Key | Action | QLab Cue |
+|---|---|---|
+| `1` | Icon Buzzer | `IBUZZ` |
+| `2` | Anthem Buzzer | `ABUZZ` |
+
+Edit `buzzer/config.json` to change key mappings.
 
 ## Uninstall
 
-To completely remove Chart Toppers from a machine (containers, images, volumes, and project files):
-
 ```bash
-./uninstall.sh
+cd ~/chart-toppers && ./uninstall.sh
 ```
 
-You will be asked to type `YES` to confirm. This cannot be undone.
-
-## Docker Commands
-
-| Task | Command |
-|---|---|
-| Rebuild after an update | `docker compose up -d --build` |
-| Stop | `docker compose stop` |
-| View logs | `docker compose logs -f chart-toppers` |
+You will be asked to type `YES` to confirm.
 
 ## Support
 
