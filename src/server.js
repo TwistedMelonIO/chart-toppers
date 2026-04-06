@@ -38,6 +38,47 @@ const CONFIG = {
   QLAB_CUE_ANTHEMS: process.env.QLAB_CUE_ANTHEMS || "ANTHEMS",
   QLAB_CUE_ICONS: process.env.QLAB_CUE_ICONS || "ICONS",
 
+  // Round 4 flow: R4NEXT is a goto cue that the server retargets to the
+  // appropriate team group (R4ANTHEM or R4ICON) based on score order.
+  QLAB_CUE_R4NEXT: process.env.QLAB_CUE_R4NEXT || "R4NEXT",
+  QLAB_CUE_R4_ANTHEMS: process.env.QLAB_CUE_R4_ANTHEMS || "R4ANTHEM",
+  QLAB_CUE_R4_ICONS: process.env.QLAB_CUE_R4_ICONS || "R4ICON",
+  // After both teams have played in R4, R4NEXT retargets to this cue (winner reveal / R5)
+  QLAB_CUE_R4_END: process.env.QLAB_CUE_R4_END || "R5",
+
+  // Team StreamDeck navigation: R1TEAMSD is a goto cue retargeted by the
+  // server to the current team's SD page cue (SDE10 icons / SDE11 anthems)
+  // whenever turnState.currentTeam changes.
+  QLAB_CUE_R1_TEAM_SD: process.env.QLAB_CUE_R1_TEAM_SD || "R1TEAMSD",
+  QLAB_CUE_SDE_ANTHEMS: process.env.QLAB_CUE_SDE_ANTHEMS || "SDE11",
+  QLAB_CUE_SDE_ICONS: process.env.QLAB_CUE_SDE_ICONS || "SDE10",
+
+  // Round 2 flow: R2GO2 is a goto cue that points to R2Team2 (second team's
+  // block) after the first team has played, then to R3 once both have played.
+  QLAB_CUE_R2GO2: process.env.QLAB_CUE_R2GO2 || "R2GO2",
+  QLAB_CUE_R2_TEAM2: process.env.QLAB_CUE_R2_TEAM2 || "R2Team2",
+  QLAB_CUE_R3: process.env.QLAB_CUE_R3 || "R3",
+
+  // Leader SD nav: LEADERSD is a goto cue retargeted to whichever team is
+  // currently in the lead (SDE10 icons / SDE11 anthems). Recomputed after
+  // every score change so it always points at the leader. In R4, points to loser.
+  QLAB_CUE_LEADER_SD: process.env.QLAB_CUE_LEADER_SD || "LEADERSD",
+
+  // Round 4 loser goto: R4LOOSER is retargeted to the losing team's R4 block
+  // (R4ICON or R4ANTHEM) when entering Round 4.
+  QLAB_CUE_R4_LOOSER: process.env.QLAB_CUE_R4_LOOSER || "R4LOOSER",
+
+  // Round 1 flow: R1GOTO points to R1TRACKS for team 2, then R2 after both played.
+  QLAB_CUE_R1GOTO: process.env.QLAB_CUE_R1GOTO || "R1GOTO",
+  QLAB_CUE_R1_SECONDTEAM: process.env.QLAB_CUE_R1_SECONDTEAM || "SECONDTEAM",
+  QLAB_CUE_R2: process.env.QLAB_CUE_R2 || "R2",
+
+  // Team background: TARGETBACKGROUND is a video cue retargeted to the first
+  // team's ident video on each round change.
+  QLAB_CUE_TARGET_BG: process.env.QLAB_CUE_TARGET_BG || "TARGETBACKGROUND",
+  QLAB_BG_ICONS: process.env.QLAB_BG_ICONS || "/Users/chrisdevlin/Documents/Chart Toppers/video/MSCCT-GRA-016-TEAM ICON_3840x2160_V1.mov",
+  QLAB_BG_ANTHEMS: process.env.QLAB_BG_ANTHEMS || "/Users/chrisdevlin/Documents/Chart Toppers/video/MSCCT-GRA-017-TEAM ANTHEM_3840x2160_V1.mov",
+
   // Admin password for sensitive operations
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "8888",
 };
@@ -191,6 +232,18 @@ let gameState = {
 // =============================================================================
 const TOTAL_ROUNDS = 4; // Tracks T1-T4
 
+// Tracks which teams have played their R4 block (cleared when entering R4 or on reset)
+let r4PlayedTeams = new Set();
+
+// Tracks which teams have played in Round 1 (cleared when entering R1 or on reset)
+let r1PlayedTeams = 0; // 0 = none, 1 = first team done, 2 = both done
+
+// Tracks which teams have played in Round 2 (cleared when entering R2 or on reset)
+let r2PlayedTeams = new Set();
+
+// Last loaded genre — used by refreshgenre to reload the same genre with fresh tracks
+let lastLoadedGenre = { round: null, genreIndex: null };
+
 let roundState = {
   currentRound: 0,  // 0 = no round active, 1-4 = active round
   completedRounds: [], // Array of completed round numbers
@@ -198,6 +251,102 @@ let roundState = {
 
 // Round 4 track play state — tracks which R4 tracks have been triggered
 let r4TracksPlayed = { 1: false, 2: false, 3: false, 4: false };
+
+// =============================================================================
+// Turn Tracking & StreamDeck Page Navigation
+// =============================================================================
+// Coin toss determines which team picks/plays first per round.
+// After genre load → navigate StreamDeck to current team's page.
+// After team stops → navigate to other team's page or back to genre page.
+
+const GENRE_PAGES = { 1: 7, 2: 8, 3: 9 };   // StreamDeck page per round for genre picker
+const TEAM_PAGES = { icons: 10, anthems: 11 }; // StreamDeck page per team
+
+let turnState = {
+  firstTeam: null,      // 'anthems' or 'icons' — coin toss winner
+  currentTeam: null,    // 'anthems' or 'icons' — who's up right now
+  phase: 'idle',        // 'idle' | 'genre-pick' | 'playing-first' | 'playing-second'
+};
+
+function otherTeam(teamId) {
+  return teamId === 'anthems' ? 'icons' : 'anthems';
+}
+
+function resetTurnState() {
+  turnState = { firstTeam: null, currentTeam: null, phase: 'idle' };
+  console.log('[TURN] Turn state reset');
+  io.emit('turnUpdate', turnState);
+}
+
+// Navigate StreamDeck to a specific Companion page via custom variable
+function navigateStreamDeck(pageNum) {
+  setCompanionVariable('streamdeck_page', String(pageNum));
+
+  // Fire the SDE cue in QLab to change StreamDeck page
+  const cueName = `SDE${pageNum}`;
+  const address = `/cue/${cueName}/start`;
+  const payload = JSON.stringify({ address, value: 0 });
+  const bridgeUrl = new URL("/send", BRIDGE_URL);
+  const options = {
+    hostname: bridgeUrl.hostname,
+    port: bridgeUrl.port,
+    path: bridgeUrl.pathname,
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) },
+  };
+  const req = http.request(options, (res) => {
+    let body = "";
+    res.on("data", (chunk) => (body += chunk));
+    res.on("end", () => console.log(`[STREAMDECK] Fired ${cueName} in QLab → page ${pageNum}`));
+  });
+  req.on("error", (err) => console.error(`[STREAMDECK] Failed to fire ${cueName}:`, err.message));
+  req.write(payload);
+  req.end();
+
+  console.log(`[STREAMDECK] Navigate to page ${pageNum}`);
+}
+
+// Compute each team's combined score and identify leader/loser/tie.
+// Combined score = earnedTime + points (works across all rounds).
+function teamRanking() {
+  const aScore = (gameState.anthems?.earnedTime || 0) + (gameState.anthems?.points || 0);
+  const iScore = (gameState.icons?.earnedTime || 0) + (gameState.icons?.points || 0);
+  if (aScore === iScore) {
+    return { tie: true, aScore, iScore };
+  }
+  const leader = aScore > iScore ? 'anthems' : 'icons';
+  const loser = leader === 'anthems' ? 'icons' : 'anthems';
+  return { tie: false, leader, loser, aScore, iScore };
+}
+
+// Auto-set turnState.currentTeam based on the rule for a given round:
+//   R1 → no auto-set (coin toss required)
+//   R2, R3 → leader plays first
+//   R4 → loser plays first
+function autoSetFirstTeamForRound(roundNum, source) {
+  if (roundNum === 1 || roundNum === 0) return; // R1 needs explicit coin toss
+  const ranking = teamRanking();
+  if (ranking.tie) {
+    console.warn(
+      `[ROUND] R${roundNum} first-team auto-set skipped (tie ${ranking.aScore} each) — operator must run coin toss`
+    );
+    logActivity('round', 'all', `R${roundNum} auto first-team skipped (tie)`, source);
+    return;
+  }
+  const firstTeamId = roundNum === 4 ? ranking.loser : ranking.leader;
+  const rule = roundNum === 4 ? 'loser plays first' : 'leader plays first';
+  turnState.firstTeam = firstTeamId;
+  turnState.currentTeam = firstTeamId;
+  turnState.phase = 'genre-pick';
+  console.log(
+    `[ROUND] R${roundNum} auto first-team: ${TEAMS[firstTeamId].name} (${rule}, scores a=${ranking.aScore} i=${ranking.iScore})`
+  );
+  logActivity('round', firstTeamId, `R${roundNum} auto first-team: ${TEAMS[firstTeamId].name} (${rule})`, source);
+  io.emit('turnUpdate', turnState);
+  setCompanionVariable('current_team', TEAMS[firstTeamId].name);
+  retargetR1TeamSDToTeam(firstTeamId, `r${roundNum}-auto`);
+  retargetTeamBackground(firstTeamId, `r${roundNum}-auto`);
+}
 
 function resetR4Tracks() {
   r4TracksPlayed = { 1: false, 2: false, 3: false, 4: false };
@@ -212,12 +361,40 @@ function setRound(roundNum, source = 'system') {
     roundState.completedRounds.push(prev);
   }
 
+  // Entering Round 4: retarget the R4NEXT goto cue to whichever team has the
+  // lowest earnedTime so the operator's single GO button fires the right team.
+  if (roundNum === 4 && prev !== 4) {
+    r4PlayedTeams.clear();
+    retargetR4NextToFirstTeam();
+    // Retarget R4LOOSER to the losing team's R4 block
+    const ranking = teamRanking();
+    if (!ranking.tie) {
+      const loserCue = ranking.loser === 'anthems' ? CONFIG.QLAB_CUE_R4_ANTHEMS : CONFIG.QLAB_CUE_R4_ICONS;
+      updateQLabCueTarget(CONFIG.QLAB_CUE_R4_LOOSER, loserCue);
+      console.log(`[R4 FLOW] R4LOOSER → ${loserCue} (${TEAMS[ranking.loser].name} goes first)`);
+    }
+  }
+
+  // Entering Round 1: reset R1 played count and point R1GOTO at R1TRACKS.
+  if (roundNum === 1 && prev !== 1) {
+    r1PlayedTeams = 0;
+    retargetR1GOTO('round-enter');
+  }
+
+  // Entering Round 2: reset the R2 played set and point R2GO2 at R2T.
+  if (roundNum === 2 && prev !== 2) {
+    r2PlayedTeams.clear();
+    retargetR2GO2('round-enter');
+  }
+
   roundState.currentRound = roundNum;
   console.log(`[ROUND] Round changed: ${prev} → ${roundNum} (${source})`);
 
   // Reset R4 track play state when entering Round 4
   if (roundNum === 4) {
     resetR4Tracks();
+    // Re-run LEADERSD now that currentRound is 4 (points to loser)
+    retargetLeaderSD('r4-enter');
   }
 
   // Clear any currently playing team state on the dashboard
@@ -228,6 +405,15 @@ function setRound(roundNum, source = 'system') {
 
   // Retarget SG1-SG3 to the correct G cues for this round
   updateGenreTargets(roundNum);
+
+  // Reset turn state for new round
+  resetTurnState();
+
+  // Auto first-team rules: R2/R3 leader, R4 loser. R1 requires coin toss.
+  // Must run AFTER resetTurnState so the auto-set isn't wiped.
+  if ([2, 3, 4].includes(roundNum) && prev !== roundNum) {
+    autoSetFirstTeamForRound(roundNum, source);
+  }
 
   // Broadcast to all connected clients
   io.emit("roundUpdate", roundState);
@@ -242,6 +428,23 @@ function resetRounds(source = 'system') {
     completedRounds: [],
   };
   resetR4Tracks();
+  resetTurnState();
+  r4PlayedTeams.clear();
+  r1PlayedTeams = 0;
+  r2PlayedTeams.clear();
+  if (r4AutoRetargetTimer) {
+    clearTimeout(r4AutoRetargetTimer);
+    r4AutoRetargetTimer = null;
+  }
+  // Reset R1GOTO back to R1TRACKS
+  retargetR1GOTO('reset');
+  // Reset R2GO2 back to R2Team2 now that no teams have played
+  retargetR2GO2('reset');
+  // Clear any lingering "now playing" glow on the dashboard
+  io.emit("teamStopPlaying", "anthems");
+  io.emit("teamStopPlaying", "icons");
+  io.emit("triggerStop", "anthems");
+  io.emit("triggerStop", "icons");
   console.log(`[ROUND] Rounds reset (${source})`);
   io.emit("roundUpdate", roundState);
   logActivity('round', 'all', 'Rounds reset', source);
@@ -250,6 +453,9 @@ function resetRounds(source = 'system') {
 function resetTeam(teamId, source = 'system') {
   gameState[teamId] = createTeamState();
   console.log(`[GAME] ${TEAMS[teamId].name} reset to defaults`);
+  // Clear the "now playing" glow for this team
+  io.emit("teamStopPlaying", teamId);
+  io.emit("triggerStop", teamId);
   // Update QLab text cue to show 0 seconds
   updateQLabTextCue(teamId, 0);
   
@@ -272,6 +478,9 @@ function resetAll(source = 'system') {
 
   // Arm all QLab cues on full reset
   armAllQLabCues();
+
+  // Clear played tracks history so all tracks are available again
+  resetPlayedTracks();
 
   resetRounds(source);
 }
@@ -315,7 +524,9 @@ function registerCorrectAnswer(teamId, source = 'system') {
   team.correctAnswers += 1;
 
   if (currentRound === 4) {
-    // Round 4: award points only — do not modify earnedTime or remainingTime
+    // Round 4: add points to earnedTime as bonus seconds
+    team.earnedTime += pointsThisAnswer;
+    team.remainingTime = team.maxTime - team.earnedTime;
     team.points += pointsThisAnswer;
 
     const entry = {
@@ -330,13 +541,13 @@ function registerCorrectAnswer(teamId, source = 'system') {
     };
     team.history.push(entry);
 
-    logActivity('correct', teamId, `Correct answer #${team.correctAnswers} (+${pointsThisAnswer} point, ${team.points} points total, round ${currentRound})`, source);
+    logActivity('correct', teamId, `Correct answer #${team.correctAnswers} (+${pointsThisAnswer}s, ${team.earnedTime}s total, round ${currentRound})`, source);
     console.log(
-      `[GAME] ${TEAMS[teamId].name} Correct #${team.correctAnswers} | +${pointsThisAnswer} point (R${currentRound}) | Points: ${team.points}`
+      `[GAME] ${TEAMS[teamId].name} Correct #${team.correctAnswers} | +${pointsThisAnswer}s (R${currentRound}) | Total: ${team.earnedTime}s`
     );
 
-    // Update QLab text cue with current points value
-    updateQLabTextCue(teamId, team.points);
+    // Update QLab text cue with current total
+    updateQLabTextCue(teamId, team.earnedTime);
   } else {
     // Rounds 1-3: add seconds to earnedTime
     team.earnedTime = Math.min(team.earnedTime + pointsThisAnswer, CONFIG.MAX_TIME);
@@ -365,6 +576,9 @@ function registerCorrectAnswer(teamId, source = 'system') {
     // Update QLab text cue with current earned time
     updateQLabTextCue(teamId, team.earnedTime);
   }
+
+  // Recompute leader so LEADERSD always points at the current winner
+  retargetLeaderSD('correct-answer');
 
   return gameState;
 }
@@ -506,7 +720,7 @@ setInterval(() => {
 }, 5000);
 
 app.get("/api/state", (req, res) => {
-  res.json({ ...gameState, round: roundState });
+  res.json({ ...gameState, round: roundState, turn: turnState });
 });
 
 // Round tracking API endpoints
@@ -535,6 +749,101 @@ app.post("/api/round/:num", (req, res) => {
   }
   setRound(num, 'api');
   res.json({ success: true, round: roundState });
+});
+
+// R4 manual retarget API — flips R4NEXT to the specified team's R4 group.
+// Useful for testing or operator overrides. POST /api/r4/retarget/:team
+app.post("/api/r4/retarget/:team", (req, res) => {
+  const teamId = req.params.team;
+  if (teamId !== 'anthems' && teamId !== 'icons') {
+    return res.status(400).json({ success: false, message: "team must be 'anthems' or 'icons'" });
+  }
+  retargetR4NextToTeam(teamId, 'api');
+  res.json({ success: true, team: teamId });
+});
+
+// Manual retarget of R2GO2 based on current r2PlayedTeams state.
+// POST /api/r2/retarget
+app.post("/api/r2/retarget", (req, res) => {
+  retargetR2GO2('api');
+  res.json({ success: true, playedTeams: Array.from(r2PlayedTeams) });
+});
+
+// Manual retarget of LEADERSD based on current scores.
+// POST /api/leader/retarget
+app.post("/api/leader/retarget", (req, res) => {
+  retargetLeaderSD('api');
+  res.json({ success: true });
+});
+
+// Manual retarget of R1TEAMSD to a specific team's SDE page cue.
+// POST /api/sd/retarget/:team
+app.post("/api/sd/retarget/:team", (req, res) => {
+  const teamId = req.params.team;
+  if (teamId !== 'anthems' && teamId !== 'icons') {
+    return res.status(400).json({ success: false, message: "team must be 'anthems' or 'icons'" });
+  }
+  retargetR1TeamSDToTeam(teamId, 'api');
+  res.json({ success: true, team: teamId });
+});
+
+// Next team trigger (HTTP counterpart of OSC /chart-toppers/nextteam).
+// Flips currentTeam to the other team and retargets R1TEAMSD accordingly.
+app.post("/api/nextteam", (req, res) => {
+  if (!turnState.currentTeam) {
+    return res.status(400).json({ success: false, message: "no currentTeam set — run cointoss first" });
+  }
+  const leavingTeam = turnState.currentTeam;
+  const next = otherTeam(leavingTeam);
+  if (roundState.currentRound === 2) {
+    r2PlayedTeams.add(leavingTeam);
+    retargetR2GO2('nextteam-api');
+  } else if (roundState.currentRound === 4) {
+    r4PlayedTeams.add(leavingTeam);
+  }
+  turnState.currentTeam = next;
+  if (turnState.phase === 'playing-first') {
+    turnState.phase = 'playing-second';
+  } else if (turnState.phase === 'playing-second') {
+    turnState.phase = 'genre-pick';
+  }
+  navigateStreamDeck(TEAM_PAGES[next]);
+  setCompanionVariable('current_team', TEAMS[next].name);
+  // Move the dashboard glow to the new team
+  io.emit("teamStopPlaying", leavingTeam);
+  io.emit("triggerStop", leavingTeam);
+  io.emit("teamPlaying", next);
+  io.emit("triggerPlaying", next);
+  io.emit('turnUpdate', turnState);
+  logActivity('turn', next, `Next team: ${TEAMS[next].name}`, 'api');
+  retargetR1TeamSDToTeam(next, 'nextteam-api');
+  res.json({ success: true, currentTeam: next, phase: turnState.phase });
+});
+
+// Turn state API
+app.get("/api/turn", (req, res) => {
+  res.json(turnState);
+});
+
+app.post("/api/cointoss/:team", (req, res) => {
+  const teamId = req.params.team;
+  if (!TEAMS[teamId]) {
+    return res.status(400).json({ success: false, error: 'Invalid team. Use anthems or icons.' });
+  }
+  turnState.firstTeam = teamId;
+  turnState.currentTeam = teamId;
+  turnState.phase = 'genre-pick';
+  io.emit('turnUpdate', turnState);
+  logActivity('cointoss', teamId, `Coin toss: ${TEAMS[teamId].name} goes first`, 'api');
+
+  const genrePage = GENRE_PAGES[roundState.currentRound];
+  if (genrePage) {
+    navigateStreamDeck(genrePage);
+  }
+
+  retargetR1TeamSDToTeam(teamId, 'cointoss-api');
+
+  res.json({ success: true, turn: turnState });
 });
 
 // Activity log API endpoint
@@ -746,6 +1055,178 @@ function updateQLabCueNotes(cueNumber, notes) {
   req.end();
 }
 
+// Round 4 flow: retarget R4NEXT based on score order.
+//   - firstTeam  = lowest earnedTime  (plays first)
+//   - secondTeam = highest earnedTime (plays second / the "winner" going in)
+// On a tie we leave R4NEXT untouched and log a warning.
+function r4TeamOrder() {
+  const anthemsScore = gameState.anthems?.earnedTime || 0;
+  const iconsScore = gameState.icons?.earnedTime || 0;
+  if (anthemsScore === iconsScore) return null;
+  const firstTeamId = anthemsScore < iconsScore ? 'anthems' : 'icons';
+  return {
+    firstTeamId,
+    secondTeamId: firstTeamId === 'anthems' ? 'icons' : 'anthems',
+    anthemsScore,
+    iconsScore,
+  };
+}
+
+function cueFor(teamId) {
+  return teamId === 'anthems'
+    ? CONFIG.QLAB_CUE_R4_ANTHEMS
+    : CONFIG.QLAB_CUE_R4_ICONS;
+}
+
+function retargetR4NextToFirstTeam() {
+  const order = r4TeamOrder();
+  if (!order) {
+    const ties = gameState.anthems?.earnedTime || 0;
+    console.warn(
+      `[R4 FLOW] Tie score (${ties}s each) — R4NEXT not retargeted. Operator must set the target manually in QLab.`
+    );
+    logActivity('round', 'all', `R4 tie (${ties}s each) — R4NEXT not retargeted`, 'system');
+    return;
+  }
+  const targetCue = cueFor(order.firstTeamId);
+  console.log(
+    `[R4 FLOW] Scores — anthems=${order.anthemsScore}s, icons=${order.iconsScore}s → ${TEAMS[order.firstTeamId].name} plays first. Retargeting ${CONFIG.QLAB_CUE_R4NEXT} → ${targetCue}`
+  );
+  logActivity('round', order.firstTeamId, `R4 first team: ${TEAMS[order.firstTeamId].name} (retarget ${CONFIG.QLAB_CUE_R4NEXT} → ${targetCue})`, 'system');
+  updateQLabCueTarget(CONFIG.QLAB_CUE_R4NEXT, targetCue);
+}
+
+// Retarget R4NEXT to a specific team's R4 group. Used by the playing-signal
+// auto-retarget path (below) — as soon as a team starts playing in R4, we
+// flip R4NEXT to the OTHER team so the operator's next GO fires that group.
+function retargetR4NextToTeam(teamId, source = 'system') {
+  const targetCue = cueFor(teamId);
+  console.log(
+    `[R4 FLOW] Retargeting ${CONFIG.QLAB_CUE_R4NEXT} → ${targetCue} (${TEAMS[teamId].name}) (${source})`
+  );
+  logActivity('round', teamId, `R4 retarget ${CONFIG.QLAB_CUE_R4NEXT} → ${targetCue} (${TEAMS[teamId].name})`, source);
+  updateQLabCueTarget(CONFIG.QLAB_CUE_R4NEXT, targetCue);
+}
+
+// Round 1 flow: retarget R1GOTO based on how many teams have played.
+//   - first team done: R1GOTO → R1TRACKS (second team plays)
+//   - both done: R1GOTO → R2
+function retargetR1GOTO(source = 'system') {
+  const target = r1PlayedTeams >= 2 ? CONFIG.QLAB_CUE_R2 : CONFIG.QLAB_CUE_R1_SECONDTEAM;
+  const label = r1PlayedTeams >= 2 ? 'both played → R2' : 'SECONDTEAM';
+  console.log(`[R1 FLOW] Retargeting R1GOTO → ${target} (${label}) (${source})`);
+  updateQLabCueTarget(CONFIG.QLAB_CUE_R1GOTO, target);
+}
+
+// Retarget R1TEAMSD goto cue to the current team's StreamDeck-page cue
+// (SDE10 for icons, SDE11 for anthems). Called whenever turnState.currentTeam
+// changes so the operator can fire R1TEAMSD to navigate the SD appropriately.
+function sdeCueFor(teamId) {
+  return teamId === 'anthems'
+    ? CONFIG.QLAB_CUE_SDE_ANTHEMS
+    : CONFIG.QLAB_CUE_SDE_ICONS;
+}
+
+// Round 2 flow: retarget R2GO2 based on how many teams have played in R2.
+//   - < 2 teams played: R2GO2 → R2Team2 (second team's block)
+//   - both played: R2GO2 → R3 (next round)
+function retargetR2GO2(source = 'system') {
+  const bothPlayed = r2PlayedTeams.has('anthems') && r2PlayedTeams.has('icons');
+  const target = bothPlayed ? CONFIG.QLAB_CUE_R3 : CONFIG.QLAB_CUE_R2_TEAM2;
+  const label = bothPlayed ? 'both played → R3' : 'R2Team2';
+  console.log(
+    `[R2 FLOW] Retargeting ${CONFIG.QLAB_CUE_R2GO2} → ${target} (${label}) (${source})`
+  );
+  logActivity('round', 'all', `R2 retarget ${CONFIG.QLAB_CUE_R2GO2} → ${target} (${label})`, source);
+  updateQLabCueTarget(CONFIG.QLAB_CUE_R2GO2, target);
+}
+
+// Retarget TARGETBACKGROUND to the first team's ident video.
+function retargetTeamBackground(teamId, source = 'system') {
+  const bgFile = teamId === 'anthems' ? CONFIG.QLAB_BG_ANTHEMS : CONFIG.QLAB_BG_ICONS;
+  updateQLabCueFilePath(CONFIG.QLAB_CUE_TARGET_BG, bgFile);
+  console.log(`[BG] TARGETBACKGROUND → ${TEAMS[teamId].name} ident (${source})`);
+}
+
+// Retarget LEADERSD to the team currently in the lead. Combined score =
+// earnedTime + points so it works in R1-R3 (time-based) and R4 (points-based).
+// On tie, leave the cue untouched and log.
+function retargetLeaderSD(source = 'system') {
+  const a = gameState.anthems;
+  const i = gameState.icons;
+  const aScore = (a?.earnedTime || 0) + (a?.points || 0);
+  const iScore = (i?.earnedTime || 0) + (i?.points || 0);
+  if (aScore === iScore) {
+    console.log(`[LEADER SD] Tie (${aScore} each) — LEADERSD not retargeted (${source})`);
+    return;
+  }
+  const leaderId = aScore > iScore ? 'anthems' : 'icons';
+  const loserId = otherTeam(leaderId);
+
+  // Round 4: loser goes first, so LEADERSD points to the loser
+  const targetTeam = roundState.currentRound === 4 ? loserId : leaderId;
+  const targetCue = sdeCueFor(targetTeam);
+  const label = roundState.currentRound === 4 ? 'Loser (R4)' : 'Leader';
+  console.log(
+    `[LEADER SD] ${label}: ${TEAMS[targetTeam].name} (a=${aScore} i=${iScore}) → ${CONFIG.QLAB_CUE_LEADER_SD} → ${targetCue} (${source})`
+  );
+  updateQLabCueTarget(CONFIG.QLAB_CUE_LEADER_SD, targetCue);
+}
+
+function retargetR1TeamSDToTeam(teamId, source = 'system') {
+  if (!teamId || !TEAMS[teamId]) {
+    console.warn(`[SD FLOW] retargetR1TeamSDToTeam called with invalid team: ${teamId}`);
+    return;
+  }
+  const targetCue = sdeCueFor(teamId);
+  console.log(
+    `[SD FLOW] Retargeting ${CONFIG.QLAB_CUE_R1_TEAM_SD} → ${targetCue} (${TEAMS[teamId].name}) (${source})`
+  );
+  logActivity('turn', teamId, `SD retarget ${CONFIG.QLAB_CUE_R1_TEAM_SD} → ${targetCue} (${TEAMS[teamId].name})`, source);
+  updateQLabCueTarget(CONFIG.QLAB_CUE_R1_TEAM_SD, targetCue);
+}
+
+// Delay before the auto-retarget fires after a team starts playing in R4.
+// Gives the current cue sequence room to breathe before we flip the target.
+const R4_AUTO_RETARGET_DELAY_MS = parseInt(process.env.R4_AUTO_RETARGET_DELAY_MS) || 10000;
+let r4AutoRetargetTimer = null;
+
+function retargetR4NextToCue(cueNumber, label, source) {
+  console.log(
+    `[R4 FLOW] Retargeting ${CONFIG.QLAB_CUE_R4NEXT} → ${cueNumber} (${label}) (${source})`
+  );
+  logActivity('round', 'all', `R4 retarget ${CONFIG.QLAB_CUE_R4NEXT} → ${cueNumber} (${label})`, source);
+  updateQLabCueTarget(CONFIG.QLAB_CUE_R4NEXT, cueNumber);
+}
+
+function scheduleR4AutoRetarget(playingTeamId, source) {
+  if (r4AutoRetargetTimer) {
+    clearTimeout(r4AutoRetargetTimer);
+    r4AutoRetargetTimer = null;
+  }
+  r4PlayedTeams.add(playingTeamId);
+  const bothPlayed = r4PlayedTeams.has('anthems') && r4PlayedTeams.has('icons');
+
+  if (bothPlayed) {
+    console.log(
+      `[R4 FLOW] Both teams have played — scheduling R4NEXT retarget → ${CONFIG.QLAB_CUE_R4_END} in ${R4_AUTO_RETARGET_DELAY_MS}ms (${source})`
+    );
+    r4AutoRetargetTimer = setTimeout(() => {
+      r4AutoRetargetTimer = null;
+      retargetR4NextToCue(CONFIG.QLAB_CUE_R4_END, 'winner reveal', `auto-after-${playingTeamId}-playing`);
+    }, R4_AUTO_RETARGET_DELAY_MS);
+  } else {
+    const nextTeamId = otherTeam(playingTeamId);
+    console.log(
+      `[R4 FLOW] ${TEAMS[playingTeamId].name} now playing — scheduling R4NEXT retarget → ${TEAMS[nextTeamId].name} in ${R4_AUTO_RETARGET_DELAY_MS}ms (${source})`
+    );
+    r4AutoRetargetTimer = setTimeout(() => {
+      r4AutoRetargetTimer = null;
+      retargetR4NextToTeam(nextTeamId, `auto-after-${playingTeamId}-playing`);
+    }, R4_AUTO_RETARGET_DELAY_MS);
+  }
+}
+
 // Map pack IDs to QLab cue group names
 const PACK_CUE_GROUPS = {
   'uk-usa-german': 'P1',
@@ -936,6 +1417,15 @@ const GENRE_SLOTS = {
   '3': 4,  // 4 tracks for Round 3
 };
 
+// Track deduplication: tracks played in rounds 1-3 won't be reused until master reset.
+// Keyed by round number, each value is a Set of track identifiers (fileName).
+let playedTracks = { '1': new Set(), '2': new Set(), '3': new Set() };
+
+function resetPlayedTracks() {
+  playedTracks = { '1': new Set(), '2': new Set(), '3': new Set() };
+  console.log('[DEDUP] Played tracks history cleared');
+}
+
 // Fisher-Yates shuffle
 function shuffle(arr) {
   const a = [...arr];
@@ -979,6 +1469,9 @@ function loadGenreTracks(genreIndex) {
 
   console.log(`[GENRE LOAD] Loading "${genreName}" for Round ${currentRound} (${slotsNeeded} slots needed)`);
 
+  // Get the dedup set for this round (rounds 1-3 only)
+  const dedupSet = playedTracks[currentRound] || null;
+
   if (currentRound === '1') {
     // Round 1: tracks come in .1/.2 pairs — group by track number, pick 6 groups
     const genreTracks = allTracks.filter(t => t.genre === genreName);
@@ -992,8 +1485,13 @@ function loadGenreTracks(genreIndex) {
       if (t.cue.endsWith('.2')) pairs[num].reveal = t;
     });
 
-    // Only use complete pairs
-    const completePairs = Object.values(pairs).filter(p => p.hook && p.reveal);
+    // Only use complete pairs, excluding already-played tracks
+    let completePairs = Object.values(pairs).filter(p => p.hook && p.reveal);
+    if (dedupSet && dedupSet.size > 0) {
+      const beforeCount = completePairs.length;
+      completePairs = completePairs.filter(p => !dedupSet.has(p.hook.fileName));
+      console.log(`[DEDUP] Round ${currentRound} "${genreName}": filtered ${beforeCount - completePairs.length} already-played pairs, ${completePairs.length} remaining`);
+    }
     const selected = shuffle(completePairs).slice(0, slotsNeeded);
 
     if (selected.length < slotsNeeded) {
@@ -1001,6 +1499,12 @@ function loadGenreTracks(genreIndex) {
     }
 
     console.log(`[GENRE LOAD] Selected ${selected.length} pairs from ${completePairs.length} available`);
+
+    // Record selected tracks as played for deduplication
+    if (dedupSet) {
+      selected.forEach(pair => dedupSet.add(pair.hook.fileName));
+      console.log(`[DEDUP] Round ${currentRound}: ${dedupSet.size} total tracks marked as played`);
+    }
 
     selected.forEach((pair, i) => {
       const slotNum = i + 1;
@@ -1025,8 +1529,13 @@ function loadGenreTracks(genreIndex) {
     });
 
   } else {
-    // Rounds 2 & 3: single cues, pick required number
-    const genreTracks = allTracks.filter(t => t.genre === genreName);
+    // Rounds 2 & 3: single cues, pick required number — excluding already-played and placeholder tracks
+    let genreTracks = allTracks.filter(t => t.genre === genreName && t.band !== 'XX');
+    if (dedupSet && dedupSet.size > 0) {
+      const beforeCount = genreTracks.length;
+      genreTracks = genreTracks.filter(t => !dedupSet.has(t.fileName));
+      console.log(`[DEDUP] Round ${currentRound} "${genreName}": filtered ${beforeCount - genreTracks.length} already-played tracks, ${genreTracks.length} remaining`);
+    }
     const selected = shuffle(genreTracks).slice(0, slotsNeeded);
 
     if (selected.length < slotsNeeded) {
@@ -1034,6 +1543,12 @@ function loadGenreTracks(genreIndex) {
     }
 
     console.log(`[GENRE LOAD] Selected ${selected.length} tracks from ${genreTracks.length} available`);
+
+    // Record selected tracks as played for deduplication
+    if (dedupSet) {
+      selected.forEach(t => dedupSet.add(t.fileName));
+      console.log(`[DEDUP] Round ${currentRound}: ${dedupSet.size} total tracks marked as played`);
+    }
 
     selected.forEach((track, i) => {
       const slotNum = i + 1;
@@ -1054,7 +1569,19 @@ function loadGenreTracks(genreIndex) {
     setCompanionVariable(`track_${i}`, '');
   }
 
+  // Remember what we loaded for refreshgenre
+  lastLoadedGenre = { round: currentRound, genreIndex };
+
   logActivity('genre', 'all', `Loaded "${genreName}" for Round ${currentRound} (${slotsNeeded} random tracks)`, 'system');
+
+  // StreamDeck navigation: after genre load, go to current team's page
+  if (turnState.currentTeam && TEAM_PAGES[turnState.currentTeam]) {
+    turnState.phase = 'playing-first';
+    navigateStreamDeck(TEAM_PAGES[turnState.currentTeam]);
+    setCompanionVariable('current_team', TEAMS[turnState.currentTeam].name);
+    io.emit('turnUpdate', turnState);
+    console.log(`[TURN] Genre loaded → navigating to ${TEAMS[turnState.currentTeam].name} page (${TEAM_PAGES[turnState.currentTeam]})`);
+  }
 
   return { success: true, genre: genreName, round: currentRound, tracksLoaded: slotsNeeded };
 }
@@ -1082,6 +1609,9 @@ function updateTrackCuesForPack(packId) {
       // Round 1 pairs: .1 = hook (short clip), .2 = reveal (long clip)
       if (roundNum === '1' && track.cue.endsWith('.1')) cueName += ' [SHORT]';
       if (roundNum === '1' && track.cue.endsWith('.2')) cueName += ' [LONG]';
+
+      // Skip placeholder tracks
+      if (track.band === 'XX') return;
 
       setTimeout(() => {
         updateQLabCueFilePath(track.cue, fullPath);
@@ -1182,6 +1712,17 @@ app.post('/api/loadgenre/:index', (req, res) => {
     return res.status(400).json({ success: false, error: 'Genre index must be 1, 2, or 3' });
   }
   const result = loadGenreTracks(genreIndex);
+  res.json(result);
+});
+
+// Refresh genre — reload same genre with fresh tracks + switch to other team
+app.post('/api/refreshgenre', (req, res) => {
+  if (!lastLoadedGenre.genreIndex) {
+    return res.status(400).json({ success: false, error: 'No genre loaded yet' });
+  }
+  console.log(`[GENRE REFRESH] Reloading genre index ${lastLoadedGenre.genreIndex} for Round ${lastLoadedGenre.round}`);
+  const result = loadGenreTracks(lastLoadedGenre.genreIndex);
+
   res.json(result);
 });
 
@@ -1660,6 +2201,20 @@ function handleOscAddress(address) {
     } else {
       console.log(`[OSC DEBUG] registerCorrectAnswer returned null for team: ${teamId}`);
     }
+    // Round 3: go back to 4-choice page after answer
+    if (roundState.currentRound === 3) {
+      navigateStreamDeck(12);
+    }
+    return;
+  }
+
+  // Incorrect answer (no points) — Round 3: go back to 4-choice page
+  if (address === '/chart-toppers/incorrect') {
+    console.log(`[OSC] Incorrect answer`);
+    logActivity('incorrect', 'all', 'Incorrect answer via OSC', 'osc');
+    if (roundState.currentRound === 3) {
+      navigateStreamDeck(12);
+    }
     return;
   }
 
@@ -1754,6 +2309,42 @@ function handleOscAddress(address) {
     const teamId = playingMatch[1];
     console.log(`[OSC] ${TEAMS[teamId].name} is now playing`);
 
+    // R4 auto-retarget: when a team starts playing in Round 4, schedule a
+    // retarget of R4NEXT to the OTHER team so the operator's next GO fires
+    // that team's group.
+    if (roundState.currentRound === 4) {
+      scheduleR4AutoRetarget(teamId, 'osc');
+    }
+
+    // R2 flow: track who's played, retarget R2GO2 after the second team plays
+    if (roundState.currentRound === 2) {
+      r2PlayedTeams.add(teamId);
+      retargetR2GO2('osc-playing');
+    }
+
+    // Auto coin-toss: if no coin toss set yet, first playing command establishes turn order
+    if (!turnState.firstTeam) {
+      turnState.firstTeam = teamId;
+      turnState.currentTeam = teamId;
+      turnState.phase = 'playing-first';
+      console.log(`[TURN] Auto coin-toss from playing: ${TEAMS[teamId].name} goes first`);
+      io.emit('turnUpdate', turnState);
+      logActivity('cointoss', teamId, `Auto coin-toss: ${TEAMS[teamId].name} goes first (from playing)`, 'osc');
+      retargetR1TeamSDToTeam(teamId, 'auto-cointoss-osc');
+      retargetTeamBackground(teamId, 'auto-cointoss-osc');
+    } else if (turnState.currentTeam !== teamId) {
+      // Sync currentTeam to whoever is actually playing — /playing/{team} is
+      // the authoritative signal. Keeps nextteam from switching the wrong way
+      // when the operator plays a team other than the auto-set leader/loser.
+      console.log(
+        `[TURN] Sync currentTeam ${turnState.currentTeam ? TEAMS[turnState.currentTeam].name : 'none'} → ${TEAMS[teamId].name} (from /playing/)`
+      );
+      turnState.currentTeam = teamId;
+      io.emit('turnUpdate', turnState);
+      setCompanionVariable('current_team', TEAMS[teamId].name);
+      retargetR1TeamSDToTeam(teamId, 'playing-sync');
+    }
+
     // Broadcast to all dashboard clients with simple emit
     console.log(`[SOCKET] Emitting teamPlaying for ${teamId}`);
     io.emit("teamPlaying", teamId);
@@ -1807,6 +2398,31 @@ function handleOscAddress(address) {
     // Log activity
     logActivity('stopPlaying', teamId, 'Team stopped playing via OSC', 'osc');
 
+    // StreamDeck navigation: after team stops, route to next step
+    if (turnState.phase === 'playing-first' && turnState.currentTeam === teamId) {
+      // First team finished → switch to second team's page
+      const next = otherTeam(teamId);
+      turnState.currentTeam = next;
+      turnState.phase = 'playing-second';
+      navigateStreamDeck(TEAM_PAGES[next]);
+      setCompanionVariable('current_team', TEAMS[next].name);
+      io.emit('turnUpdate', turnState);
+      console.log(`[TURN] First team done → navigating to ${TEAMS[next].name} page (${TEAM_PAGES[next]})`);
+      retargetR1TeamSDToTeam(next, 'team-switch');
+    } else if (turnState.phase === 'playing-second' && turnState.currentTeam === teamId) {
+      // Second team finished → back to genre page for next pick
+      turnState.currentTeam = turnState.firstTeam; // reset to first team for next genre
+      turnState.phase = 'genre-pick';
+      const genrePage = GENRE_PAGES[roundState.currentRound];
+      if (genrePage) {
+        navigateStreamDeck(genrePage);
+        console.log(`[TURN] Both teams done → back to genre page (${genrePage})`);
+      }
+      setCompanionVariable('current_team', '');
+      io.emit('turnUpdate', turnState);
+      retargetR1TeamSDToTeam(turnState.firstTeam, 'second-team-done');
+    }
+
     return;
   }
 
@@ -1839,6 +2455,69 @@ function handleOscAddress(address) {
     return;
   }
 
+  // Team switch: /chart-toppers/nextteam
+  // Flips currentTeam to the other team and retargets R1TEAMSD accordingly.
+  // Use between the first team's scoreboard and the second team starting, and
+  // again between the second team finishing and the next genre pick.
+  if (address === "/chart-toppers/nextteam") {
+    if (!turnState.currentTeam) {
+      console.warn("[NEXT TEAM] triggered but no currentTeam set — ignoring");
+      return;
+    }
+    const leavingTeam = turnState.currentTeam;
+    const next = otherTeam(leavingTeam);
+    console.log(
+      `[NEXT TEAM] Team switch: ${TEAMS[leavingTeam].name} → ${TEAMS[next].name} (osc)`
+    );
+    // Mark the team that just played in the current round's played-team set.
+    // This drives R2GO2 retarget and mirrors the R4 tracking.
+    if (roundState.currentRound === 2) {
+      r2PlayedTeams.add(leavingTeam);
+      retargetR2GO2('nextteam-osc');
+    } else if (roundState.currentRound === 4) {
+      r4PlayedTeams.add(leavingTeam);
+      // Don't call scheduleR4AutoRetarget — it's for /playing/ signals
+    }
+    turnState.currentTeam = next;
+    if (turnState.phase === 'playing-first') {
+      turnState.phase = 'playing-second';
+    } else if (turnState.phase === 'playing-second') {
+      turnState.phase = 'genre-pick';
+    }
+    navigateStreamDeck(TEAM_PAGES[next]);
+    setCompanionVariable('current_team', TEAMS[next].name);
+    // Move the dashboard glow to the new team
+    io.emit("teamStopPlaying", leavingTeam);
+    io.emit("triggerStop", leavingTeam);
+    io.emit("teamPlaying", next);
+    io.emit("triggerPlaying", next);
+    io.emit('turnUpdate', turnState);
+    logActivity('turn', next, `Next team: ${TEAMS[next].name}`, 'osc');
+    retargetR1TeamSDToTeam(next, 'nextteam-osc');
+    return;
+  }
+
+  // Coin toss: /chart-toppers/cointoss/anthems or /chart-toppers/cointoss/icons
+  const cointossMatch = address.match(/^\/chart-toppers\/cointoss\/(anthems|icons)$/);
+  if (cointossMatch) {
+    const teamId = cointossMatch[1];
+    turnState.firstTeam = teamId;
+    turnState.currentTeam = teamId;
+    turnState.phase = 'genre-pick';
+    console.log(`[TURN] Coin toss: ${TEAMS[teamId].name} goes first`);
+    io.emit('turnUpdate', turnState);
+    logActivity('cointoss', teamId, `Coin toss: ${TEAMS[teamId].name} goes first`, 'osc');
+
+    // Navigate StreamDeck to genre page for current round
+    const genrePage = GENRE_PAGES[roundState.currentRound];
+    if (genrePage) {
+      navigateStreamDeck(genrePage);
+    }
+    retargetR1TeamSDToTeam(teamId, 'cointoss-osc');
+    retargetTeamBackground(teamId, 'cointoss-osc');
+    return;
+  }
+
   // Load genre tracks: /chart-toppers/loadgenre/1, /2, /3
   const genreMatch = address.match(/^\/chart-toppers\/loadgenre\/(\d+)$/);
   if (genreMatch) {
@@ -1848,6 +2527,75 @@ function handleOscAddress(address) {
       console.log(`[OSC] Load genre ${genreIndex}: ${result.success ? result.genre : result.error}`);
     } else {
       console.log(`[OSC] Invalid genre index: ${genreIndex} (must be 1-3)`);
+    }
+    return;
+  }
+
+  // Refresh genre: reload the same genre with fresh tracks (dedup ensures no repeats)
+  if (address === '/chart-toppers/refreshgenre') {
+    if (!lastLoadedGenre.genreIndex) {
+      console.warn(`[OSC] refreshgenre — no genre loaded yet, ignoring`);
+      return;
+    }
+    console.log(`[GENRE REFRESH] Reloading genre index ${lastLoadedGenre.genreIndex} for Round ${lastLoadedGenre.round}`);
+    const result = loadGenreTracks(lastLoadedGenre.genreIndex);
+    console.log(`[OSC] Refresh genre: ${result.success ? result.genre + ' (fresh tracks)' : result.error}`);
+    return;
+  }
+
+  // Second team answer: retarget R2GO2 → R3 and switch turn if possible
+  if (address === '/chart-toppers/secondteamanswer') {
+    // Always retarget R2GO2 → R3
+    r2PlayedTeams.add('anthems');
+    r2PlayedTeams.add('icons');
+    retargetR2GO2('secondteamanswer');
+
+    // Switch turn state if a team is set
+    if (turnState.currentTeam) {
+      const next = otherTeam(turnState.currentTeam);
+      turnState.currentTeam = next;
+      turnState.phase = 'playing-second';
+      setCompanionVariable('current_team', TEAMS[next].name);
+      io.emit('turnUpdate', turnState);
+      console.log(`[OSC] Second team answer → ${TEAMS[next].name}`);
+    }
+    return;
+  }
+
+  // R1 second team: navigate SD to the other team's answer page
+  if (address === '/chart-toppers/r1secondteam') {
+    if (turnState.currentTeam) {
+      const next = otherTeam(turnState.currentTeam);
+      navigateStreamDeck(TEAM_PAGES[next]);
+      console.log(`[OSC] R1 second team → SD page ${TEAM_PAGES[next]} (${TEAMS[next].name})`);
+    } else {
+      console.warn(`[OSC] r1secondteam — no current team set`);
+    }
+    return;
+  }
+
+  // Swap team background: retarget TARGETBACKGROUND to the other team's ident
+  if (address === '/chart-toppers/swapteambackground') {
+    if (turnState.currentTeam) {
+      const next = otherTeam(turnState.currentTeam);
+      retargetTeamBackground(next, 'swapteambackground');
+    } else {
+      console.warn(`[OSC] swapteambackground — no current team set`);
+    }
+    return;
+  }
+
+  // R1 team done: advance R1 played count and retarget R1GOTO
+  if (address === '/chart-toppers/r1teamdone') {
+    r1PlayedTeams += 1;
+    retargetR1GOTO('r1teamdone');
+    console.log(`[R1 FLOW] Team done (${r1PlayedTeams}/2)`);
+
+    // First team done → navigate SD to second team's answer page
+    if (r1PlayedTeams === 1 && turnState.currentTeam) {
+      const next = otherTeam(turnState.currentTeam);
+      navigateStreamDeck(TEAM_PAGES[next]);
+      console.log(`[R1 FLOW] SD → ${TEAMS[next].name} answer page (${TEAM_PAGES[next]})`);
     }
     return;
   }
@@ -1887,13 +2635,9 @@ udpServer.bind(CONFIG.OSC_LISTEN_PORT, "0.0.0.0");
 console.log(`[QLAB] Will send OSC via bridge at ${BRIDGE_URL}`);
 console.log(`[COMPANION] HTTP API at ${COMPANION_URL}`);
 
-function sendQLabLoadCue(teamId, remainingSeconds) {
-  const cueName = TEAMS[teamId].cueName;
-  const address = `/cue/${cueName}/loadActionAt`;
-  // Add video offset to account for intro before countdown starts
-  const loadPosition = remainingSeconds + CONFIG.VIDEO_OFFSET;
-  const payload = JSON.stringify({ address, value: loadPosition });
-
+// Low-level helper: POST any OSC address+value via the bridge.
+function sendBridgeOsc(address, value, logLabel) {
+  const payload = JSON.stringify({ address, value });
   const bridgeUrl = new URL("/send", BRIDGE_URL);
   const options = {
     hostname: bridgeUrl.hostname,
@@ -1905,21 +2649,28 @@ function sendQLabLoadCue(teamId, remainingSeconds) {
       "Content-Length": Buffer.byteLength(payload),
     },
   };
-
   const req = http.request(options, (res) => {
-    let body = "";
-    res.on("data", (chunk) => (body += chunk));
+    res.on("data", () => {});
     res.on("end", () => {
-      console.log(`[QLAB OUT] ${address} → ${loadPosition}s (${remainingSeconds}s remaining + ${CONFIG.VIDEO_OFFSET}s offset) (bridge: ${res.statusCode})`);
+      console.log(`[QLAB OUT] ${address}${logLabel ? " " + logLabel : ""} (bridge: ${res.statusCode})`);
     });
   });
-
   req.on("error", (err) => {
-    console.error(`[QLAB OUT] Bridge error: ${err.message}`);
+    console.error(`[QLAB OUT] Bridge error (${address}): ${err.message}`);
   });
-
   req.write(payload);
   req.end();
+}
+
+function sendQLabLoadCue(teamId, remainingSeconds) {
+  const cueName = TEAMS[teamId].cueName;
+  // Add video offset to account for intro before countdown starts
+  const loadPosition = remainingSeconds + CONFIG.VIDEO_OFFSET;
+  sendBridgeOsc(
+    `/cue/${cueName}/loadActionAt`,
+    loadPosition,
+    `→ ${loadPosition}s (${remainingSeconds}s remaining + ${CONFIG.VIDEO_OFFSET}s offset)`
+  );
 }
 
 function clearQLabLoadPosition(teamId) {
@@ -2091,6 +2842,9 @@ function playGoldenRecordCue(teamId) {
   req.end();
 }
 
+// Cues that must stay disarmed (managed by QLab, not the server)
+const ALWAYS_DISARMED_CUES = ['JUMP'];
+
 function armAllQLabCues() {
   const address = `/cue/*/armed`;
   const payload = JSON.stringify({ address, value: 1 });
@@ -2109,6 +2863,22 @@ function armAllQLabCues() {
     res.on("data", (chunk) => (body += chunk));
     res.on("end", () => {
       console.log(`[QLAB] Armed all cues in workspace: ${body}`);
+      // Re-disarm cues that must stay disarmed
+      ALWAYS_DISARMED_CUES.forEach(cueName => {
+        const disarmPayload = JSON.stringify({ address: `/cue/${cueName}/armed`, value: 0 });
+        const disarmReq = http.request(options, (disarmRes) => {
+          let disarmBody = "";
+          disarmRes.on("data", (chunk) => (disarmBody += chunk));
+          disarmRes.on("end", () => {
+            console.log(`[QLAB] Re-disarmed ${cueName}: ${disarmBody}`);
+          });
+        });
+        disarmReq.on("error", (err) => {
+          console.error(`[QLAB] Error re-disarming ${cueName}:`, err.message);
+        });
+        disarmReq.write(disarmPayload);
+        disarmReq.end();
+      });
     });
   });
 

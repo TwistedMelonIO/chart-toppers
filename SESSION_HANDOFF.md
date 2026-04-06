@@ -1,6 +1,6 @@
 # Chart Toppers — Session Handoff
 
-> Last updated: 2026-04-02 | Version: v3.4.0
+> Last updated: 2026-04-03 | Version: v3.4.0
 > Update this file at the end of every significant session.
 
 ---
@@ -157,6 +157,12 @@ Configurable from Settings UI. Stored in `data/pack-settings.json`. No Docker re
 | GET | `/api/license_status` | Current license state |
 | POST | `/api/activate_license` | Activate with license key |
 
+### Turn Tracking
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/turn` | Current turn state (firstTeam, currentTeam, phase) |
+| POST | `/api/cointoss/:team` | Set coin toss winner (anthems/icons), navigates StreamDeck to genre page |
+
 ---
 
 ## Socket.IO Events
@@ -168,6 +174,7 @@ Configurable from Settings UI. Stored in `data/pack-settings.json`. No Docker re
 - `packChanged` — pack selection changed
 - `countdownTick` — ~5fps during active playback
 - `countdownStop` / `countdownComplete` — playback ended
+- `turnUpdate` — turn state changed (coin toss, team switch, phase change)
 
 ### Client -> Server
 - `correct` / `reset` / `stop` — game actions
@@ -205,6 +212,35 @@ docker compose logs -f osc-bridge
 ---
 
 ## Session Log
+
+### 2026-04-03 — Turn Tracking & StreamDeck Page Navigation
+
+**What was done:**
+- Added turn tracking state system (firstTeam, currentTeam, phase) to manage team alternation during genre rounds
+- Added StreamDeck page navigation via Companion custom variable `streamdeck_page`
+- Added `/chart-toppers/cointoss/{team}` OSC command to set coin toss winner and navigate to genre page
+- Added auto coin-toss fallback: first `/chart-toppers/playing/{team}` command establishes turn order if no explicit coin toss was sent
+- After genre load (`loadGenreTracks`): server navigates StreamDeck to current team's page (Icons=10, Anthems=11) and sets `current_team` variable
+- After first team stops playing: server navigates StreamDeck to other team's page
+- After second team stops playing: server navigates back to genre page for next genre pick
+- Turn state resets on round change
+- Added `GET /api/turn` and `POST /api/cointoss/:team` REST endpoints
+- Added `turnUpdate` Socket.IO event broadcast on all turn state changes
+- New Companion custom variables: `streamdeck_page`, `current_team`
+
+**Decisions made:**
+- StreamDeck page navigation uses Companion custom variable approach (no direct surface API in Companion HTTP API)
+- Genre pages per round: R1=7, R2=8, R3=9; Team pages: Icons=10, Anthems=11
+- Coin toss can come from explicit `/cointoss/` OSC or auto-detected from first `/playing/` command
+- After both teams finish a genre, turn order resets to first team (coin toss winner) for next genre
+
+**What's next / pending:**
+- Create `streamdeck_page` and `current_team` custom variables in Companion
+- Set up Companion internal trigger to watch `streamdeck_page` and navigate StreamDeck surface
+- Test full genre flow: coin toss → genre pick → team A plays → team B plays → back to genre
+- Wire coin toss button on StreamDeck Companion page
+
+---
 
 ### 2026-04-02 (Session 2) — Genre System, Companion Integration, Track Randomization
 

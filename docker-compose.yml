@@ -15,12 +15,23 @@ services:
       - POINTS_PER_CORRECT=5
       - QLAB_CUE_ANTHEMS=ANTHEMS
       - QLAB_CUE_ICONS=ICONS
+      - QLAB_CUE_R4NEXT=R4NEXT
+      - QLAB_CUE_R4_ANTHEMS=R4ANTHEM
+      - QLAB_CUE_R4_ICONS=R4ICON
+      - QLAB_CUE_R4_END=R5
+      - QLAB_CUE_R1_TEAM_SD=R1TEAMSD
+      - QLAB_CUE_SDE_ANTHEMS=SDE11
+      - QLAB_CUE_SDE_ICONS=SDE10
+      - QLAB_CUE_R2GO2=R2GO2
+      - QLAB_CUE_R2_TEAM2=R2Team2
+      - QLAB_CUE_R3=R3
+      - QLAB_CUE_LEADER_SD=LEADERSD
       # Bridge URL for OSC output
       - BRIDGE_URL=http://osc-bridge:3201
       # Base folder where QLab audio files live (mapped below)
       - TRACK_BASE_PATH=/app/qlab-audio
       # App version
-      - APP_VERSION=4.0.0
+      - APP_VERSION=4.1.0
       # License key (empty by default, set during installation)
       - LICENSE_KEY=${LICENSE_KEY:-}
       - HOST_HARDWARE_ID=${HOST_HARDWARE_ID:-}
