@@ -28,8 +28,8 @@ const CONFIG = {
 
   // Round-based scoring: seconds earned per correct answer per round (Round 4 = points, not seconds)
   ROUND_SCORING: {
-    1: 2,   // Round 1 — Name It In Five: 6 clips, 1 pt = 2 secs, max 12 secs
-    2: 5,   // Round 2 — On Track: 4 tracks, 1 pt = 5 secs, max 20 secs
+    1: 4,   // Round 1 — Name It In Five: 6 clips, 1 pt = 4 secs, max 24 secs
+    2: 6,   // Round 2 — On Track: 2 tracks per team, 1 pt = 6 secs, max 12 secs
     3: 8,   // Round 3 — Mash Up Mayhem: 4 mashups, 1 pt = 8 secs, max 64 secs
     4: 1,   // Round 4 — 1 point per correct (points only, no time added)
   },
@@ -53,11 +53,11 @@ const CONFIG = {
   QLAB_CUE_SDE_ANTHEMS: process.env.QLAB_CUE_SDE_ANTHEMS || "SDE11",
   QLAB_CUE_SDE_ICONS: process.env.QLAB_CUE_SDE_ICONS || "SDE10",
 
-  // Round 2 flow: R2GO2 is a goto cue that points to R2Team2 (second team's
-  // block) after the first team has played, then to R3 once both have played.
+  // Round 2 flow: R2GO2 is a goto cue that points to R2T (tracks replay for
+  // second team) after the first team has played, then to R3 once both have played.
   QLAB_CUE_R2GO2: process.env.QLAB_CUE_R2GO2 || "R2GO2",
-  QLAB_CUE_R2_TEAM2: process.env.QLAB_CUE_R2_TEAM2 || "R2Team2",
-  QLAB_CUE_R3: process.env.QLAB_CUE_R3 || "R3",
+  QLAB_CUE_R2_TEAM2: process.env.QLAB_CUE_R2_TEAM2 || "R2T",
+  QLAB_CUE_R3: process.env.QLAB_CUE_R3 || "AWO",
 
   // Leader SD nav: LEADERSD is a goto cue retargeted to whichever team is
   // currently in the lead (SDE10 icons / SDE11 anthems). Recomputed after
@@ -244,6 +244,13 @@ let r2PlayedTeams = new Set();
 // Last loaded genre — used by refreshgenre to reload the same genre with fresh tracks
 let lastLoadedGenre = { round: null, genreIndex: null };
 
+// R2 refresh counter: 1st refreshtracks = swap tracks, 2nd = retarget R2GO2 → AWO
+let r2RefreshCount = 0;
+
+// R3 active track state: which mashup is playing, how many wrong answers on it
+let r3ActiveTrack = 0;       // 0 = none, 1-4 = R3T1-R3T4
+let r3WrongCount = 0;        // resets when a new track starts
+
 let roundState = {
   currentRound: 0,  // 0 = no round active, 1-4 = active round
   completedRounds: [], // Array of completed round numbers
@@ -373,6 +380,18 @@ function setRound(roundNum, source = 'system') {
       updateQLabCueTarget(CONFIG.QLAB_CUE_R4_LOOSER, loserCue);
       console.log(`[R4 FLOW] R4LOOSER → ${loserCue} (${TEAMS[ranking.loser].name} goes first)`);
     }
+    // Retarget R4SINGLESCORE to the first team's score cue
+    if (!ranking.tie) {
+      const firstTeam = ranking.loser; // loser goes first in R4
+      const scoreCue = firstTeam === 'anthems' ? 'R4SANTHEM' : 'R4SICON';
+      updateQLabCueTarget('R4SINGLESCORE', scoreCue);
+      console.log(`[R4 FLOW] R4SINGLESCORE → ${scoreCue} (${TEAMS[firstTeam].name} first)`);
+      // R4GOTO initially points at team 2's block (team 1 plays first)
+      const secondTeam = otherTeam(firstTeam);
+      const secondBlock = secondTeam === 'anthems' ? 'R4ANTHEM' : 'R4ICON';
+      updateQLabCueTarget('R4GOTO', secondBlock);
+      console.log(`[R4 FLOW] R4GOTO → ${secondBlock} (${TEAMS[secondTeam].name} plays second)`);
+    }
   }
 
   // Entering Round 1: reset R1 played count and point R1GOTO at R1TRACKS.
@@ -381,10 +400,17 @@ function setRound(roundNum, source = 'system') {
     retargetR1GOTO('round-enter');
   }
 
-  // Entering Round 2: reset the R2 played set and point R2GO2 at R2T.
+  // Entering Round 2: reset the R2 played set, refresh counter, and point R2GO2 at R2T.
   if (roundNum === 2 && prev !== 2) {
     r2PlayedTeams.clear();
+    r2RefreshCount = 0;
     retargetR2GO2('round-enter');
+  }
+
+  // Entering Round 3: reset active track state
+  if (roundNum === 3 && prev !== 3) {
+    r3ActiveTrack = 0;
+    r3WrongCount = 0;
   }
 
   roundState.currentRound = roundNum;
@@ -432,6 +458,9 @@ function resetRounds(source = 'system') {
   r4PlayedTeams.clear();
   r1PlayedTeams = 0;
   r2PlayedTeams.clear();
+  r2RefreshCount = 0;
+  r3ActiveTrack = 0;
+  r3WrongCount = 0;
   if (r4AutoRetargetTimer) {
     clearTimeout(r4AutoRetargetTimer);
     r4AutoRetargetTimer = null;
@@ -456,8 +485,10 @@ function resetTeam(teamId, source = 'system') {
   // Clear the "now playing" glow for this team
   io.emit("teamStopPlaying", teamId);
   io.emit("triggerStop", teamId);
-  // Update QLab text cue to show 0 seconds
+  // Update QLab text cues to show 0 seconds (both standard and R4)
   updateQLabTextCue(teamId, 0);
+  const r4Cue = teamId === 'anthems' ? '1.1' : '2.2';
+  sendBridgeOsc(`/cue/${r4Cue}/text`, '0', `→ reset ${r4Cue} to 0`);
   
   // Log activity
   logActivity('reset', teamId, 'Team reset', source);
@@ -469,9 +500,11 @@ function resetAll(source = 'system') {
     icons: createTeamState(),
   };
   console.log("[GAME] All teams reset to defaults");
-  // Update both QLab text cues to show 0 seconds
+  // Update both QLab text cues to show 0 seconds (standard and R4)
   updateQLabTextCue("anthems", 0);
   updateQLabTextCue("icons", 0);
+  sendBridgeOsc('/cue/1.1/text', '0', '→ reset 1.1 to 0');
+  sendBridgeOsc('/cue/2.2/text', '0', '→ reset 2.2 to 0');
   
   // Log activity
   logActivity('reset', 'all', 'All teams reset', source);
@@ -579,6 +612,52 @@ function registerCorrectAnswer(teamId, source = 'system') {
 
   // Recompute leader so LEADERSD always points at the current winner
   retargetLeaderSD('correct-answer');
+
+  return gameState;
+}
+
+function undoLastAnswer(teamId, source = 'system') {
+  const team = gameState[teamId];
+  if (!team || team.history.length === 0) {
+    console.log(`[GAME] Nothing to undo for ${teamId}`);
+    return null;
+  }
+
+  const lastEntry = team.history.pop();
+  team.correctAnswers = Math.max(0, team.correctAnswers - 1);
+
+  if (lastEntry.type === 'points') {
+    // Round 4: reverse points and earnedTime
+    team.points -= lastEntry.pointsAwarded;
+    team.earnedTime -= lastEntry.pointsAwarded;
+  } else {
+    // Rounds 1-3: reverse earnedTime
+    team.earnedTime -= lastEntry.pointsAwarded;
+  }
+
+  // Clamp
+  if (team.earnedTime < 0) team.earnedTime = 0;
+  if (team.points < 0) team.points = 0;
+  team.remainingTime = team.maxTime - team.earnedTime;
+
+  // Restore golden record if it was used on this answer
+  if (lastEntry.goldenRecord) {
+    team.goldenRecordUsed = false;
+    team.goldenRecordAvailable = true;
+    team.goldenRecordArmed = false;
+  }
+
+  // Update QLab text cue
+  updateQLabTextCue(teamId, team.earnedTime);
+
+  // Update QLab load cue with new remaining time
+  sendQLabLoadCue(teamId, team.remainingTime);
+
+  // Recompute leader
+  retargetLeaderSD('undo');
+
+  logActivity('undo', teamId, `Undo answer #${lastEntry.answer} (-${lastEntry.pointsAwarded}s${lastEntry.goldenRecord ? ' GOLDEN RECORD reversed' : ''}, now ${team.earnedTime}s)`, source);
+  console.log(`[GAME] ${TEAMS[teamId].name} Undo #${lastEntry.answer} | -${lastEntry.pointsAwarded}s | Earned: ${team.earnedTime}s | Remaining: ${team.remainingTime}s`);
 
   return gameState;
 }
@@ -797,9 +876,22 @@ app.post("/api/nextteam", (req, res) => {
   const next = otherTeam(leavingTeam);
   if (roundState.currentRound === 2) {
     r2PlayedTeams.add(leavingTeam);
-    retargetR2GO2('nextteam-api');
   } else if (roundState.currentRound === 4) {
     r4PlayedTeams.add(leavingTeam);
+    // Retarget R4SINGLESCORE to the incoming team's score cue
+    const scoreCue = next === 'anthems' ? 'R4SANTHEM' : 'R4SICON';
+    updateQLabCueTarget('R4SINGLESCORE', scoreCue);
+    console.log(`[R4 FLOW] R4SINGLESCORE → ${scoreCue} (${TEAMS[next].name} now playing)`);
+    // Retarget R4GOTO: team 2's block if first team done, R5 if both done
+    const bothPlayed = r4PlayedTeams.has('anthems') && r4PlayedTeams.has('icons');
+    if (bothPlayed) {
+      updateQLabCueTarget('R4GOTO', 'R5');
+      console.log(`[R4 FLOW] R4GOTO → R5 (both teams played)`);
+    } else {
+      const nextBlock = next === 'anthems' ? 'R4ANTHEM' : 'R4ICON';
+      updateQLabCueTarget('R4GOTO', nextBlock);
+      console.log(`[R4 FLOW] R4GOTO → ${nextBlock} (${TEAMS[next].name} still to play)`);
+    }
   }
   turnState.currentTeam = next;
   if (turnState.phase === 'playing-first') {
@@ -1128,12 +1220,12 @@ function sdeCueFor(teamId) {
 }
 
 // Round 2 flow: retarget R2GO2 based on how many teams have played in R2.
-//   - < 2 teams played: R2GO2 → R2Team2 (second team's block)
+//   - < 2 teams played: R2GO2 → R2T (tracks for second team)
 //   - both played: R2GO2 → R3 (next round)
 function retargetR2GO2(source = 'system') {
   const bothPlayed = r2PlayedTeams.has('anthems') && r2PlayedTeams.has('icons');
   const target = bothPlayed ? CONFIG.QLAB_CUE_R3 : CONFIG.QLAB_CUE_R2_TEAM2;
-  const label = bothPlayed ? 'both played → R3' : 'R2Team2';
+  const label = bothPlayed ? 'both played → R3' : 'R2T';
   console.log(
     `[R2 FLOW] Retargeting ${CONFIG.QLAB_CUE_R2GO2} → ${target} (${label}) (${source})`
   );
@@ -1413,7 +1505,7 @@ function setCompanionVariable(varName, value) {
 // Number of tracks to randomly select per round when a genre is loaded
 const GENRE_SLOTS = {
   '1': 6,  // 6 track pairs for Round 1 (hook + reveal = 12 cue retargets)
-  '2': 4,  // 4 tracks for Round 2
+  '2': 2,  // 2 tracks per team for Round 2 (refreshed between teams)
   '3': 4,  // 4 tracks for Round 3
 };
 
@@ -1723,6 +1815,16 @@ app.post('/api/refreshgenre', (req, res) => {
   console.log(`[GENRE REFRESH] Reloading genre index ${lastLoadedGenre.genreIndex} for Round ${lastLoadedGenre.round}`);
   const result = loadGenreTracks(lastLoadedGenre.genreIndex);
 
+  res.json(result);
+});
+
+// Refresh tracks — reload R2T1/R2T2 with fresh tracks from the selected genre
+app.post('/api/refreshtracks', (req, res) => {
+  if (!lastLoadedGenre.genreIndex) {
+    return res.status(400).json({ success: false, error: 'No genre loaded yet' });
+  }
+  console.log(`[REFRESH TRACKS] Swapping R2 tracks for second team (api)`);
+  const result = loadGenreTracks(lastLoadedGenre.genreIndex);
   res.json(result);
 });
 
@@ -2111,6 +2213,14 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("undo", (teamId) => {
+    if (!teamId || !TEAMS[teamId]) return;
+    const state = undoLastAnswer(teamId, 'socket');
+    if (state) {
+      io.emit("stateUpdate", state);
+    }
+  });
+
   socket.on("reset", (teamId) => {
     if (teamId && TEAMS[teamId]) {
       playResetCue(teamId);
@@ -2201,19 +2311,61 @@ function handleOscAddress(address) {
     } else {
       console.log(`[OSC DEBUG] registerCorrectAnswer returned null for team: ${teamId}`);
     }
-    // Round 3: go back to 4-choice page after answer
+    // Round 3: go back to 4-choice page and stop active mashup track
     if (roundState.currentRound === 3) {
       navigateStreamDeck(12);
+      if (r3ActiveTrack > 0) {
+        sendBridgeOsc(`/cue/R3T${r3ActiveTrack}/stop`, 0, `→ stop R3T${r3ActiveTrack} after correct`);
+        console.log(`[R3] Stopped R3T${r3ActiveTrack} after correct answer`);
+        r3ActiveTrack = 0;
+        r3WrongCount = 0;
+      }
     }
     return;
   }
 
-  // Incorrect answer (no points) — Round 3: go back to 4-choice page
+  // R3 track started playing: /chart-toppers/r3play/1 through /chart-toppers/r3play/4
+  const r3PlayMatch = address.match(/^\/chart-toppers\/r3play\/([1-4])$/);
+  if (r3PlayMatch) {
+    r3ActiveTrack = parseInt(r3PlayMatch[1]);
+    r3WrongCount = 0;
+    console.log(`[R3] Track R3T${r3ActiveTrack} now playing`);
+    logActivity('r3play', 'all', `R3 track ${r3ActiveTrack} started`, 'osc');
+    return;
+  }
+
+  // Buzzer fired — pause active R3 mashup track
+  if (address === '/chart-toppers/buzz') {
+    console.log(`[OSC] Buzz received`);
+    logActivity('buzz', 'all', 'Buzzer fired', 'osc');
+    if (roundState.currentRound === 3 && r3ActiveTrack > 0) {
+      sendBridgeOsc(`/cue/R3T${r3ActiveTrack}/pause`, 0, `→ pause R3T${r3ActiveTrack} on buzz`);
+      console.log(`[R3] Paused R3T${r3ActiveTrack} on buzz`);
+    }
+    return;
+  }
+
+  // Incorrect answer — Round 3: resume only if not both teams got it wrong
   if (address === '/chart-toppers/incorrect') {
     console.log(`[OSC] Incorrect answer`);
     logActivity('incorrect', 'all', 'Incorrect answer via OSC', 'osc');
     if (roundState.currentRound === 3) {
-      navigateStreamDeck(12);
+      r3WrongCount++;
+      if (r3WrongCount < 2 && r3ActiveTrack > 0) {
+        // First wrong answer — resume the track after a short delay
+        const track = r3ActiveTrack;
+        setTimeout(() => {
+          sendBridgeOsc(`/cue/R3T${track}/start`, 0, `→ resume R3T${track} after incorrect`);
+          console.log(`[R3] Resumed R3T${track} after incorrect (delayed 500ms)`);
+        }, 1000);
+      } else if (r3ActiveTrack > 0) {
+        // Both teams got it wrong — stop the track and go back to choices
+        sendBridgeOsc(`/cue/R3T${r3ActiveTrack}/stop`, 0, `→ stop R3T${r3ActiveTrack} both wrong`);
+        console.log(`[R3] Both teams wrong — stopped R3T${r3ActiveTrack}`);
+        navigateStreamDeck(12);
+        r3ActiveTrack = 0;
+        r3WrongCount = 0;
+      }
     }
     return;
   }
@@ -2473,9 +2625,22 @@ function handleOscAddress(address) {
     // This drives R2GO2 retarget and mirrors the R4 tracking.
     if (roundState.currentRound === 2) {
       r2PlayedTeams.add(leavingTeam);
-      retargetR2GO2('nextteam-osc');
     } else if (roundState.currentRound === 4) {
       r4PlayedTeams.add(leavingTeam);
+      // Retarget R4SINGLESCORE to the incoming team's score cue
+      const scoreCue = next === 'anthems' ? 'R4SANTHEM' : 'R4SICON';
+      updateQLabCueTarget('R4SINGLESCORE', scoreCue);
+      console.log(`[R4 FLOW] R4SINGLESCORE → ${scoreCue} (${TEAMS[next].name} now playing)`);
+      // Retarget R4GOTO: team 2's block if first team done, R5 if both done
+      const bothPlayed = r4PlayedTeams.has('anthems') && r4PlayedTeams.has('icons');
+      if (bothPlayed) {
+        updateQLabCueTarget('R4GOTO', 'R5');
+        console.log(`[R4 FLOW] R4GOTO → R5 (both teams played)`);
+      } else {
+        const nextBlock = next === 'anthems' ? 'R4ANTHEM' : 'R4ICON';
+        updateQLabCueTarget('R4GOTO', nextBlock);
+        console.log(`[R4 FLOW] R4GOTO → ${nextBlock} (${TEAMS[next].name} still to play)`);
+      }
       // Don't call scheduleR4AutoRetarget — it's for /playing/ signals
     }
     turnState.currentTeam = next;
@@ -2540,6 +2705,38 @@ function handleOscAddress(address) {
     console.log(`[GENRE REFRESH] Reloading genre index ${lastLoadedGenre.genreIndex} for Round ${lastLoadedGenre.round}`);
     const result = loadGenreTracks(lastLoadedGenre.genreIndex);
     console.log(`[OSC] Refresh genre: ${result.success ? result.genre + ' (fresh tracks)' : result.error}`);
+    return;
+  }
+
+  // Refresh tracks: 1st call = swap R2T1/R2T2, 2nd call = retarget R2GO2 → AWO
+  if (address === '/chart-toppers/refreshtracks') {
+    r2RefreshCount++;
+    if (r2RefreshCount === 1) {
+      // First call: swap tracks for team 2
+      if (!lastLoadedGenre.genreIndex) {
+        console.warn(`[OSC] refreshtracks — no genre loaded yet, ignoring`);
+        r2RefreshCount = 0;
+        return;
+      }
+      console.log(`[REFRESH TRACKS] Call #1: Swapping R2 tracks for second team (osc)`);
+      const result = loadGenreTracks(lastLoadedGenre.genreIndex);
+      console.log(`[OSC] Refresh tracks: ${result.success ? result.genre + ' (fresh tracks loaded)' : result.error}`);
+      // Switch StreamDeck to the other team's page for R2
+      const playedTeam = turnState.currentTeam || turnState.firstTeam
+                       || (r2PlayedTeams.has('icons') ? 'icons' : null)
+                       || (r2PlayedTeams.has('anthems') ? 'anthems' : null);
+      if (playedTeam) {
+        const nextTeam = otherTeam(playedTeam);
+        navigateStreamDeck(TEAM_PAGES[nextTeam]);
+        console.log(`[REFRESH TRACKS] StreamDeck switched to ${nextTeam} page (was ${playedTeam})`);
+      } else {
+        console.warn(`[REFRESH TRACKS] Cannot switch SD — no team context available`);
+      }
+    } else {
+      // Second call: team 2 done, retarget R2GO2 → AWO
+      console.log(`[REFRESH TRACKS] Call #2: Retargeting R2GO2 → ${CONFIG.QLAB_CUE_R3} (osc)`);
+      updateQLabCueTarget(CONFIG.QLAB_CUE_R2GO2, CONFIG.QLAB_CUE_R3);
+    }
     return;
   }
 
@@ -2740,9 +2937,12 @@ function stopQLabCue(teamId) {
 }
 
 function updateQLabTextCue(teamId, earnedTime) {
-  const cueNumber = teamId === "anthems" ? "1" : "2";  // Use numeric cue numbers
-  const address = `/cue/${cueNumber}/text`;  // Remove /live to update text content, not cue name
-  const text = String(earnedTime);
+  const isR4 = roundState.currentRound === 4;
+  const cueNumber = teamId === "anthems"
+    ? (isR4 ? "1.1" : "1")
+    : (isR4 ? "2.2" : "2");
+  const address = `/cue/${cueNumber}/text`;
+  const text = isR4 ? String(gameState[teamId]?.points || 0) : String(earnedTime);
   const payload = JSON.stringify({ address, value: text });
 
   console.log(`[QLAB TEXT] Updating cue ${cueNumber} (${teamId}) text content to "${text}" seconds`);

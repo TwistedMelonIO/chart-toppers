@@ -15,7 +15,7 @@
   <!-- License Gate Overlay -->
   <div id="license-gate" class="license-gate">
     <div class="license-gate-box">
-      <h2>Chart Toppers v4.1.0</h2>
+      <h2>Chart Toppers v4.2.0</h2>
       <p class="subtitle">A valid license is required to use this application.</p>
       <div class="machine-id-label">Your Machine ID</div>
       <div class="machine-id-value" id="gate-machine-id"
@@ -121,7 +121,7 @@
           </div>
         </div>
         <div class="controls">
-          <button class="btn btn-reset" data-action="reset" data-team="icons">↺ Reset</button>
+          <button class="btn btn-undo" data-action="undo" data-team="icons" disabled>↩ Undo</button>
         </div>
         <div class="history-section">
           <h3>History</h3>
@@ -156,7 +156,7 @@
           </div>
         </div>
         <div class="controls">
-          <button class="btn btn-reset" data-action="reset" data-team="anthems">↺ Reset</button>
+          <button class="btn btn-undo" data-action="undo" data-team="anthems" disabled>↩ Undo</button>
         </div>
         <div class="history-section">
           <h3>History</h3>
@@ -168,7 +168,6 @@
     </div>
 
     <div class="global-controls">
-      <button class="btn btn-reset-all" id="btnResetAll">↺ Reset All Teams</button>
     </div>
 
   </div>
@@ -254,15 +253,25 @@
             panel.style.border = '';
             panel.style.boxShadow = '';
           });
-          
+
           // Add playing class to the specific team panel
           const teamPanel = document.querySelector('.team-' + teamId);
           if (teamPanel) {
             teamPanel.classList.add('playing');
-            
+
             // Also try direct CSS manipulation as fallback
             teamPanel.style.border = '3px solid ' + (teamId === 'anthems' ? '#ffd700' : '#ffd700');
             teamPanel.style.boxShadow = '0 0 15px ' + (teamId === 'anthems' ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 215, 0, 0.3)');
+
+            // R4: swap labels to "Points Earned" and show 0 for the playing team
+            if (window._currentRound === 4) {
+              const label = teamPanel.querySelector('.score-label');
+              const unit = teamPanel.querySelector('.score-unit');
+              const score = teamPanel.querySelector('.score-value');
+              if (label) label.textContent = 'Points Earned';
+              if (unit) unit.textContent = 'points';
+              if (score) score.textContent = '0';
+            }
           }
         } catch (error) {
           // Error in triggerTeamPlaying

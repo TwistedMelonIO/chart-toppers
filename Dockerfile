@@ -1,6 +1,6 @@
 FROM node:20-alpine
 
-LABEL org.opencontainers.image.version="4.1.0" \
+LABEL org.opencontainers.image.version="4.2.0" \
       org.opencontainers.image.title="Chart Toppers" \
       org.opencontainers.image.description="QLab Scoring System"
 

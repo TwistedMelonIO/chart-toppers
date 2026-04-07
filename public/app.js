@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', function() {
       cancel: document.getElementById('iosAlertCancel'),
       confirm: document.getElementById('iosAlertConfirm')
     },
-    resetAll: document.getElementById('btnResetAll'),
     connectionStatus: document.getElementById('connectionStatus')
   };
 
@@ -249,8 +248,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  window._currentRound = 0;
   socket.on('roundUpdate', (roundState) => {
     updateRoundUI(roundState);
+    window._currentRound = roundState?.currentRound || 0;
+    // Reset labels back to time when leaving R4
+    if (window._currentRound !== 4) {
+      ['icons', 'anthems'].forEach(teamId => {
+        const el = elements[teamId];
+        if (el.label) el.label.textContent = 'Time Earned';
+        if (el.unit) el.unit.textContent = 'seconds';
+      });
+    }
   });
 
   socket.on('connect_error', () => {
@@ -321,11 +330,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const teamElements = elements[teamId];
     
-    // Update earned time
+    // Update earned time (R4: show points only)
     if (teamElements.earned) {
+      const displayValue = (window._currentRound === 4) ? (team.points || 0) : team.earnedTime;
       const currentText = teamElements.earned.textContent || "0";
       const currentValue = parseInt(currentText) || 0;
-      animateValue(teamElements.earned, currentValue, team.earnedTime, 400);
+      animateValue(teamElements.earned, currentValue, displayValue, 400);
     }
 
     // Update progress bar
@@ -343,15 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // Update points display (Round 4)
-    if (teamElements.pointsCard && teamElements.points) {
-      if (team.points > 0) {
-        teamElements.pointsCard.style.display = 'block';
-        teamElements.points.textContent = team.points;
-      } else {
-        teamElements.pointsCard.style.display = 'none';
-      }
-    }
+    // Points tracked server-side only — no UI display needed
 
     // Update history
     if (teamElements.history) {
@@ -375,6 +377,12 @@ document.addEventListener('DOMContentLoaded', function() {
         grEl.classList.add('golden-record-used');
         grStatus.textContent = 'Used';
       }
+    }
+
+    // Enable/disable undo button based on history
+    const undoBtn = document.querySelector(`[data-action=undo][data-team=${teamId}]`);
+    if (undoBtn) {
+      undoBtn.disabled = !team.history || team.history.length === 0;
     }
   }
 
@@ -568,24 +576,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  document.querySelectorAll("[data-action=reset]").forEach(btn => {
+  document.querySelectorAll("[data-action=undo]").forEach(btn => {
     btn.addEventListener("click", () => {
-      const teamName = btn.dataset.team === "anthems" ? "Team Anthems" : "Team Icons";
-      showIOSAlert(
-        `Reset ${teamName}?`,
-        `This will clear all scores and history for ${teamName}.`,
-        () => socket.emit("reset", btn.dataset.team)
-      );
+      socket.emit("undo", btn.dataset.team);
     });
   });
-
-  if (elements.resetAll) {
-    elements.resetAll.addEventListener("click", () => {
-      showIOSAlert(
-        "Reset ALL teams?",
-        "This will clear all scores and history for both teams.",
-        () => socket.emit("reset")
-      );
-    });
-  }
 });

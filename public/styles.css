@@ -837,16 +837,21 @@ header h1 {
   transform: translateY(0);
 }
 
-.btn-reset {
+.btn-undo {
   background: rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
   border: 1px solid var(--border);
 }
 
-.btn-reset:hover {
-  background: rgba(244, 63, 94, 0.1);
-  color: var(--danger);
-  border-color: rgba(244, 63, 94, 0.4);
+.btn-undo:hover:not(:disabled) {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--warning, #fbbf24);
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+.btn-undo:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .controls {
@@ -863,26 +868,6 @@ header h1 {
   animation: fadeInUp 0.7s ease 0.3s both;
 }
 
-.btn-reset-all {
-  padding: 0.85rem 2rem;
-  border: 1px solid rgba(244, 63, 94, 0.3);
-  border-radius: 10px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  background: rgba(244, 63, 94, 0.06);
-  color: var(--danger);
-}
-
-.btn-reset-all:hover {
-  background: rgba(244, 63, 94, 0.15);
-  box-shadow: 0 4px 20px var(--danger-glow);
-  transform: translateY(-2px);
-}
 
 /* ---------- HISTORY ---------- */
 
@@ -1412,16 +1397,14 @@ header h1 {
   .btn:hover,
   .settings-btn:hover,
   .btn-correct:hover,
-  .btn-reset:hover,
-  .btn-reset-all:hover {
+  .btn-undo:hover {
     transform: none;
   }
 
   .btn:active,
   .settings-btn:active,
   .btn-correct:active,
-  .btn-reset:active,
-  .btn-reset-all:active {
+  .btn-undo:active {
     transform: scale(0.96);
     opacity: 0.85;
   }
