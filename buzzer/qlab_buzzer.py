@@ -12,6 +12,7 @@ import urllib.error
 from pathlib import Path
 
 from pynput import keyboard
+from pythonosc import udp_client
 
 SCRIPT_DIR = Path(__file__).parent
 
@@ -95,7 +96,7 @@ def send_to_qlab(bundle_id, action, cue=None):
         return False
 
 
-def make_handler(config, bundle_id):
+def make_handler(config, bundle_id, osc_client=None):
     mappings = config.get("key_mappings", {})
     debounce_sec = config.get("debounce_ms", 150) / 1000.0
     log_all = config.get("log_all_keys", False)
@@ -142,23 +143,16 @@ def make_handler(config, bundle_id):
 
         send_to_qlab(bundle_id, action, cue)
 
-        # Notify Chart Toppers server for activity log
-        notify_server(action, cue, char)
+        # Notify chart-toppers server of buzz event
+        if osc_client:
+            try:
+                team = mapping.get("team", "unknown")
+                osc_client.send_message("/chart-toppers/buzz", team)
+                print(f"  [OSC] Sent /chart-toppers/buzz {team}")
+            except Exception as e:
+                print(f"  [OSC] Failed to send buzz: {e}")
 
     return on_press
-
-
-def notify_server(action, cue, key):
-    """POST buzzer trigger to Chart Toppers so it appears in the activity log."""
-    try:
-        data = json.dumps({"action": action, "cue": cue or "", "key": key}).encode()
-        req = urllib.request.Request(
-            "http://localhost:3200/api/buzzer/trigger",
-            method="POST", data=data,
-            headers={"Content-Type": "application/json"})
-        urllib.request.urlopen(req, timeout=2)
-    except (urllib.error.URLError, OSError):
-        pass  # Server not available — silent fail
 
 
 def start_heartbeat(config):
@@ -203,6 +197,17 @@ def main():
     start_heartbeat(config)
     print(f"  Heartbeat: every {config.get('heartbeat_interval', 5)}s → {config.get('heartbeat_url', 'http://localhost:3200/api/buzzer/heartbeat')}")
 
+    # OSC client for chart-toppers server notifications
+    osc_host = config.get("osc_host", "127.0.0.1")
+    osc_port = config.get("osc_port", 53536)
+    osc_client = None
+    try:
+        osc_client = udp_client.SimpleUDPClient(osc_host, osc_port)
+        print(f"  OSC client: {osc_host}:{osc_port}")
+    except Exception as e:
+        print(f"  WARNING: OSC client failed to init: {e}")
+        print("  (Buzzer will still work, but chart-toppers won't receive buzz events)")
+
     print("\nListening for keypresses... (Ctrl+C to quit)\n")
 
     def shutdown(signum, frame):
@@ -212,7 +217,7 @@ def main():
     signal.signal(signal.SIGTERM, shutdown)
 
     try:
-        with keyboard.Listener(on_press=make_handler(config, bundle_id)) as listener:
+        with keyboard.Listener(on_press=make_handler(config, bundle_id, osc_client)) as listener:
             listener.join()
     except KeyboardInterrupt:
         print("\nShutting down...")
