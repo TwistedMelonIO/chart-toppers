@@ -854,6 +854,20 @@ header h1 {
   cursor: not-allowed;
 }
 
+.btn-undo.buzz-highlight,
+.btn-undo.buzz-highlight:disabled {
+  background: rgba(251, 191, 36, 0.2);
+  color: var(--warning, #fbbf24);
+  border-color: rgba(251, 191, 36, 0.6);
+  opacity: 1;
+  animation: buzz-pulse 0.6s ease-in-out 2;
+}
+
+@keyframes buzz-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+  50% { box-shadow: 0 0 12px 4px rgba(251, 191, 36, 0.3); }
+}
+
 .controls {
   display: flex;
   gap: 0.5rem;

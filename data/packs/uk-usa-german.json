@@ -13,9 +13,9 @@
       "World Pop"
     ],
     "3": [
-      "A-Side/B-side",
-      "One Hit Wonders",
-      "Power Ballads"
+      "80s",
+      "90s",
+      "2000s"
     ],
     "4": [
       "A-Side/B-side",
@@ -1011,339 +1011,129 @@
       "tracks": [
         {
           "cue": "R3T1",
-          "fileName": "PACK_A_ROUND 3_TRACK_1_Champagne Supernova_Hey Jude.mp3",
-          "band": "Oasis",
-          "track": "Champagne Supernova",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_A1_A2.wav",
+          "band": "Mashup",
+          "track": "A1 vs A2",
+          "genre": "80s"
         },
         {
           "cue": "R3T2",
-          "fileName": "PACK_A_ROUND 3_TRACK_1_Champagne Supernova_Hey Jude.mp3",
-          "band": "The Beatles",
-          "track": "Hey Jude",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_B1_B2.wav",
+          "band": "Mashup",
+          "track": "B1 vs B2",
+          "genre": "80s"
         },
         {
           "cue": "R3T3",
-          "fileName": "PACK_A_ROUND 3_TRACK_3_Coffee & TV_ COMMON PEOPLE.mp3",
-          "band": "Blur",
-          "track": "Coffee & TV",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_C1_C2.wav",
+          "band": "Mashup",
+          "track": "C1 vs C2",
+          "genre": "80s"
         },
         {
           "cue": "R3T4",
-          "fileName": "PACK_A_ROUND 3_TRACK_3_Coffee & TV_ COMMON PEOPLE.mp3",
-          "band": "Pulp",
-          "track": "Common People",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_D1_F2.wav",
+          "band": "Mashup",
+          "track": "D1 vs F2",
+          "genre": "80s"
         },
         {
           "cue": "R3T5",
-          "fileName": "PACK_A_ROUND 3_TRACK_5_Connection_Champagne Supernova.mp3",
-          "band": "Elastica",
-          "track": "Connection",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_D2_F1.wav",
+          "band": "Mashup",
+          "track": "D2 vs F1",
+          "genre": "80s"
         },
         {
           "cue": "R3T6",
-          "fileName": "PACK_A_ROUND 3_TRACK_5_Connection_Champagne Supernova.mp3",
-          "band": "Oasis",
-          "track": "Champagne Supernova",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_E1_E2.wav",
+          "band": "Mashup",
+          "track": "E1 vs E2",
+          "genre": "80s"
         },
         {
           "cue": "R3T7",
-          "fileName": "PACK_A_ROUND 3_TRACK_7_Beetlebum_ THE SMITHS.mp3",
-          "band": "Blur",
-          "track": "Beetlebum",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_A1_A2.wav",
+          "band": "Mashup",
+          "track": "A1 vs A2",
+          "genre": "90s"
         },
         {
           "cue": "R3T8",
-          "fileName": "PACK_A_ROUND 3_TRACK_7_Beetlebum_ THE SMITHS.mp3",
-          "band": "The Smiths",
-          "track": "There Is a Light That Never Goes Out",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_B1_B2.wav",
+          "band": "Mashup",
+          "track": "B1 vs B2",
+          "genre": "90s"
         },
         {
           "cue": "R3T9",
-          "fileName": "PACK_A_ROUND 3_TRACK_9_Close to Me_BABIES.mp3",
-          "band": "The Cure",
-          "track": "Close to Me",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_C1_C2.wav",
+          "band": "Mashup",
+          "track": "C1 vs C2",
+          "genre": "90s"
         },
         {
           "cue": "R3T10",
-          "fileName": "PACK_A_ROUND 3_TRACK_9_Close to Me_BABIES.mp3",
-          "band": "Pulp",
-          "track": "Babies",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_D1_F2.wav",
+          "band": "Mashup",
+          "track": "D1 vs F2",
+          "genre": "90s"
         },
         {
           "cue": "R3T11",
-          "fileName": "PACK_A_ROUND 3_TRACK_11_Animal Nitrate_GOING UNDERGROUND.mp3",
-          "band": "Suede",
-          "track": "Animal Nitrate",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_D2_F1.wav",
+          "band": "Mashup",
+          "track": "D2 vs F1",
+          "genre": "90s"
         },
         {
           "cue": "R3T12",
-          "fileName": "PACK_A_ROUND 3_TRACK_11_Animal Nitrate_GOING UNDERGROUND.mp3",
-          "band": "The Jam",
-          "track": "Going Underground",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_E1_E2.wav",
+          "band": "Mashup",
+          "track": "E1 vs E2",
+          "genre": "90s"
         },
         {
           "cue": "R3T13",
-          "fileName": "PACK_A_ROUND 3_TRACK_13_Should I Stay or Should I Go_ LOVE WILL TEAR US APART.mp3",
-          "band": "The Clash",
-          "track": "Should I Stay or Should I Go",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_A1_A2.wav",
+          "band": "Mashup",
+          "track": "A1 vs A2",
+          "genre": "2000s"
         },
         {
           "cue": "R3T14",
-          "fileName": "PACK_A_ROUND 3_TRACK_13_Should I Stay or Should I Go_ LOVE WILL TEAR US APART.mp3",
-          "band": "Joy Division",
-          "track": "Love Will Tear Us Apart",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_B1_B2.wav",
+          "band": "Mashup",
+          "track": "B1 vs B2",
+          "genre": "2000s"
         },
         {
           "cue": "R3T15",
-          "fileName": "PACK_A_ROUND 3_TRACK_15_I Wanna Be Adored_ PRINMAL SCREAM.mp3",
-          "band": "The Stone Roses",
-          "track": "I Wanna Be Adored",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_C1_C2.wav",
+          "band": "Mashup",
+          "track": "C1 vs C2",
+          "genre": "2000s"
         },
         {
           "cue": "R3T16",
-          "fileName": "PACK_A_ROUND 3_TRACK_15_I Wanna Be Adored_ PRINMAL SCREAM.mp3",
-          "band": "Primal Scream",
-          "track": "Loaded",
-          "genre": "A-Side/B-side"
+          "fileName": "Round 3- Mashup Madness_2000_s_D1_F2.wav",
+          "band": "Mashup",
+          "track": "D1 vs F2",
+          "genre": "2000s"
         },
         {
           "cue": "R3T17",
-          "fileName": "PACK_A_ROUND 3_TRACK_17_Macarena_I LIKE TO MOVE IT.mp3",
-          "band": "Los Del Rio",
-          "track": "Macarena",
-          "genre": "One Hit Wonders"
+          "fileName": "Round 3- Mashup Madness_2000_s_D2_F1.wav",
+          "band": "Mashup",
+          "track": "D2 vs F1",
+          "genre": "2000s"
         },
         {
           "cue": "R3T18",
-          "fileName": "PACK_A_ROUND 3_TRACK_17_Macarena_I LIKE TO MOVE IT.mp3",
-          "band": "Reel 2 Real",
-          "track": "I Like to Move It",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T19",
-          "fileName": "PACK_A_ROUND 3_TRACK_19_99 Red Balloons_MICKEY.mp3",
-          "band": "Nena",
-          "track": "99 Red Balloons",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T20",
-          "fileName": "PACK_A_ROUND 3_TRACK_19_99 Red Balloons_MICKEY.mp3",
-          "band": "Toni Basil",
-          "track": "Mickey",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T21",
-          "fileName": "PACK_A_ROUND 3_TRACK_21_The Safety Dance_EILEEN.mp3",
-          "band": "Men Without Hats",
-          "track": "The Safety Dance",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T22",
-          "fileName": "PACK_A_ROUND 3_TRACK_21_The Safety Dance_EILEEN.mp3",
-          "band": "Dexys Midnight Runners",
-          "track": "Come On Eileen",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T23",
-          "fileName": "PACK_A_ROUND 3_TRACK_23_Macarena_99 RED BALLOONS.mp3",
-          "band": "Los Del Rio",
-          "track": "Macarena",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T24",
-          "fileName": "PACK_A_ROUND 3_TRACK_23_Macarena_99 RED BALLOONS.mp3",
-          "band": "Nena",
-          "track": "99 Red Balloons",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T25",
-          "fileName": "PACK_A_ROUND 3_TRACK_25_The Final Countdown_IM TOO SEXY.mp3",
-          "band": "Europe",
-          "track": "The Final Countdown",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T26",
-          "fileName": "PACK_A_ROUND 3_TRACK_25_The Final Countdown_IM TOO SEXY.mp3",
-          "band": "Right Said Fred",
-          "track": "I'm Too Sexy",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T27",
-          "fileName": "PACK_A_ROUND 3_TRACK_27_Tainted Love_my sharona.mp3",
-          "band": "Soft Cell",
-          "track": "Tainted Love",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T28",
-          "fileName": "PACK_A_ROUND 3_TRACK_27_Tainted Love_my sharona.mp3",
-          "band": "The Knack",
-          "track": "My Sharona",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T29",
-          "fileName": "PACK_A_ROUND 3_TRACK_29_867-5309 Jenny_I Think We're Alone Now.mp3",
-          "band": "Tommy Tutone",
-          "track": "867-5309/Jenny",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T30",
-          "fileName": "PACK_A_ROUND 3_TRACK_29_867-5309 Jenny_I Think We're Alone Now.mp3",
-          "band": "Tiffany",
-          "track": "I Think We're Alone Now",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T31",
-          "fileName": "PACK_A_ROUND 3_TRACK_31_Ice Ice Baby_lou begga.mp3",
-          "band": "Vanilla Ice",
-          "track": "Ice Ice Baby",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T32",
-          "fileName": "PACK_A_ROUND 3_TRACK_31_Ice Ice Baby_lou begga.mp3",
-          "band": "Lou Bega",
-          "track": "Mambo No. 5",
-          "genre": "One Hit Wonders"
-        },
-        {
-          "cue": "R3T33",
-          "fileName": "PACK_A_ROUND 3_TRACK_33_Total Eclipse of the Heart_power of love.mp3",
-          "band": "Bonnie Tyler",
-          "track": "Total Eclipse of the Heart",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T34",
-          "fileName": "PACK_A_ROUND 3_TRACK_33_Total Eclipse of the Heart_power of love.mp3",
-          "band": "Jennifer Rush",
-          "track": "The Power of Love",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T35",
-          "fileName": "PACK_A_ROUND 3_TRACK_35_Greatest Love of All_HERO.mp3",
-          "band": "Whitney Houston",
-          "track": "Greatest Love of All",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T36",
-          "fileName": "PACK_A_ROUND 3_TRACK_35_Greatest Love of All_HERO.mp3",
-          "band": "Mariah Carey",
-          "track": "Hero",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T37",
-          "fileName": "PACK_A_ROUND 3_TRACK_37_I Don't Want to Miss a Thing_AIR SUPPLY.mp3",
-          "band": "Aerosmith",
-          "track": "I Don't Want to Miss a Thing",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T38",
-          "fileName": "PACK_A_ROUND 3_TRACK_37_I Don't Want to Miss a Thing_AIR SUPPLY.mp3",
-          "band": "Air Supply",
-          "track": "All Out of Love",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T39",
-          "fileName": "PACK_A_ROUND 3_TRACK_39_Total Eclipse of the Heart_I WILL ALWAYS LOVE YOU.mp3",
-          "band": "Bonnie Tyler",
-          "track": "Total Eclipse of the Heart",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T40",
-          "fileName": "PACK_A_ROUND 3_TRACK_39_Total Eclipse of the Heart_I WILL ALWAYS LOVE YOU.mp3",
-          "band": "Whitney Houston",
-          "track": "I Will Always Love You",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T41",
-          "fileName": "PACK_A_ROUND 3_TRACK_41_Don't Stop Believin'_MY HEART WILL GO ON.mp3",
-          "band": "Journey",
-          "track": "Don't Stop Believin'",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T42",
-          "fileName": "PACK_A_ROUND 3_TRACK_41_Don't Stop Believin'_MY HEART WILL GO ON.mp3",
-          "band": "Céline Dion",
-          "track": "My Heart Will Go On",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T43",
-          "fileName": "PACK_A_ROUND 3_TRACK_43_I'd Do Anything for Love_NOVEMBER RAIN.mp3",
-          "band": "Meat Loaf",
-          "track": "I'd Do Anything for Love",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T44",
-          "fileName": "PACK_A_ROUND 3_TRACK_43_I'd Do Anything for Love_NOVEMBER RAIN.mp3",
-          "band": "Guns N' Roses",
-          "track": "November Rain",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T45",
-          "fileName": "PACK_A_ROUND 3_TRACK_45_I Want to Know What Love Is_ALONE.mp3",
-          "band": "Foreigner",
-          "track": "I Want to Know What Love Is",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T46",
-          "fileName": "PACK_A_ROUND 3_TRACK_45_I Want to Know What Love Is_ALONE.mp3",
-          "band": "Heart",
-          "track": "Alone",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T47",
-          "fileName": "PACK_A_ROUND 3_TRACK_47_The Final Countdown_CAN'T FIGHT THIS FEELING.mp3",
-          "band": "Europe",
-          "track": "The Final Countdown",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R3T48",
-          "fileName": "PACK_A_ROUND 3_TRACK_47_The Final Countdown_CAN'T FIGHT THIS FEELING.mp3",
-          "band": "REO Speedwagon",
-          "track": "Can't Fight This Feeling",
-          "genre": "Power Ballads"
+          "fileName": "Round 3- Mashup Madness_2000_s_E1_E2.wav",
+          "band": "Mashup",
+          "track": "E1 vs E2",
+          "genre": "2000s"
         }
       ]
     },
@@ -1528,16 +1318,16 @@
         },
         {
           "cue": "R4T26",
-          "fileName": "PACK_A_ROUND 4_TRACK_26_Me Gustas Tú.mp3",
+          "fileName": "PACK_A_ROUND 4_TRACK_26_Me Gustas T\u00fa.mp3",
           "band": "Manu Chao",
-          "track": "Me Gustas Tú",
+          "track": "Me Gustas T\u00fa",
           "genre": "World Pop"
         },
         {
           "cue": "R4T27",
-          "fileName": "PACK_A_ROUND 4_TRACK_27_Santa María.mp3",
+          "fileName": "PACK_A_ROUND 4_TRACK_27_Santa Mar\u00eda.mp3",
           "band": "Gotan Project",
-          "track": "Santa María",
+          "track": "Santa Mar\u00eda",
           "genre": "World Pop"
         },
         {

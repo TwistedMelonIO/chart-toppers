@@ -45,6 +45,8 @@ const CONFIG = {
   QLAB_CUE_R4_ICONS: process.env.QLAB_CUE_R4_ICONS || "R4ICON",
   // After both teams have played in R4, R4NEXT retargets to this cue (winner reveal / R5)
   QLAB_CUE_R4_END: process.env.QLAB_CUE_R4_END || "R5",
+  // Tiebreaker cue — used instead of R5 when scores are tied after R4
+  QLAB_CUE_TIEBREAK: process.env.QLAB_CUE_TIEBREAK || "TIEBREAK",
 
   // Team StreamDeck navigation: R1TEAMSD is a goto cue retargeted by the
   // server to the current team's SD page cue (SDE10 icons / SDE11 anthems)
@@ -250,6 +252,10 @@ let r2RefreshCount = 0;
 // R3 active track state: which mashup is playing, how many wrong answers on it
 let r3ActiveTrack = 0;       // 0 = none, 1-4 = R3T1-R3T4
 let r3WrongCount = 0;        // resets when a new track starts
+let r3LastBuzzTeam = null;   // which team buzzed in on the current R3 track
+
+// Map team IDs to their buzzer cue names in QLab
+const TEAM_BUZZER_CUE = { icons: 'IBUZZ', anthems: 'ABUZZ' };
 
 let roundState = {
   currentRound: 0,  // 0 = no round active, 1-4 = active round
@@ -357,6 +363,25 @@ function autoSetFirstTeamForRound(roundNum, source) {
 
 function resetR4Tracks() {
   r4TracksPlayed = { 1: false, 2: false, 3: false, 4: false };
+
+  // Shuffle R4 tracks: pick 4 random tracks from the full pool and assign to R4T1-R4T4
+  const pack = packData[packSettings.currentPack];
+  if (pack && pack.rounds && pack.rounds['4']) {
+    const allR4 = pack.rounds['4'].tracks.filter(t => t.band !== 'XX');
+    const shuffled = [...allR4].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 4);
+    const basePath = packSettings.audioBasePath || '';
+
+    selected.forEach((track, i) => {
+      const slot = `R4T${i + 1}`;
+      const fullPath = basePath ? path.join(basePath, track.fileName) : track.fileName;
+      updateQLabCueFilePath(slot, fullPath);
+      updateQLabCueName(slot, `${track.band} - ${track.track}`);
+      console.log(`[R4 SHUFFLE] ${slot}: ${track.band} - ${track.track}`);
+    });
+    console.log(`[ROUND 4] Shuffled 4 tracks from ${allR4.length} available`);
+  }
+
   console.log('[ROUND 4] Track play state reset');
 }
 
@@ -413,10 +438,13 @@ function setRound(roundNum, source = 'system') {
     retargetR2GO2('round-enter');
   }
 
-  // Entering Round 3: reset active track state
+  // Entering Round 3: reset active track state and StreamDeck button colours
   if (roundNum === 3 && prev !== 3) {
     r3ActiveTrack = 0;
     r3WrongCount = 0;
+    for (let i = 1; i <= 4; i++) {
+      setCompanionVariable(`r3_track_${i}_played`, '0');
+    }
   }
 
   roundState.currentRound = roundNum;
@@ -467,6 +495,9 @@ function resetRounds(source = 'system') {
   r2RefreshCount = 0;
   r3ActiveTrack = 0;
   r3WrongCount = 0;
+  for (let i = 1; i <= 4; i++) {
+    setCompanionVariable(`r3_track_${i}_played`, '0');
+  }
   if (r4AutoRetargetTimer) {
     clearTimeout(r4AutoRetargetTimer);
     r4AutoRetargetTimer = null;
@@ -478,6 +509,12 @@ function resetRounds(source = 'system') {
   // Reset R4GOTO back to R4ICON (default, will be retargeted on R4 entry)
   updateQLabCueTarget('R4GOTO', 'R4ICON');
   console.log(`[RESET] R4GOTO → R4ICON (default)`);
+  // Reset R4SINGLESCORE back to R4SICON (default, will be retargeted on R4 entry)
+  updateQLabCueTarget('R4SINGLESCORE', 'R4SICON');
+  console.log(`[RESET] R4SINGLESCORE → R4SICON (default)`);
+  // Reset DUALGO back to R5 (default, will be retargeted to TIEBREAK if scores are tied)
+  updateQLabCueTarget('DUALGO', 'R5');
+  console.log(`[RESET] DUALGO → R5 (default)`);
   // Clear any lingering "now playing" glow on the dashboard
   io.emit("teamStopPlaying", "anthems");
   io.emit("teamStopPlaying", "icons");
@@ -665,6 +702,10 @@ function undoLastAnswer(teamId, source = 'system') {
   // Recompute leader
   retargetLeaderSD('undo');
 
+  // Stop buzzer cues (most likely trigger for an undo)
+  sendBridgeOsc('/cue/IBUZZ/stop', 0, '→ stop IBUZZ on undo');
+  sendBridgeOsc('/cue/ABUZZ/stop', 0, '→ stop ABUZZ on undo');
+
   logActivity('undo', teamId, `Undo answer #${lastEntry.answer} (-${lastEntry.pointsAwarded}s${lastEntry.goldenRecord ? ' GOLDEN RECORD reversed' : ''}, now ${team.earnedTime}s)`, source);
   console.log(`[GAME] ${TEAMS[teamId].name} Undo #${lastEntry.answer} | -${lastEntry.pointsAwarded}s | Earned: ${team.earnedTime}s | Remaining: ${team.remainingTime}s`);
 
@@ -786,11 +827,21 @@ app.get("/api/buzzer/status", (req, res) => {
   res.json({ connected });
 });
 
+// Map buzzer cue names to team IDs
+const BUZZER_CUE_TEAM = { 'IBUZZ': 'icons', 'ABUZZ': 'anthems' };
+
 app.post("/api/buzzer/trigger", (req, res) => {
   const { action, cue, key } = req.body || {};
   const detail = cue ? `Buzzer: ${action} cue ${cue} (key: ${key})` : `Buzzer: ${action} (key: ${key})`;
   console.log(`[BUZZER] ${detail}`);
   logActivity('buzzer', 'all', detail, 'buzzer');
+
+  // Notify dashboard which team buzzed in
+  const teamId = BUZZER_CUE_TEAM[cue];
+  if (teamId) {
+    io.emit("buzzerFired", { team: teamId });
+  }
+
   res.json({ ok: true });
 });
 
@@ -1399,18 +1450,23 @@ function updateAllGenreCues(packId) {
 
   console.log(`[GENRE] Updating G1-G9 for ${pack.name}`);
 
+  let delay = 0;
   Object.entries(GENRE_CUE_MAP).forEach(([round, cues]) => {
     const genres = pack.genres[round];
     if (!genres) return;
 
     cues.forEach((cue, i) => {
       const genreName = genres[i] || '';
-      updateQLabCueName(cue, genreName);
+      setTimeout(() => {
+        updateQLabCueName(cue, genreName);
+        sendBridgeOsc(`/cue/${cue}/text`, genreName.toUpperCase(), `→ set ${cue} text to "${genreName.toUpperCase()}"`);
+      }, delay);
+      delay += 100;
     });
   });
 
-  // Also update Companion variables + SG targets for the current round
-  updateGenreTargets(roundState.currentRound);
+  // Also update Companion variables + SG targets for the current round (default to R1 if no round active)
+  updateGenreTargets(roundState.currentRound || 1);
 }
 
 // Retarget SG1-SG3 to the correct G cues for the given round + update Companion variables
@@ -1897,6 +1953,47 @@ app.post("/api/reset", (req, res) => {
   res.json({ success: true, message: "Reset all teams - playing AT and IT cues" });
 });
 
+// Randomise Round 3 scores for testing
+app.post("/api/randomise-round3", (req, res) => {
+  const R3_POINTS_PER_CORRECT = CONFIG.ROUND_SCORING[3] || 8;
+  const R3_MAX_CORRECT = 4; // 4 mashups in Round 3
+
+  for (const teamId of ['anthems', 'icons']) {
+    const team = gameState[teamId];
+    const numCorrect = Math.floor(Math.random() * (R3_MAX_CORRECT + 1)); // 0-4
+    const r3Time = numCorrect * R3_POINTS_PER_CORRECT;
+
+    team.earnedTime = Math.min(team.earnedTime + r3Time, CONFIG.MAX_TIME);
+    team.remainingTime = team.maxTime - team.earnedTime;
+    if (team.remainingTime < 0) team.remainingTime = 0;
+    team.correctAnswers += numCorrect;
+
+    for (let i = 0; i < numCorrect; i++) {
+      team.history.push({
+        timestamp: new Date().toISOString(),
+        answer: team.correctAnswers - numCorrect + i + 1,
+        earnedTime: team.earnedTime - (numCorrect - i - 1) * R3_POINTS_PER_CORRECT,
+        remainingTime: team.maxTime - (team.earnedTime - (numCorrect - i - 1) * R3_POINTS_PER_CORRECT),
+        round: 3,
+        pointsAwarded: R3_POINTS_PER_CORRECT,
+        goldenRecord: false,
+      });
+    }
+
+    updateQLabTextCue(teamId, team.earnedTime);
+    console.log(`[API] Randomised R3 for ${TEAMS[teamId].name}: ${numCorrect} correct (+${r3Time}s), total ${team.earnedTime}s`);
+  }
+
+  retargetLeaderSD('randomise-round3');
+  io.emit("stateUpdate", gameState);
+  logActivity('system', null, `Randomised Round 3 scores — Anthems: ${gameState.anthems.earnedTime}s, Icons: ${gameState.icons.earnedTime}s`, 'api');
+  res.json({
+    success: true,
+    anthems: { earnedTime: gameState.anthems.earnedTime, remainingTime: gameState.anthems.remainingTime },
+    icons: { earnedTime: gameState.icons.earnedTime, remainingTime: gameState.icons.remainingTime },
+  });
+});
+
 // =============================================================================
 // License Validation System
 // =============================================================================
@@ -2306,7 +2403,7 @@ function parseOscFloat(buf, offset) {
 
 const udpServer = dgram.createSocket({ type: "udp4", reuseAddr: true });
 
-function handleOscAddress(address) {
+function handleOscAddress(address, args) {
   // Team correct answers: /chart-toppers/correct/anthems or /chart-toppers/correct/icons
   const correctMatch = address.match(/^\/chart-toppers\/correct\/(anthems|icons)$/);
   if (correctMatch) {
@@ -2324,10 +2421,15 @@ function handleOscAddress(address) {
     if (roundState.currentRound === 3) {
       navigateStreamDeck(12);
       if (r3ActiveTrack > 0) {
+        setCompanionVariable(`r3_track_${r3ActiveTrack}_played`, '1');
         sendBridgeOsc(`/cue/R3T${r3ActiveTrack}/stop`, 0, `→ stop R3T${r3ActiveTrack} after correct`);
-        console.log(`[R3] Stopped R3T${r3ActiveTrack} after correct answer`);
+        // Re-arm both buzzers for the next track
+        sendBridgeOsc('/cue/IBUZZ/armed', 1, '→ arm IBUZZ after R3 correct');
+        sendBridgeOsc('/cue/ABUZZ/armed', 1, '→ arm ABUZZ after R3 correct');
+        console.log(`[R3] Stopped R3T${r3ActiveTrack} after correct answer — both buzzers re-armed`);
         r3ActiveTrack = 0;
         r3WrongCount = 0;
+        r3LastBuzzTeam = null;
       }
     }
     return;
@@ -2338,16 +2440,30 @@ function handleOscAddress(address) {
   if (r3PlayMatch) {
     r3ActiveTrack = parseInt(r3PlayMatch[1]);
     r3WrongCount = 0;
-    console.log(`[R3] Track R3T${r3ActiveTrack} now playing`);
+    r3LastBuzzTeam = null;
+    // Re-arm both buzzers for the new track
+    sendBridgeOsc('/cue/IBUZZ/armed', 1, '→ arm IBUZZ for new R3 track');
+    sendBridgeOsc('/cue/ABUZZ/armed', 1, '→ arm ABUZZ for new R3 track');
+    console.log(`[R3] Track R3T${r3ActiveTrack} now playing — both buzzers armed`);
     logActivity('r3play', 'all', `R3 track ${r3ActiveTrack} started`, 'osc');
     return;
   }
 
   // Buzzer fired — pause active R3 mashup track
   if (address === '/chart-toppers/buzz') {
-    console.log(`[OSC] Buzz received`);
-    logActivity('buzz', 'all', 'Buzzer fired', 'osc');
+    const buzzTeam = args.length > 0 ? (args[0].value || args[0]) : null;
+    console.log(`[OSC] Buzz received${buzzTeam ? ` (${buzzTeam})` : ''}`);
+    logActivity('buzz', buzzTeam || 'all', 'Buzzer fired', 'osc');
+    if (buzzTeam) {
+      io.emit("buzzerFired", { team: buzzTeam });
+    }
     if (roundState.currentRound === 3 && r3ActiveTrack > 0) {
+      // Ignore buzz from a locked-out team (already got it wrong on this track)
+      if (buzzTeam && buzzTeam === r3LastBuzzTeam) {
+        console.log(`[R3] Ignoring buzz from locked-out team ${buzzTeam}`);
+        return;
+      }
+      r3LastBuzzTeam = buzzTeam;
       sendBridgeOsc(`/cue/R3T${r3ActiveTrack}/pause`, 0, `→ pause R3T${r3ActiveTrack} on buzz`);
       console.log(`[R3] Paused R3T${r3ActiveTrack} on buzz`);
     }
@@ -2361,7 +2477,12 @@ function handleOscAddress(address) {
     if (roundState.currentRound === 3) {
       r3WrongCount++;
       if (r3WrongCount < 2 && r3ActiveTrack > 0) {
-        // First wrong answer — resume the track after a short delay
+        // First wrong answer — lock out the buzzer for the team that got it wrong
+        if (r3LastBuzzTeam && TEAM_BUZZER_CUE[r3LastBuzzTeam]) {
+          sendBridgeOsc(`/cue/${TEAM_BUZZER_CUE[r3LastBuzzTeam]}/armed`, 0, `→ disarm ${TEAM_BUZZER_CUE[r3LastBuzzTeam]} after incorrect`);
+          console.log(`[R3] Locked out ${r3LastBuzzTeam} buzzer (${TEAM_BUZZER_CUE[r3LastBuzzTeam]})`);
+        }
+        // Resume the track after a short delay
         const track = r3ActiveTrack;
         setTimeout(() => {
           sendBridgeOsc(`/cue/R3T${track}/start`, 0, `→ resume R3T${track} after incorrect`);
@@ -2369,11 +2490,16 @@ function handleOscAddress(address) {
         }, 1000);
       } else if (r3ActiveTrack > 0) {
         // Both teams got it wrong — stop the track and go back to choices
+        setCompanionVariable(`r3_track_${r3ActiveTrack}_played`, '1');
         sendBridgeOsc(`/cue/R3T${r3ActiveTrack}/stop`, 0, `→ stop R3T${r3ActiveTrack} both wrong`);
-        console.log(`[R3] Both teams wrong — stopped R3T${r3ActiveTrack}`);
+        // Re-arm both buzzers for the next track
+        sendBridgeOsc('/cue/IBUZZ/armed', 1, '→ arm IBUZZ after R3 both wrong');
+        sendBridgeOsc('/cue/ABUZZ/armed', 1, '→ arm ABUZZ after R3 both wrong');
+        console.log(`[R3] Both teams wrong — stopped R3T${r3ActiveTrack} — both buzzers re-armed`);
         navigateStreamDeck(12);
         r3ActiveTrack = 0;
         r3WrongCount = 0;
+        r3LastBuzzTeam = null;
       }
     }
     return;
@@ -2698,6 +2824,26 @@ function handleOscAddress(address) {
     return;
   }
 
+  // Dual scoreboard screen: only check for tiebreaker in Round 4
+  if (address === '/chart-toppers/dualscreen') {
+    if (roundState.currentRound !== 4) {
+      console.log(`[DUALSCREEN] Round ${roundState.currentRound} — ignoring (DUALGO only active in R4)`);
+      return;
+    }
+    const ranking = teamRanking();
+    if (ranking.tie) {
+      console.log(`[TIEBREAK] Tie detected (${ranking.aScore} each) — DUALGO → TIEBREAK`);
+      updateQLabCueTarget('DUALGO', CONFIG.QLAB_CUE_TIEBREAK);
+      sendBridgeOsc('/cue/DUALGO/armed', 1, '→ arm DUALGO for tiebreaker');
+      sendBridgeOsc('/cue/IBUZZ/armed', 1, '→ arm IBUZZ for tiebreaker');
+      sendBridgeOsc('/cue/ABUZZ/armed', 1, '→ arm ABUZZ for tiebreaker');
+      logActivity('tiebreak', 'all', `Tiebreaker triggered (${ranking.aScore} each)`, 'osc');
+    } else {
+      console.log(`[DUALSCREEN] No tie — DUALGO stays disarmed`);
+    }
+    return;
+  }
+
   // Coin toss: /chart-toppers/cointoss/anthems or /chart-toppers/cointoss/icons
   const cointossMatch = address.match(/^\/chart-toppers\/cointoss\/(anthems|icons)$/);
   if (cointossMatch) {
@@ -2841,12 +2987,12 @@ udpServer.on("message", (msg, rinfo) => {
   try {
     const oscMsg = osc.readPacket(msg, { metadata: true });
     console.log(`[OSC IN] ${oscMsg.address}`, oscMsg.args || [], `from ${rinfo.address}:${rinfo.port}`);
-    handleOscAddress(oscMsg.address);
+    handleOscAddress(oscMsg.address, oscMsg.args || []);
   } catch (err) {
     console.log(`[OSC IN RAW] ${msg.length} bytes from ${rinfo.address}:${rinfo.port} (parse error: ${err.message})`);
     const addr = parseOscAddress(msg);
     console.log(`[OSC IN RAW] Extracted address: "${addr}"`);
-    handleOscAddress(addr);
+    handleOscAddress(addr, []);
   }
 });
 
@@ -3089,7 +3235,7 @@ function playGoldenRecordCue(teamId) {
 }
 
 // Cues that must stay disarmed (managed by QLab, not the server)
-const ALWAYS_DISARMED_CUES = ['JUMP'];
+const ALWAYS_DISARMED_CUES = ['JUMP', 'IBUZZ', 'ABUZZ', 'DUALGO'];
 
 function armAllQLabCues() {
   const address = `/cue/*/armed`;

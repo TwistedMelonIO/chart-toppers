@@ -158,15 +158,15 @@
         },
         {
           "cue": "R1T10.1",
-          "fileName": "PACK3_Round1_Retro Classics_Beyoncé",
-          "band": "Beyoncé",
+          "fileName": "PACK3_Round1_Retro Classics_Beyonc\u00e9",
+          "band": "Beyonc\u00e9",
           "track": "Crazy in Love",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T10.2",
-          "fileName": "PACK3_Round1_Retro Classics_Beyoncé_reveal",
-          "band": "Beyoncé",
+          "fileName": "PACK3_Round1_Retro Classics_Beyonc\u00e9_reveal",
+          "band": "Beyonc\u00e9",
           "track": "Crazy in Love",
           "genre": "Retro Classics"
         },
@@ -382,15 +382,15 @@
         },
         {
           "cue": "R1T26.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Rosé",
-          "band": "Rosé",
+          "fileName": "PACK3_Round1_TikTok Hits_Ros\u00e9",
+          "band": "Ros\u00e9",
           "track": "APT",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T26.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Rosé_reveal",
-          "band": "Rosé",
+          "fileName": "PACK3_Round1_TikTok Hits_Ros\u00e9_reveal",
+          "band": "Ros\u00e9",
           "track": "APT",
           "genre": "TikTok Hits"
         },
@@ -996,339 +996,129 @@
       "tracks": [
         {
           "cue": "R3T1",
-          "fileName": "PACK3_Round3_TikTok Hits_Lil Nas X",
-          "band": "Lil Nas X",
-          "track": "Old Town Road",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_A1_A2.wav",
+          "band": "Mashup",
+          "track": "A1 vs A2",
+          "genre": "Disney Hits"
         },
         {
           "cue": "R3T2",
-          "fileName": "PACK3_Round3_TikTok Hits_Doja Cat",
-          "band": "Doja Cat",
-          "track": "Planet Her",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_B1_B2.wav",
+          "band": "Mashup",
+          "track": "B1 vs B2",
+          "genre": "Disney Hits"
         },
         {
           "cue": "R3T3",
-          "fileName": "PACK3_Round3_TikTok Hits_SZA",
-          "band": "SZA",
-          "track": "Good Days",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_C1_C2.wav",
+          "band": "Mashup",
+          "track": "C1 vs C2",
+          "genre": "Disney Hits"
         },
         {
           "cue": "R3T4",
-          "fileName": "PACK3_Round3_TikTok Hits_Taylor Swift",
-          "band": "Taylor Swift",
-          "track": "Anti-Hero",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_D1_F2.wav",
+          "band": "Mashup",
+          "track": "D1 vs F2",
+          "genre": "Disney Hits"
         },
         {
           "cue": "R3T5",
-          "fileName": "PACK3_Round3_TikTok Hits_Lizzo",
-          "band": "Lizzo",
-          "track": "About Damn Time",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_D2_F1.wav",
+          "band": "Mashup",
+          "track": "D2 vs F1",
+          "genre": "Disney Hits"
         },
         {
           "cue": "R3T6",
-          "fileName": "PACK3_Round3_TikTok Hits_Nicky Youre & hey daisey",
-          "band": "Nicky Youre & hey daisey",
-          "track": "Sunroof",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_E1_E2.wav",
+          "band": "Mashup",
+          "track": "E1 vs E2",
+          "genre": "Disney Hits"
         },
         {
           "cue": "R3T7",
-          "fileName": "PACK3_Round3_TikTok Hits_Rema",
-          "band": "Rema",
-          "track": "Calm Down & Selena Gomez",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_A1_A2.wav",
+          "band": "Mashup",
+          "track": "A1 vs A2",
+          "genre": "Latin"
         },
         {
           "cue": "R3T8",
-          "fileName": "PACK3_Round3_TikTok Hits_Ariana Grande",
-          "band": "Ariana Grande",
-          "track": "positions",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_B1_B2.wav",
+          "band": "Mashup",
+          "track": "B1 vs B2",
+          "genre": "Latin"
         },
         {
           "cue": "R3T9",
-          "fileName": "PACK3_Round3_TikTok Hits_Justin Bieber",
-          "band": "Justin Bieber",
-          "track": "Peaches",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_C1_C2.wav",
+          "band": "Mashup",
+          "track": "C1 vs C2",
+          "genre": "Latin"
         },
         {
           "cue": "R3T10",
-          "fileName": "PACK3_Round3_TikTok Hits_Ed Sheeran",
-          "band": "Ed Sheeran",
-          "track": "Bad Habits",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_D1_F2.wav",
+          "band": "Mashup",
+          "track": "D1 vs F2",
+          "genre": "Latin"
         },
         {
           "cue": "R3T11",
-          "fileName": "PACK3_Round3_TikTok Hits_Bruno Mars",
-          "band": "Bruno Mars",
-          "track": "Leave the Door Open",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_D2_F1.wav",
+          "band": "Mashup",
+          "track": "D2 vs F1",
+          "genre": "Latin"
         },
         {
           "cue": "R3T12",
-          "fileName": "PACK3_Round3_TikTok Hits_BTS",
-          "band": "BTS",
-          "track": "Butter",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_E1_E2.wav",
+          "band": "Mashup",
+          "track": "E1 vs E2",
+          "genre": "Latin"
         },
         {
           "cue": "R3T13",
-          "fileName": "PACK3_Round3_TikTok Hits_Chlöe",
-          "band": "Chlöe",
-          "track": "Have Mercy",
+          "fileName": "Round 3- Mashup Madness_2000_s_A1_A2.wav",
+          "band": "Mashup",
+          "track": "A1 vs A2",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R3T14",
-          "fileName": "PACK3_Round3_TikTok Hits_Normani",
-          "band": "Normani",
-          "track": "Wild Side",
+          "fileName": "Round 3- Mashup Madness_2000_s_B1_B2.wav",
+          "band": "Mashup",
+          "track": "B1 vs B2",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R3T15",
-          "fileName": "PACK3_Round3_TikTok Hits_Summer Walker",
-          "band": "Summer Walker",
-          "track": "No Love",
+          "fileName": "Round 3- Mashup Madness_2000_s_C1_C2.wav",
+          "band": "Mashup",
+          "track": "C1 vs C2",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R3T16",
-          "fileName": "PACK3_Round3_TikTok Hits_Giveon",
-          "band": "Giveon",
-          "track": "Heartbreak Anniversary",
+          "fileName": "Round 3- Mashup Madness_2000_s_D1_F2.wav",
+          "band": "Mashup",
+          "track": "D1 vs F2",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R3T17",
-          "fileName": "PACK3_Round3_Latin_Bad Bunny",
-          "band": "Bad Bunny",
-          "track": "Dakiti",
-          "genre": "Latin"
+          "fileName": "Round 3- Mashup Madness_2000_s_D2_F1.wav",
+          "band": "Mashup",
+          "track": "D2 vs F1",
+          "genre": "TikTok Hits"
         },
         {
           "cue": "R3T18",
-          "fileName": "PACK3_Round3_Latin_J Balvin",
-          "band": "J Balvin",
-          "track": "Mi Gente",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T19",
-          "fileName": "PACK3_Round3_Latin_Karol G",
-          "band": "Karol G",
-          "track": "Tusa",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T20",
-          "fileName": "PACK3_Round3_Latin_Daddy Yankee",
-          "band": "Daddy Yankee",
-          "track": "Con Calma",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T21",
-          "fileName": "PACK3_Round3_Latin_Luis Fonsi",
-          "band": "Luis Fonsi",
-          "track": "Despacito",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T22",
-          "fileName": "PACK3_Round3_Latin_Bad Bunny",
-          "band": "Bad Bunny",
-          "track": "Tití Me Preguntó",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T23",
-          "fileName": "PACK3_Round3_Latin_Karol G",
-          "band": "Karol G",
-          "track": "Bichota",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T24",
-          "fileName": "PACK3_Round3_Latin_J Balvin",
-          "band": "J Balvin",
-          "track": "Reggaeton",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T25",
-          "fileName": "PACK3_Round3_Latin_Daddy Yankee",
-          "band": "Daddy Yankee",
-          "track": "Shaky Shaky",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T26",
-          "fileName": "PACK3_Round3_Latin_Maluma",
-          "band": "Maluma",
-          "track": "Hawái",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T27",
-          "fileName": "PACK3_Round3_Latin_Nicky Jam",
-          "band": "Nicky Jam",
-          "track": "X",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T28",
-          "fileName": "PACK3_Round3_Latin_Ozuna",
-          "band": "Ozuna",
-          "track": "La Modelo",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T29",
-          "fileName": "PACK3_Round3_Latin_Anuel AA",
-          "band": "Anuel AA",
-          "track": "China",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T30",
-          "fileName": "PACK3_Round3_Latin_Sech",
-          "band": "Sech",
-          "track": "Otro Trago",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T31",
-          "fileName": "PACK3_Round3_Latin_Jhay Cortez",
-          "band": "Jhay Cortez",
-          "track": "Patek",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T32",
-          "fileName": "PACK3_Round3_Latin_Rauw Alejandro",
-          "band": "Rauw Alejandro",
-          "track": "Todo de Ti",
-          "genre": "Latin"
-        },
-        {
-          "cue": "R3T33",
-          "fileName": "PACK3_Round3_Disney Hits_Let It Go",
-          "band": "Frozen",
-          "track": "Let It Go",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T34",
-          "fileName": "PACK3_Round3_Disney Hits_Circle of Life",
-          "band": "The Lion King",
-          "track": "Circle of Life",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T35",
-          "fileName": "PACK3_Round3_Disney Hits_We Don't Talk About Bruno",
-          "band": "Encanto",
-          "track": "We Don't Talk About Bruno",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T36",
-          "fileName": "PACK3_Round3_Disney Hits_How Far I'll Go",
-          "band": "Moana",
-          "track": "How Far I'll Go",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T37",
-          "fileName": "PACK3_Round3_Disney Hits_A Whole New World",
-          "band": "Aladdin",
-          "track": "A Whole New World",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T38",
-          "fileName": "PACK3_Round3_Disney Hits_Let It Go",
-          "band": "Frozen",
-          "track": "Let It Go",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T39",
-          "fileName": "PACK3_Round3_Disney Hits_Into the Unknown",
-          "band": "Frozen 2",
-          "track": "Into the Unknown",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T40",
-          "fileName": "PACK3_Round3_Disney Hits_Surface Pressure",
-          "band": "Encanto",
-          "track": "Surface Pressure",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T41",
-          "fileName": "PACK3_Round3_Disney Hits_What Else Can I Do?",
-          "band": "Encanto",
-          "track": "What Else Can I Do?",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T42",
-          "fileName": "PACK3_Round3_Disney Hits_Shiny",
-          "band": "Moana",
-          "track": "Shiny",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T43",
-          "fileName": "PACK3_Round3_Disney Hits_You're Welcome",
-          "band": "Moana",
-          "track": "You're Welcome",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T44",
-          "fileName": "PACK3_Round3_Disney Hits_Part of Your World",
-          "band": "The Little Mermaid",
-          "track": "Part of Your World",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T45",
-          "fileName": "PACK3_Round3_Disney Hits_Belle",
-          "band": "Beauty and the Beast",
-          "track": "Belle",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T46",
-          "fileName": "PACK3_Round3_Disney Hits_I See the Light",
-          "band": "Tangled",
-          "track": "I See the Light",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T47",
-          "fileName": "PACK3_Round3_Disney Hits_Brave",
-          "band": "Brave",
-          "track": "Brave",
-          "genre": "Disney Hits"
-        },
-        {
-          "cue": "R3T48",
-          "fileName": "PACK3_Round3_Disney Hits_Bare Necessities",
-          "band": "Jungle Book",
-          "track": "Bare Necessities",
-          "genre": "Disney Hits"
+          "fileName": "Round 3- Mashup Madness_2000_s_E1_E2.wav",
+          "band": "Mashup",
+          "track": "E1 vs E2",
+          "genre": "TikTok Hits"
         }
       ]
     },
@@ -1380,9 +1170,9 @@
         },
         {
           "cue": "R4T7",
-          "fileName": "PACK3_Round4_Latin_Alejandro Fernández",
-          "band": "Alejandro Fernández",
-          "track": "Lástima Que Seas Ajena",
+          "fileName": "PACK3_Round4_Latin_Alejandro Fern\u00e1ndez",
+          "band": "Alejandro Fern\u00e1ndez",
+          "track": "L\u00e1stima Que Seas Ajena",
           "genre": "Latin"
         },
         {
@@ -1396,13 +1186,13 @@
           "cue": "R4T9",
           "fileName": "PACK3_Round4_Latin_Shakira",
           "band": "Shakira",
-          "track": "Monotonía",
+          "track": "Monoton\u00eda",
           "genre": "Latin"
         },
         {
           "cue": "R4T10",
-          "fileName": "PACK3_Round4_Latin_Rosalía",
-          "band": "Rosalía",
+          "fileName": "PACK3_Round4_Latin_Rosal\u00eda",
+          "band": "Rosal\u00eda",
           "track": "Con Altura",
           "genre": "Latin"
         },

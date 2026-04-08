@@ -283,6 +283,15 @@ document.addEventListener('DOMContentLoaded', function() {
     updateBuzzerUI(data.connected);
   });
 
+  // Highlight undo button when a team buzzes in
+  socket.on("buzzerFired", (data) => {
+    const undoBtn = document.querySelector(`[data-action=undo][data-team=${data.team}]`);
+    if (undoBtn) {
+      undoBtn.classList.add('buzz-highlight');
+      setTimeout(() => undoBtn.classList.remove('buzz-highlight'), 4000);
+    }
+  });
+
   // Check buzzer status on initial load
   fetch('/api/buzzer/status')
     .then(r => r.json())
