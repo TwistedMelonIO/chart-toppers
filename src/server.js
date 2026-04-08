@@ -392,6 +392,12 @@ function setRound(roundNum, source = 'system') {
       updateQLabCueTarget('R4GOTO', secondBlock);
       console.log(`[R4 FLOW] R4GOTO → ${secondBlock} (${TEAMS[secondTeam].name} plays second)`);
     }
+    // Zero out all score cues for R4 (standard + R4-specific)
+    sendBridgeOsc('/cue/1/text', '0', '→ cue 1 zeroed for R4');
+    sendBridgeOsc('/cue/2/text', '0', '→ cue 2 zeroed for R4');
+    sendBridgeOsc('/cue/1.1/text', '0', '→ cue 1.1 zeroed for R4');
+    sendBridgeOsc('/cue/2.2/text', '0', '→ cue 2.2 zeroed for R4');
+    console.log(`[R4 FLOW] All score cues zeroed for R4`);
   }
 
   // Entering Round 1: reset R1 played count and point R1GOTO at R1TRACKS.
@@ -469,6 +475,9 @@ function resetRounds(source = 'system') {
   retargetR1GOTO('reset');
   // Reset R2GO2 back to R2Team2 now that no teams have played
   retargetR2GO2('reset');
+  // Reset R4GOTO back to R4ICON (default, will be retargeted on R4 entry)
+  updateQLabCueTarget('R4GOTO', 'R4ICON');
+  console.log(`[RESET] R4GOTO → R4ICON (default)`);
   // Clear any lingering "now playing" glow on the dashboard
   io.emit("teamStopPlaying", "anthems");
   io.emit("teamStopPlaying", "icons");
@@ -2465,6 +2474,33 @@ function handleOscAddress(address) {
     // retarget of R4NEXT to the OTHER team so the operator's next GO fires
     // that team's group.
     if (roundState.currentRound === 4) {
+      // Retarget R4SINGLESCORE based on first or second team
+      const otherPlayed = r4PlayedTeams.has(otherTeam(teamId));
+      if (otherPlayed) {
+        // Second team — scoreboard goes to dual SCOREBOARD
+        updateQLabCueTarget('R4SINGLESCORE', 'SCOREBOARD');
+        console.log(`[R4 FLOW] R4SINGLESCORE → SCOREBOARD (second team playing)`);
+        updateQLabCueTarget('R4GOTO', 'R5');
+        console.log(`[R4 FLOW] R4GOTO → R5 (second team now playing)`);
+        // Re-send first team's R4 points to their standard cue so dual scoreboard is fresh
+        const firstTeamId = otherTeam(teamId);
+        const firstCue = firstTeamId === 'anthems' ? '1' : '2';
+        const firstR4Cue = firstTeamId === 'anthems' ? '1.1' : '2.2';
+        const firstPoints = String(gameState[firstTeamId]?.points || 0);
+        sendBridgeOsc(`/cue/${firstCue}/text`, firstPoints, `→ ${firstCue} refresh ${firstTeamId} R4 points: ${firstPoints}`);
+        sendBridgeOsc(`/cue/${firstR4Cue}/text`, firstPoints, `→ ${firstR4Cue} refresh ${firstTeamId} R4 points: ${firstPoints}`);
+        console.log(`[R4 FLOW] Refreshed ${firstTeamId} scores: cue ${firstCue}+${firstR4Cue} = ${firstPoints} points`);
+      } else {
+        // First team — individual scoreboard
+        const scoreCue = teamId === 'anthems' ? 'R4SANTHEM' : 'R4SICON';
+        updateQLabCueTarget('R4SINGLESCORE', scoreCue);
+        console.log(`[R4 FLOW] R4SINGLESCORE → ${scoreCue} (first team playing)`);
+        // R4GOTO points at other team's block
+        const otherBlock = teamId === 'anthems' ? 'R4ICON' : 'R4ANTHEM';
+        updateQLabCueTarget('R4GOTO', otherBlock);
+        console.log(`[R4 FLOW] R4GOTO → ${otherBlock} (first team playing)`);
+      }
+      r4PlayedTeams.add(teamId);
       scheduleR4AutoRetarget(teamId, 'osc');
     }
 
@@ -2938,11 +2974,21 @@ function stopQLabCue(teamId) {
 
 function updateQLabTextCue(teamId, earnedTime) {
   const isR4 = roundState.currentRound === 4;
-  const cueNumber = teamId === "anthems"
-    ? (isR4 ? "1.1" : "1")
-    : (isR4 ? "2.2" : "2");
+  const standardCue = teamId === "anthems" ? "1" : "2";
+  const r4Cue = teamId === "anthems" ? "1.1" : "2.2";
+
+  if (isR4) {
+    // R4: update BOTH standard and R4 cues with points value
+    const text = String(gameState[teamId]?.points || 0);
+    sendBridgeOsc(`/cue/${r4Cue}/text`, text, `→ ${r4Cue} R4 points: ${text}`);
+    sendBridgeOsc(`/cue/${standardCue}/text`, text, `→ ${standardCue} R4 points: ${text}`);
+    console.log(`[QLAB TEXT] R4 updating cues ${r4Cue} + ${standardCue} (${teamId}) to "${text}" points`);
+    return;
+  }
+
+  const cueNumber = standardCue;
   const address = `/cue/${cueNumber}/text`;
-  const text = isR4 ? String(gameState[teamId]?.points || 0) : String(earnedTime);
+  const text = String(earnedTime);
   const payload = JSON.stringify({ address, value: text });
 
   console.log(`[QLAB TEXT] Updating cue ${cueNumber} (${teamId}) text content to "${text}" seconds`);
