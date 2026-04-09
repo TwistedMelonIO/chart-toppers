@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Chart Toppers - Stage Host</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Chakra+Petch:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="stylesheet" href="stagehost.css" />
+</head>
+<body>
+  <div class="sh-page">
+
+    <!-- Main 3-column layout: Score | Answer | Score -->
+    <div class="sh-main">
+
+      <!-- Left: Icons -->
+      <div class="sh-score-panel sh-icons">
+        <div class="sh-team-name">Icons</div>
+        <div class="sh-score" id="icons-score">0</div>
+        <div class="sh-score-unit" id="icons-unit">seconds</div>
+        <div class="sh-gr" id="icons-gr">GR Available</div>
+      </div>
+
+      <!-- Centre: Answer -->
+      <div class="sh-answer-centre">
+        <div class="sh-answer-topbar">
+          <span class="sh-round-pill" data-round="1">R1</span>
+          <span class="sh-round-pill" data-round="2">R2</span>
+          <span class="sh-round-pill" data-round="3">R3</span>
+          <span class="sh-round-pill" data-round="4">Final</span>
+        </div>
+        <div class="sh-answer-body">
+          <div class="sh-answer-label" id="answer-label">Answers</div>
+          <div class="sh-answer-track" id="answer-track">Stayin' Alive</div>
+          <div class="sh-answer-artist" id="answer-artist">The Bee Gees</div>
+          <div class="sh-answer-meta" id="answer-meta">Answer 1 of 6</div>
+        </div>
+      </div>
+
+      <!-- Right: Anthems -->
+      <div class="sh-score-panel sh-anthems">
+        <div class="sh-team-name">Anthems</div>
+        <div class="sh-score" id="anthems-score">0</div>
+        <div class="sh-score-unit" id="anthems-unit">seconds</div>
+        <div class="sh-gr" id="anthems-gr">GR Available</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="stagehost.js"></script>
+</body>
+</html>

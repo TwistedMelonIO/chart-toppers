@@ -31,7 +31,7 @@ services:
       # Base folder where QLab audio files live (mapped below)
       - TRACK_BASE_PATH=/app/qlab-audio
       # App version
-      - APP_VERSION=4.1.0
+      - APP_VERSION=5.0.0
       # License key (empty by default, set during installation)
       - LICENSE_KEY=${LICENSE_KEY:-}
       - HOST_HARDWARE_ID=${HOST_HARDWARE_ID:-}

@@ -1,0 +1,250 @@
+/* Stage Host — iPad landscape, 3-column: Score | Answer | Score */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100vh;
+  overflow: hidden;
+  background: #0a0a12;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.sh-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem 0 0.4rem;
+}
+
+/* Round pills inside answer card */
+.sh-answer-topbar {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.sh-round-pill {
+  flex: 1;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.4rem 0;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.sh-round-pill.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.sh-round-pill.completed {
+  color: rgba(255, 255, 255, 0.18);
+}
+
+/* Main 3-column layout — fill remaining space, never overflow */
+.sh-main {
+  flex: 1;
+  display: flex;
+  gap: 0.5rem;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Score panels — left and right */
+.sh-score-panel {
+  width: 22%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.8rem;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Icons — Hot Rose identity (matches dashboard) */
+.sh-icons {
+  background: linear-gradient(170deg, rgba(251, 113, 133, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(251, 113, 133, 0.25);
+  border-radius: 0 0.8rem 0.8rem 0;
+}
+
+/* Anthems — Electric Cyan identity (matches dashboard) */
+.sh-anthems {
+  background: linear-gradient(170deg, rgba(6, 182, 212, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  border-radius: 0.8rem 0 0 0.8rem;
+}
+
+/* Playing state — gold pulsing glow (matches dashboard pulseGlow) */
+.sh-icons.playing,
+.sh-anthems.playing {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: linear-gradient(170deg, rgba(251, 191, 36, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  animation: shPulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes shPulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4), inset 0 0 20px rgba(251, 191, 36, 0.05); }
+  50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.4), inset 0 0 30px rgba(251, 191, 36, 0.08); }
+}
+
+.sh-team-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.sh-icons .sh-team-name {
+  color: #fb7185;
+  text-shadow: 0 0 30px rgba(251, 113, 133, 0.35);
+}
+.sh-anthems .sh-team-name {
+  color: #06b6d4;
+  text-shadow: 0 0 30px rgba(6, 182, 212, 0.35);
+}
+
+/* Playing state — team name goes gold */
+.sh-icons.playing .sh-team-name,
+.sh-anthems.playing .sh-team-name {
+  color: #fbbf24;
+  text-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
+}
+
+.sh-score {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: min(16rem, 30vh);
+  line-height: 0.8;
+  letter-spacing: -0.02em;
+}
+
+.sh-icons .sh-score {
+  color: #fb7185;
+  text-shadow: 0 0 40px rgba(251, 113, 133, 0.35);
+}
+.sh-anthems .sh-score {
+  color: #06b6d4;
+  text-shadow: 0 0 40px rgba(6, 182, 212, 0.35);
+}
+
+/* Playing state — score goes gold */
+.sh-icons.playing .sh-score,
+.sh-anthems.playing .sh-score {
+  color: #fbbf24;
+  text-shadow: 0 0 40px rgba(251, 191, 36, 0.4);
+}
+
+.sh-score-unit {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 0.2rem;
+  font-weight: 500;
+}
+
+.sh-gr {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.25);
+  margin-top: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.3rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sh-gr.available {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.15);
+}
+
+.sh-gr.armed {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.15);
+}
+
+.sh-gr.used {
+  color: rgba(255, 255, 255, 0.15);
+  text-decoration: line-through;
+}
+
+/* Centre answer panel */
+.sh-answer-centre {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.5rem 0.6rem;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sh-answer-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.sh-answer-label {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.3);
+  margin-bottom: 0.8rem;
+}
+
+.sh-answer-track {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 7rem;
+  line-height: 1;
+  color: #fff;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.3rem;
+}
+
+.sh-answer-artist {
+  font-family: 'Outfit', sans-serif;
+  font-size: 3rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 0.6rem;
+}
+
+.sh-answer-meta {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* R3 mashup list — smaller text to fit all 4 answers */
+.sh-answer-track br { line-height: 1.8; }
+
+footer { display: none; }
