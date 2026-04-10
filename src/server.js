@@ -50,10 +50,7 @@ const CONFIG = {
   // Tiebreaker cue — used instead of R5 when scores are tied after R4
   QLAB_CUE_TIEBREAK: process.env.QLAB_CUE_TIEBREAK || "TIEBREAK",
 
-  // Team StreamDeck navigation: R1TEAMSD is a goto cue retargeted by the
-  // server to the current team's SD page cue (SDE10 icons / SDE11 anthems)
-  // whenever turnState.currentTeam changes.
-  QLAB_CUE_R1_TEAM_SD: process.env.QLAB_CUE_R1_TEAM_SD || "R1TEAMSD",
+  // Team SD page cues — used by LEADERSD retarget (leader in R1-R3, loser in R4).
   QLAB_CUE_SDE_ANTHEMS: process.env.QLAB_CUE_SDE_ANTHEMS || "SDE11",
   QLAB_CUE_SDE_ICONS: process.env.QLAB_CUE_SDE_ICONS || "SDE10",
 
@@ -378,8 +375,69 @@ function autoSetFirstTeamForRound(roundNum, source) {
   logActivity('round', firstTeamId, `R${roundNum} auto first-team: ${TEAMS[firstTeamId].name} (${rule})`, source);
   io.emit('turnUpdate', turnState);
   setCompanionVariable('current_team', TEAMS[firstTeamId].name);
-  retargetR1TeamSDToTeam(firstTeamId, `r${roundNum}-auto`);
   retargetTeamBackground(firstTeamId, `r${roundNum}-auto`);
+}
+
+// Auto-shuffle 6 random R1 pairs from ALL R1 tracks (ignoring genre) and
+// load them into R1T1.1-R1T6.2. Mirrors resetR4Tracks — R1 uses buzzers,
+// no genre pick, so the round auto-randomises on entry.
+function resetR1Tracks() {
+  const pack = packData[packSettings.currentPack];
+  if (!pack || !pack.rounds || !pack.rounds['1']) {
+    console.warn('[R1 SHUFFLE] No R1 tracks in current pack');
+    return;
+  }
+
+  const allR1 = pack.rounds['1'].tracks.filter(t => t.band !== 'XX');
+  const basePath = packSettings.audioBasePath || '';
+
+  // Group .1 (hook) + .2 (reveal) into pairs by track number
+  const pairs = {};
+  allR1.forEach(t => {
+    const num = t.cue.replace('R1T', '').split('.')[0];
+    if (!pairs[num]) pairs[num] = {};
+    if (t.cue.endsWith('.1')) pairs[num].hook = t;
+    if (t.cue.endsWith('.2')) pairs[num].reveal = t;
+  });
+
+  const completePairs = Object.values(pairs).filter(p => p.hook && p.reveal);
+  const slotsNeeded = GENRE_SLOTS['1'] || 6;
+  const selected = shuffle(completePairs).slice(0, slotsNeeded);
+
+  if (selected.length < slotsNeeded) {
+    console.warn(`[R1 SHUFFLE] Only ${selected.length} complete pairs available (need ${slotsNeeded})`);
+  }
+
+  stageHostAnswers = [];
+  stageHostAnswerIndex = 0;
+
+  selected.forEach((pair, i) => {
+    const slotNum = i + 1;
+    const hookSlot = `R1T${slotNum}.1`;
+    const revealSlot = `R1T${slotNum}.2`;
+
+    const hookPath = basePath ? path.join(basePath, pair.hook.fileName) : pair.hook.fileName;
+    updateQLabCueFilePath(hookSlot, hookPath);
+    updateQLabCueName(hookSlot, `${pair.hook.band} - ${pair.hook.track} [SHORT]`.toUpperCase());
+    updateQLabCueNotes(hookSlot, '');
+
+    const revealPath = basePath ? path.join(basePath, pair.reveal.fileName) : pair.reveal.fileName;
+    updateQLabCueFilePath(revealSlot, revealPath);
+    updateQLabCueName(revealSlot, `${pair.reveal.band} - ${pair.reveal.track} [LONG]`.toUpperCase());
+    updateQLabCueNotes(revealSlot, `Correct Answer: ${pair.hook.band} - ${pair.hook.track}`.toUpperCase());
+
+    setCompanionVariable(`track_${slotNum}`, `${pair.hook.band} - ${pair.hook.track}`);
+    stageHostAnswers.push({ number: slotNum, track: pair.hook.track, artist: pair.hook.band });
+
+    console.log(`[R1 SHUFFLE] Slot ${slotNum}: ${pair.hook.band} - ${pair.hook.track}`);
+    logActivity('track_loaded', 'all', `R1 Slot ${slotNum}: ${pair.hook.band} - ${pair.hook.track} [random]`, 'round-enter');
+  });
+
+  io.emit('answersUpdate', { round: '1', genre: 'Random', answers: stageHostAnswers });
+  if (stageHostAnswers.length > 0) {
+    io.emit('currentTrack', { trackNumber: 1, total: stageHostAnswers.length });
+  }
+  console.log(`[R1 SHUFFLE] Loaded ${selected.length} random pairs into R1 slots`);
 }
 
 function resetR4Tracks() {
@@ -471,10 +529,12 @@ function setRound(roundNum, source = 'system') {
     console.log(`[R4 FLOW] All score cues zeroed for R4`);
   }
 
-  // Entering Round 1: reset R1 played count and point R1GOTO at R1TRACKS.
+  // Entering Round 1: reset R1 played count, point R1GOTO at R1TRACKS, and
+  // auto-shuffle 6 random pairs from ALL R1 tracks (R1 uses buzzers, no genre pick).
   if (roundNum === 1 && prev !== 1) {
     r1PlayedTeams = 0;
     retargetR1GOTO('round-enter');
+    resetR1Tracks();
   }
 
   // Entering Round 2: reset the R2 played set, refresh counter, and point R2GO2 at R2T.
@@ -1016,19 +1076,8 @@ app.post("/api/leader/retarget", (req, res) => {
   res.json({ success: true });
 });
 
-// Manual retarget of R1TEAMSD to a specific team's SDE page cue.
-// POST /api/sd/retarget/:team
-app.post("/api/sd/retarget/:team", (req, res) => {
-  const teamId = req.params.team;
-  if (teamId !== 'anthems' && teamId !== 'icons') {
-    return res.status(400).json({ success: false, message: "team must be 'anthems' or 'icons'" });
-  }
-  retargetR1TeamSDToTeam(teamId, 'api');
-  res.json({ success: true, team: teamId });
-});
-
 // Next team trigger (HTTP counterpart of OSC /chart-toppers/nextteam).
-// Flips currentTeam to the other team and retargets R1TEAMSD accordingly.
+// Flips currentTeam to the other team.
 app.post("/api/nextteam", (req, res) => {
   if (!turnState.currentTeam) {
     return res.status(400).json({ success: false, message: "no currentTeam set — run cointoss first" });
@@ -1069,7 +1118,6 @@ app.post("/api/nextteam", (req, res) => {
   io.emit("triggerPlaying", next);
   io.emit('turnUpdate', turnState);
   logActivity('turn', next, `Next team: ${TEAMS[next].name}`, 'api');
-  retargetR1TeamSDToTeam(next, 'nextteam-api');
   res.json({ success: true, currentTeam: next, phase: turnState.phase });
 });
 
@@ -1094,7 +1142,9 @@ app.post("/api/cointoss/:team", (req, res) => {
     navigateStreamDeck(genrePage);
   }
 
-  retargetR1TeamSDToTeam(teamId, 'cointoss-api');
+  // Update LEADERSD to the cointoss winner so the QLab Auto StreamDeck cue
+  // points to the right team page even when scores are tied.
+  retargetLeaderSD('cointoss-api');
 
   res.json({ success: true, turn: turnState });
 });
@@ -1371,9 +1421,9 @@ function retargetR1GOTO(source = 'system') {
   updateQLabCueTarget(CONFIG.QLAB_CUE_R1GOTO, target);
 }
 
-// Retarget R1TEAMSD goto cue to the current team's StreamDeck-page cue
-// (SDE10 for icons, SDE11 for anthems). Called whenever turnState.currentTeam
-// changes so the operator can fire R1TEAMSD to navigate the SD appropriately.
+// Map a team to its StreamDeck-page cue (SDE10 for icons, SDE11 for anthems).
+// Used by retargetLeaderSD to point LEADERSD at the current leader's (or R4
+// loser's) SD page.
 function sdeCueFor(teamId) {
   return teamId === 'anthems'
     ? CONFIG.QLAB_CUE_SDE_ANTHEMS
@@ -1433,40 +1483,37 @@ function retargetTeamBackground(teamId, source = 'system') {
 
 // Retarget LEADERSD to the team currently in the lead. Combined score =
 // earnedTime + points so it works in R1-R3 (time-based) and R4 (points-based).
-// On tie, leave the cue untouched and log.
+// On tie, fall back to turnState.currentTeam (i.e. whoever just won the coin
+// flip / is currently playing) so LEADERSD always points somewhere sensible.
 function retargetLeaderSD(source = 'system') {
   const a = gameState.anthems;
   const i = gameState.icons;
   const aScore = (a?.earnedTime || 0) + (a?.points || 0);
   const iScore = (i?.earnedTime || 0) + (i?.points || 0);
+  let leaderId;
+  let loserId;
+  let label;
   if (aScore === iScore) {
-    console.log(`[LEADER SD] Tie (${aScore} each) — LEADERSD not retargeted (${source})`);
-    return;
+    if (!turnState.currentTeam) {
+      console.log(`[LEADER SD] Tie (${aScore} each) and no currentTeam — LEADERSD not retargeted (${source})`);
+      return;
+    }
+    leaderId = turnState.currentTeam;
+    loserId = otherTeam(leaderId);
+    label = `Tie (${aScore} each) → currentTeam`;
+  } else {
+    leaderId = aScore > iScore ? 'anthems' : 'icons';
+    loserId = otherTeam(leaderId);
+    label = roundState.currentRound === 4 ? 'Loser (R4)' : 'Leader';
   }
-  const leaderId = aScore > iScore ? 'anthems' : 'icons';
-  const loserId = otherTeam(leaderId);
 
   // Round 4: loser goes first, so LEADERSD points to the loser
   const targetTeam = roundState.currentRound === 4 ? loserId : leaderId;
   const targetCue = sdeCueFor(targetTeam);
-  const label = roundState.currentRound === 4 ? 'Loser (R4)' : 'Leader';
   console.log(
     `[LEADER SD] ${label}: ${TEAMS[targetTeam].name} (a=${aScore} i=${iScore}) → ${CONFIG.QLAB_CUE_LEADER_SD} → ${targetCue} (${source})`
   );
   updateQLabCueTarget(CONFIG.QLAB_CUE_LEADER_SD, targetCue);
-}
-
-function retargetR1TeamSDToTeam(teamId, source = 'system') {
-  if (!teamId || !TEAMS[teamId]) {
-    console.warn(`[SD FLOW] retargetR1TeamSDToTeam called with invalid team: ${teamId}`);
-    return;
-  }
-  const targetCue = sdeCueFor(teamId);
-  console.log(
-    `[SD FLOW] Retargeting ${CONFIG.QLAB_CUE_R1_TEAM_SD} → ${targetCue} (${TEAMS[teamId].name}) (${source})`
-  );
-  logActivity('turn', teamId, `SD retarget ${CONFIG.QLAB_CUE_R1_TEAM_SD} → ${targetCue} (${TEAMS[teamId].name})`, source);
-  updateQLabCueTarget(CONFIG.QLAB_CUE_R1_TEAM_SD, targetCue);
 }
 
 // Delay before the auto-retarget fires after a team starts playing in R4.
@@ -2021,13 +2068,9 @@ app.post('/api/loadgenre/:index', (req, res) => {
     return res.status(400).json({ success: false, error: 'Genre index must be 1, 2, or 3' });
   }
   const result = loadGenreTracks(genreIndex);
-  // Navigate StreamDeck to page 1 after genre pick, then retarget
-  // R1TEAMSD back to the current team's page so correct/incorrect stays put
+  // Navigate StreamDeck to page 1 after genre pick
   if (result.success) {
     navigateStreamDeck(1);
-    if (turnState.currentTeam) {
-      retargetR1TeamSDToTeam(turnState.currentTeam, 'genre-load');
-    }
   }
   res.json(result);
 });
@@ -2116,11 +2159,13 @@ app.post("/api/reset", (req, res) => {
 // Randomise Round 3 scores for testing
 app.post("/api/randomise-round3", (req, res) => {
   const R3_POINTS_PER_CORRECT = CONFIG.ROUND_SCORING[3] || 8;
-  const R3_MAX_CORRECT = 4; // 4 mashups in Round 3
 
+  // Target ~30s per team. At 1pt = 8s, that's 3 correct (24s) or 4 correct (32s).
+  // Each team gets an independent random pick so the result is varied but always
+  // lands within 6 seconds of the 30s target.
   for (const teamId of ['anthems', 'icons']) {
     const team = gameState[teamId];
-    const numCorrect = Math.floor(Math.random() * (R3_MAX_CORRECT + 1)); // 0-4
+    const numCorrect = 3 + Math.floor(Math.random() * 2); // 3 or 4
     const r3Time = numCorrect * R3_POINTS_PER_CORRECT;
 
     team.earnedTime = Math.min(team.earnedTime + r3Time, CONFIG.MAX_TIME);
@@ -2648,7 +2693,6 @@ app.get("/api/selftest", async (req, res) => {
   addResult("Goto Cue Configuration", "R3COINFLIP configured",   !!CONFIG.QLAB_CUE_R3_COINFLIP,   `Value: ${CONFIG.QLAB_CUE_R3_COINFLIP}`);
   addResult("Goto Cue Configuration", "R4NEXT configured",       !!CONFIG.QLAB_CUE_R4NEXT,        `Value: ${CONFIG.QLAB_CUE_R4NEXT}`);
   addResult("Goto Cue Configuration", "LEADERSD configured",     !!CONFIG.QLAB_CUE_LEADER_SD,     `Value: ${CONFIG.QLAB_CUE_LEADER_SD}`);
-  addResult("Goto Cue Configuration", "R1TEAMSD configured",     !!CONFIG.QLAB_CUE_R1_TEAM_SD,    `Value: ${CONFIG.QLAB_CUE_R1_TEAM_SD}`);
   addResult("Goto Cue Configuration", "Team background configured", !!CONFIG.QLAB_CUE_TARGET_BG,  `Value: ${CONFIG.QLAB_CUE_TARGET_BG}`);
 
   // 19-20. Team configuration
@@ -2746,12 +2790,25 @@ function handleOscAddress(address, args) {
         r3LastBuzzTeam = null;
       }
     }
+    // Round 2 only: defensive disarm — R2 has no buzzers, but a stray Companion/
+    // QLab button may have armed them. Disarm immediately after every correct.
+    if (roundState.currentRound === 2) {
+      sendBridgeOsc('/cue/IBUZZ/armed', 0, '→ disarm IBUZZ after R2 correct (defensive)');
+      sendBridgeOsc('/cue/ABUZZ/armed', 0, '→ disarm ABUZZ after R2 correct (defensive)');
+    }
     return;
   }
 
   // R3 track started playing: /chart-toppers/r3play/1 through /chart-toppers/r3play/4
   const r3PlayMatch = address.match(/^\/chart-toppers\/r3play\/([1-4])$/);
   if (r3PlayMatch) {
+    // Defensive auto-advance: r3play is unmistakably an R3 signal. If the server
+    // is still on a previous round (e.g. QLab moved to R3 without firing
+    // /chart-toppers/round/3), advance now so all subsequent R3 logic works.
+    if (roundState.currentRound !== 3) {
+      console.warn(`[R3] r3play received while currentRound=${roundState.currentRound} — auto-advancing to R3`);
+      setRound(3, 'r3play-auto');
+    }
     r3ActiveTrack = parseInt(r3PlayMatch[1]);
     r3WrongCount = 0;
     r3LastBuzzTeam = null;
@@ -2835,6 +2892,13 @@ function handleOscAddress(address, args) {
     // R1/R3: navigate StreamDeck back to SDE1 after incorrect
     if (roundState.currentRound === 1 || roundState.currentRound === 3) {
       navigateStreamDeck(1);
+    }
+
+    // Round 2: defensive disarm — R2 has no buzzers, but a stray Companion/QLab
+    // button may have armed them. Disarm immediately after every incorrect.
+    if (roundState.currentRound === 2) {
+      sendBridgeOsc('/cue/IBUZZ/armed', 0, '→ disarm IBUZZ after R2 incorrect (defensive)');
+      sendBridgeOsc('/cue/ABUZZ/armed', 0, '→ disarm ABUZZ after R2 incorrect (defensive)');
     }
 
     // R4: advance stage host but don't auto-clear
@@ -2984,20 +3048,18 @@ function handleOscAddress(address, args) {
       scheduleR4AutoRetarget(teamId, 'osc');
     }
 
-    // R2 flow: track who's played, retarget R2GO2 after the second team plays
+    // R2 flow: track who's played, retarget R2GO2 after the second team plays.
+    // Don't force-navigate the StreamDeck — the QLab Auto StreamDeck (Re-Target)
+    // cue uses LEADERSD's target to land on the right team page after the
+    // genre picker. Server stays on SDE1 between genre pick and team answers.
     if (roundState.currentRound === 2) {
       r2PlayedTeams.add(teamId);
       retargetR2GO2('osc-playing');
-      // R2: stay on team's SDE page
-      navigateStreamDeck(TEAM_PAGES[teamId]);
-      console.log(`[R2 FLOW] StreamDeck → page ${TEAM_PAGES[teamId]} (${TEAMS[teamId].name} playing)`);
     }
 
-    // R3 flow: navigate StreamDeck to the playing team's page
-    if (roundState.currentRound === 3) {
-      navigateStreamDeck(TEAM_PAGES[teamId]);
-      console.log(`[R3 FLOW] StreamDeck → page ${TEAM_PAGES[teamId]} (${TEAMS[teamId].name} playing)`);
-    }
+    // R3 flow: don't force-navigate the StreamDeck. Same as R2 — after the
+    // coin flip and genre pick, SD stays on SDE1. The QLab Auto StreamDeck
+    // (Re-Target) cue using LEADERSD drives any team-page nav when needed.
 
     // Auto coin-toss: if no coin toss set yet, first playing command establishes turn order
     if (!turnState.firstTeam) {
@@ -3007,8 +3069,10 @@ function handleOscAddress(address, args) {
       console.log(`[TURN] Auto coin-toss from playing: ${TEAMS[teamId].name} goes first`);
       io.emit('turnUpdate', turnState);
       logActivity('cointoss', teamId, `Auto coin-toss: ${TEAMS[teamId].name} goes first (from playing)`, 'osc');
-      retargetR1TeamSDToTeam(teamId, 'auto-cointoss-osc');
       retargetTeamBackground(teamId, 'auto-cointoss-osc');
+      // Update LEADERSD now that we have a winner — covers tied-score case
+      // (e.g. R2 entry 0-0) where retargetLeaderSD would otherwise bail.
+      retargetLeaderSD('auto-cointoss-osc');
     } else if (turnState.currentTeam !== teamId) {
       // Sync currentTeam to whoever is actually playing — /playing/{team} is
       // the authoritative signal. Keeps nextteam from switching the wrong way
@@ -3019,7 +3083,8 @@ function handleOscAddress(address, args) {
       turnState.currentTeam = teamId;
       io.emit('turnUpdate', turnState);
       setCompanionVariable('current_team', TEAMS[teamId].name);
-      retargetR1TeamSDToTeam(teamId, 'playing-sync');
+      // Re-evaluate LEADERSD against the new currentTeam (matters for tied scores)
+      retargetLeaderSD('playing-sync');
     }
 
     // Broadcast to all dashboard clients with simple emit
@@ -3085,7 +3150,6 @@ function handleOscAddress(address, args) {
       setCompanionVariable('current_team', TEAMS[next].name);
       io.emit('turnUpdate', turnState);
       console.log(`[TURN] First team done → ${TEAMS[next].name} page (${TEAM_PAGES[next]})`);
-      retargetR1TeamSDToTeam(next, 'team-switch');
     } else if (turnState.phase === 'playing-second' && turnState.currentTeam === teamId) {
       // Second team finished → back to genre page for next pick
       turnState.currentTeam = turnState.firstTeam; // reset to first team for next genre
@@ -3097,7 +3161,6 @@ function handleOscAddress(address, args) {
       }
       setCompanionVariable('current_team', '');
       io.emit('turnUpdate', turnState);
-      retargetR1TeamSDToTeam(turnState.firstTeam, 'second-team-done');
     }
 
     return;
@@ -3133,7 +3196,7 @@ function handleOscAddress(address, args) {
   }
 
   // Team switch: /chart-toppers/nextteam
-  // Flips currentTeam to the other team and retargets R1TEAMSD accordingly.
+  // Flips currentTeam to the other team.
   // Use between the first team's scoreboard and the second team starting, and
   // again between the second team finishing and the next genre pick.
   if (address === "/chart-toppers/nextteam") {
@@ -3183,7 +3246,6 @@ function handleOscAddress(address, args) {
     io.emit("triggerPlaying", next);
     io.emit('turnUpdate', turnState);
     logActivity('turn', next, `Next team: ${TEAMS[next].name}`, 'osc');
-    retargetR1TeamSDToTeam(next, 'nextteam-osc');
     return;
   }
 
@@ -3229,8 +3291,10 @@ function handleOscAddress(address, args) {
     if (genrePage) {
       navigateStreamDeck(genrePage);
     }
-    retargetR1TeamSDToTeam(teamId, 'cointoss-osc');
     retargetTeamBackground(teamId, 'cointoss-osc');
+    // Update LEADERSD to the cointoss winner so the QLab Auto StreamDeck cue
+    // points to the right team page even when scores are tied.
+    retargetLeaderSD('cointoss-osc');
     return;
   }
 
@@ -3241,13 +3305,9 @@ function handleOscAddress(address, args) {
     if (genreIndex >= 1 && genreIndex <= 3) {
       const result = loadGenreTracks(genreIndex);
       console.log(`[OSC] Load genre ${genreIndex}: ${result.success ? result.genre : result.error}`);
-      // Navigate StreamDeck to page 1 after genre pick, then retarget
-      // R1TEAMSD back to the current team's page so correct/incorrect stays put
+      // Navigate StreamDeck to page 1 after genre pick
       if (result.success) {
         navigateStreamDeck(1);
-        if (turnState.currentTeam) {
-          retargetR1TeamSDToTeam(turnState.currentTeam, 'genre-load');
-        }
         console.log(`[OSC] StreamDeck → SDE1 after genre load`);
       }
     } else {
@@ -3268,40 +3328,67 @@ function handleOscAddress(address, args) {
     return;
   }
 
-  // Refresh tracks: 1st call = swap R2T1/R2T2, 2nd call = retarget R2GO2 → AWO
+  // Refresh tracks: state-based, idempotent. Driven by r2PlayedTeams membership
+  // so repeated calls (operator double-press, QLab firing it twice, etc) don't
+  // prematurely advance R2GO2 to AWO.
+  //   - 0 teams played: ignore
+  //   - 1 team played: swap tracks for the opponent, force LEADERSD → opponent
+  //   - 2 teams played: both done → retarget R2GO2 → AWO
   if (address === '/chart-toppers/refreshtracks') {
-    r2RefreshCount++;
-    if (r2RefreshCount === 1) {
-      // First call: swap tracks for team 2
-      if (!lastLoadedGenre.genreIndex) {
-        console.warn(`[OSC] refreshtracks — no genre loaded yet, ignoring`);
-        r2RefreshCount = 0;
-        return;
-      }
-      console.log(`[REFRESH TRACKS] Call #1: Swapping R2 tracks for second team (osc)`);
+    if (!lastLoadedGenre.genreIndex) {
+      console.warn(`[OSC] refreshtracks — no genre loaded yet, ignoring`);
+      return;
+    }
+
+    const playedCount = r2PlayedTeams.size;
+
+    if (playedCount === 0) {
+      console.warn(`[OSC] refreshtracks — no team has played yet, ignoring`);
+      return;
+    }
+
+    if (playedCount === 1) {
+      // First team done → swap tracks for the second team
+      const playedTeam = r2PlayedTeams.has('anthems') ? 'anthems' : 'icons';
+      const nextTeam = otherTeam(playedTeam);
+      console.log(`[REFRESH TRACKS] First team (${TEAMS[playedTeam].name}) done — swapping tracks for ${TEAMS[nextTeam].name} (osc)`);
       const result = loadGenreTracks(lastLoadedGenre.genreIndex);
       console.log(`[OSC] Refresh tracks: ${result.success ? result.genre + ' (fresh tracks loaded)' : result.error}`);
-      // Switch StreamDeck to the other team's page for R2
-      const playedTeam = turnState.currentTeam || turnState.firstTeam
-                       || (r2PlayedTeams.has('icons') ? 'icons' : null)
-                       || (r2PlayedTeams.has('anthems') ? 'anthems' : null);
-      if (playedTeam) {
-        const nextTeam = otherTeam(playedTeam);
-        navigateStreamDeck(TEAM_PAGES[nextTeam]);
-        // Switch the playing glow on the dashboard/stage host
-        io.emit("teamStopPlaying", playedTeam);
-        io.emit("triggerStop", playedTeam);
-        io.emit("teamPlaying", nextTeam);
-        io.emit("triggerPlaying", nextTeam);
-        console.log(`[REFRESH TRACKS] StreamDeck + dashboard switched to ${nextTeam} (was ${playedTeam})`);
-      } else {
-        console.warn(`[REFRESH TRACKS] Cannot switch SD — no team context available`);
-      }
-    } else {
-      // Second call: team 2 done, retarget R2GO2 → AWO
-      console.log(`[REFRESH TRACKS] Call #2: Retargeting R2GO2 → ${CONFIG.QLAB_CUE_R3} (osc)`);
-      updateQLabCueTarget(CONFIG.QLAB_CUE_R2GO2, CONFIG.QLAB_CUE_R3);
+
+      // Anticipate the second team's play — mark them as played now so the
+      // NEXT /refreshtracks correctly hits the "both played" branch. This
+      // covers QLab setups where /chart-toppers/playing/{secondteam} never
+      // fires (e.g. shared play cue that always emits /playing/anthems).
+      r2PlayedTeams.add(nextTeam);
+      console.log(`[REFRESH TRACKS] Marked ${TEAMS[nextTeam].name} as played (anticipated)`);
+
+      // Update currentTeam to the second team so subsequent logic
+      // (correct/incorrect, dashboard glow) targets the right team.
+      turnState.currentTeam = nextTeam;
+      io.emit('turnUpdate', turnState);
+      setCompanionVariable('current_team', TEAMS[nextTeam].name);
+
+      // Navigate StreamDeck to the second team's answer page directly.
+      navigateStreamDeck(TEAM_PAGES[nextTeam]);
+
+      // Also force LEADERSD to the opponent so any subsequent QLab Auto
+      // StreamDeck (Re-Target) cue fire lands on the same page.
+      const nextSdeCue = sdeCueFor(nextTeam);
+      updateQLabCueTarget(CONFIG.QLAB_CUE_LEADER_SD, nextSdeCue);
+      console.log(`[LEADER SD] Refresh tracks — forced LEADERSD → ${nextSdeCue} (${TEAMS[nextTeam].name}, opponent of ${TEAMS[playedTeam].name})`);
+
+      // Switch the playing glow on the dashboard/stage host
+      io.emit("teamStopPlaying", playedTeam);
+      io.emit("triggerStop", playedTeam);
+      io.emit("teamPlaying", nextTeam);
+      io.emit("triggerPlaying", nextTeam);
+      console.log(`[REFRESH TRACKS] StreamDeck → ${TEAMS[nextTeam].name} page, dashboard switched (was ${playedTeam})`);
+      return;
     }
+
+    // Both teams played → retarget R2GO2 → AWO (next round)
+    console.log(`[REFRESH TRACKS] Both teams played — retargeting R2GO2 → ${CONFIG.QLAB_CUE_R3} (osc)`);
+    updateQLabCueTarget(CONFIG.QLAB_CUE_R2GO2, CONFIG.QLAB_CUE_R3);
     return;
   }
 
@@ -3617,13 +3704,12 @@ function playGoldenRecordCue(teamId) {
   req.end();
 }
 
-// Cues that must stay disarmed (managed by QLab, not the server)
-// DUALGO only disarmed in R4 — other rounds leave it alone
-const BASE_DISARMED_CUES = ['JUMP', 'IBUZZ', 'ABUZZ'];
+// Cues that must stay disarmed after armAllQLabCues — the server arms them
+// on demand when it's actually time to fire them (e.g. /dualscreen handler
+// arms DUALGO in R4, buzzer arming happens in tiebreak flow).
+const BASE_DISARMED_CUES = ['JUMP', 'IBUZZ', 'ABUZZ', 'DUALGO'];
 function getDisarmedCues() {
-  return roundState.currentRound === 4
-    ? [...BASE_DISARMED_CUES, 'DUALGO']
-    : BASE_DISARMED_CUES;
+  return BASE_DISARMED_CUES;
 }
 
 function armAllQLabCues() {
