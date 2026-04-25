@@ -374,18 +374,17 @@ if [ "$LICENSE_STATUS" = "VALID" ]; then
     echo "  To manually start/stop: ./start.sh ./stop.sh"
     echo ""
 
-    # ── Docforge Export ──────────────────────────────────────
-    read -p "  Generate .docforge file? (y/N): " DOCFORGE_CHOICE
+    # ── Docforge Export (always) ─────────────────────────────
+    echo "  ── Certificate details ─────────────────"
+    echo "  (press Enter to skip a field)"
+    echo ""
+    read -p "  Licensee name (e.g. MSC Poesia): " LICENSEE_NAME
+    read -p "  Expiry days (blank = permanent): " EXPIRY_DAYS
 
-    if [ "$DOCFORGE_CHOICE" = "y" ] || [ "$DOCFORGE_CHOICE" = "Y" ]; then
-        echo ""
-        read -p "  Licensee name (e.g. MSC Poesia): " LICENSEE_NAME
-        read -p "  Expiry days (blank = permanent): " EXPIRY_DAYS
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+    DOCFORGE_FILE="$HOME/Desktop/chart-toppers-license.docforge"
 
-        TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
-        DOCFORGE_FILE="$HOME/Desktop/chart-toppers-license.docforge"
-
-        python3 -c "
+    python3 -c "
 import json, sys
 
 data = {
@@ -407,12 +406,12 @@ with open(sys.argv[6], 'w') as f:
     json.dump(data, f, indent=2)
 " "$TIMESTAMP" "$MACHINE_ID" "$LICENSEE_NAME" "$EXPIRY_DAYS" "$LICENSE_KEY" "$DOCFORGE_FILE"
 
-        if [ -f "$DOCFORGE_FILE" ]; then
-            echo ""
-            echo "  ✓ Docforge file: $DOCFORGE_FILE"
-        else
-            echo "  ✗ Failed to create .docforge file."
-        fi
+    if [ -f "$DOCFORGE_FILE" ]; then
+        echo ""
+        echo "  ✓ Docforge file: $DOCFORGE_FILE"
+    else
+        echo ""
+        echo "  ✗ Failed to create .docforge file."
     fi
 else
     echo "  ========================================"
