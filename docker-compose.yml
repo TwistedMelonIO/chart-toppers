@@ -30,13 +30,17 @@ services:
       # Base folder where QLab audio files live (mapped below)
       - TRACK_BASE_PATH=/app/qlab-audio
       # App version
-      - APP_VERSION=5.1.0
+      - APP_VERSION=5.4.0
       # License key (empty by default, set during installation)
       - LICENSE_KEY=${LICENSE_KEY:-}
       - HOST_HARDWARE_ID=${HOST_HARDWARE_ID:-}
     volumes:
       # Persistent storage for activity log and pack settings
       - chart-toppers-data:/app/data
+      # Host-side backup of license_key + machine_id. Survives docker volume
+      # destruction and Docker Desktop factory reset. Defense-in-depth so the
+      # demo unit can never lose its license short of deleting the user's home dir.
+      - ${HOME}/.twisted-melon/chart-toppers:/app/host-data
       # Host QLab audio folder → inside container (set in .env by install_license.sh)
       - ${QLAB_AUDIO_PATH:-/path/to/qlab-audio}:/app/qlab-audio:ro
     depends_on:

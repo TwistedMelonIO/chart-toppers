@@ -72,25 +72,17 @@ const CONFIG = {
   QLAB_CUE_CF3: process.env.QLAB_CUE_CF3 || "CF3",
   QLAB_CUE_GP3: process.env.QLAB_CUE_GP3 || "GP3",
 
+  // Round 4 coin flip: same pattern as R2/R3.
+  // Draw → CF4 (coin flip group), scores differ → loser's block (R4ANTHEM/R4ICON).
+  // R4 has no genre picker, so when not tied the target IS the first-team block.
+  QLAB_CUE_CF4: process.env.QLAB_CUE_CF4 || "CF4",
+
   // Leader SD nav: LEADERSD is a goto cue retargeted to whichever team is
   // currently in the lead (SDE10 icons / SDE11 anthems). Recomputed after
   // every score change so it always points at the leader. In R4, points to loser.
   QLAB_CUE_LEADER_SD: process.env.QLAB_CUE_LEADER_SD || "LEADERSD",
 
-  // Round 4 loser goto: R4LOOSER is retargeted to the losing team's R4 block
-  // (R4ICON or R4ANTHEM) when entering Round 4.
-  QLAB_CUE_R4_LOOSER: process.env.QLAB_CUE_R4_LOOSER || "R4LOOSER",
-
-  // Round 1 flow: R1GOTO points to R1TRACKS for team 2, then R2 after both played.
-  QLAB_CUE_R1GOTO: process.env.QLAB_CUE_R1GOTO || "R1GOTO",
-  QLAB_CUE_R1_SECONDTEAM: process.env.QLAB_CUE_R1_SECONDTEAM || "SECONDTEAM",
   QLAB_CUE_R2: process.env.QLAB_CUE_R2 || "R2",
-
-  // Team background: TARGETBACKGROUND is a video cue retargeted to the first
-  // team's ident video on each round change.
-  QLAB_CUE_TARGET_BG: process.env.QLAB_CUE_TARGET_BG || "TARGETBACKGROUND",
-  QLAB_BG_ICONS: process.env.QLAB_BG_ICONS || "/Users/chrisdevlin/Documents/Chart Toppers/video/MSCCT-GRA-016-TEAM ICON_3840x2160_V1.mov",
-  QLAB_BG_ANTHEMS: process.env.QLAB_BG_ANTHEMS || "/Users/chrisdevlin/Documents/Chart Toppers/video/MSCCT-GRA-017-TEAM ANTHEM_3840x2160_V1.mov",
 
   // Admin password for sensitive operations
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "8888",
@@ -375,7 +367,6 @@ function autoSetFirstTeamForRound(roundNum, source) {
   logActivity('round', firstTeamId, `R${roundNum} auto first-team: ${TEAMS[firstTeamId].name} (${rule})`, source);
   io.emit('turnUpdate', turnState);
   setCompanionVariable('current_team', TEAMS[firstTeamId].name);
-  retargetTeamBackground(firstTeamId, `r${roundNum}-auto`);
 }
 
 // Auto-shuffle 6 random R1 pairs from ALL R1 tracks (ignoring genre) and
@@ -502,13 +493,7 @@ function setRound(roundNum, source = 'system') {
   if (roundNum === 4 && prev !== 4) {
     r4PlayedTeams.clear();
     retargetR4NextToFirstTeam();
-    // Retarget R4LOOSER to the losing team's R4 block
     const ranking = teamRanking();
-    if (!ranking.tie) {
-      const loserCue = ranking.loser === 'anthems' ? CONFIG.QLAB_CUE_R4_ANTHEMS : CONFIG.QLAB_CUE_R4_ICONS;
-      updateQLabCueTarget(CONFIG.QLAB_CUE_R4_LOOSER, loserCue);
-      console.log(`[R4 FLOW] R4LOOSER → ${loserCue} (${TEAMS[ranking.loser].name} goes first)`);
-    }
     // Retarget R4SINGLESCORE to the first team's score cue
     if (!ranking.tie) {
       const firstTeam = ranking.loser; // loser goes first in R4
@@ -529,12 +514,12 @@ function setRound(roundNum, source = 'system') {
     console.log(`[R4 FLOW] All score cues zeroed for R4`);
   }
 
-  // Entering Round 1: reset R1 played count, point R1GOTO at R1TRACKS, and
-  // auto-shuffle 6 random pairs from ALL R1 tracks (R1 uses buzzers, no genre pick).
+  // Entering Round 1: reset R1 played count and auto-shuffle 6 random pairs
+  // from ALL R1 tracks (R1 uses buzzers, no genre pick).
   if (roundNum === 1 && prev !== 1) {
     r1PlayedTeams = 0;
-    retargetR1GOTO('round-enter');
     resetR1Tracks();
+    refreshGoldenRecords('r1-enter');
   }
 
   // Entering Round 2: reset the R2 played set, refresh counter, and point R2GO2 at R2T.
@@ -548,6 +533,7 @@ function setRound(roundNum, source = 'system') {
     sendBridgeOsc('/cue/IBUZZ/armed', 0, '→ disarm IBUZZ for R2');
     sendBridgeOsc('/cue/ABUZZ/armed', 0, '→ disarm ABUZZ for R2');
     console.log(`[R2 FLOW] Buzzers disarmed for Round 2`);
+    refreshGoldenRecords('r2-enter');
   }
 
   // Entering Round 3: reset active track state and StreamDeck button colours
@@ -559,6 +545,7 @@ function setRound(roundNum, source = 'system') {
       setCompanionVariable(`r3_track_${i}_played`, '0');
     }
     retargetR3CoinFlip('round-enter');
+    refreshGoldenRecords('r3-enter');
   }
 
   roundState.currentRound = roundNum;
@@ -567,8 +554,15 @@ function setRound(roundNum, source = 'system') {
   // Reset R4 track play state when entering Round 4
   if (roundNum === 4) {
     resetR4Tracks();
+    // R4 has no buzzers during normal play (tiebreaker may arm them later
+    // via /dualscreen). Proactively disarm on round entry.
+    sendBridgeOsc('/cue/IBUZZ/armed', 0, '→ disarm IBUZZ for R4');
+    sendBridgeOsc('/cue/ABUZZ/armed', 0, '→ disarm ABUZZ for R4');
+    console.log(`[R4 FLOW] Buzzers disarmed for Round 4`);
     // Re-run LEADERSD now that currentRound is 4 (points to loser)
     retargetLeaderSD('r4-enter');
+    // Initialise DUALGO target based on current scores (R5 unless scores are already tied)
+    retargetDUALGO('r4-enter');
     // Re-send load-to-time for both teams' countdown videos.
     // Covers panic recovery: if all cues were stopped, QLab loses the
     // loadActionAt position. The server still has the correct times.
@@ -629,8 +623,6 @@ function resetRounds(source = 'system') {
     clearTimeout(r4AutoRetargetTimer);
     r4AutoRetargetTimer = null;
   }
-  // Reset R1GOTO back to R1TRACKS
-  retargetR1GOTO('reset');
   // Reset R2GO2 back to R2Team2 now that no teams have played
   retargetR2GO2('reset');
   // Reset R4GOTO back to R4ICON (default, will be retargeted on R4 entry)
@@ -794,6 +786,19 @@ function registerCorrectAnswer(teamId, source = 'system') {
   // Recompute leader so LEADERSD always points at the current winner
   retargetLeaderSD('correct-answer');
 
+  // R4: keep DUALGO target tracking live scores (TIEBREAK if tied, else R5)
+  retargetDUALGO('correct-answer');
+
+  // R2: mark this team as having played. /refreshtracks uses r2PlayedTeams
+  // to decide swap-vs-advance-to-AWO. Populated here because operator flows
+  // fire /correct/{team} directly rather than always firing /playing/{team}.
+  if (currentRound === 2) {
+    if (!r2PlayedTeams.has(teamId)) {
+      r2PlayedTeams.add(teamId);
+      console.log(`[R2 FLOW] ${TEAMS[teamId].name} marked as played (via correct answer) — r2PlayedTeams size: ${r2PlayedTeams.size}`);
+    }
+  }
+
   // Tiebreaker: stop TB cue on correct answer
   if (tiebreakActive) {
     sendBridgeOsc('/cue/TB/stop', 0, '→ stop TB on tiebreaker correct');
@@ -863,6 +868,9 @@ function undoLastAnswer(teamId, source = 'system') {
   // Recompute leader
   retargetLeaderSD('undo');
 
+  // R4: undo may flip a tie <-> non-tie state, so keep DUALGO target live
+  retargetDUALGO('undo');
+
   // Stop buzzer cues (most likely trigger for an undo)
   sendBridgeOsc('/cue/IBUZZ/stop', 0, '→ stop IBUZZ on undo');
   sendBridgeOsc('/cue/ABUZZ/stop', 0, '→ stop ABUZZ on undo');
@@ -871,6 +879,25 @@ function undoLastAnswer(teamId, source = 'system') {
   console.log(`[GAME] ${TEAMS[teamId].name} Undo #${lastEntry.answer} | -${lastEntry.pointsAwarded}s | Earned: ${team.earnedTime}s | Remaining: ${team.remainingTime}s`);
 
   return gameState;
+}
+
+// Refresh both teams' Golden Record availability at the start of a round.
+// R1/R2/R3 each get a fresh Golden Record — if a team used it in the previous
+// round, they can use it again in the new round. Does NOT touch R4 (no GR there).
+function refreshGoldenRecords(source = 'system') {
+  for (const teamId of ['anthems', 'icons']) {
+    const team = gameState[teamId];
+    if (!team) continue;
+    const wasUsed = team.goldenRecordUsed || !team.goldenRecordAvailable;
+    team.goldenRecordAvailable = true;
+    team.goldenRecordArmed = false;
+    team.goldenRecordUsed = false;
+    if (wasUsed) {
+      console.log(`[GOLDEN RECORD] Refreshed for ${TEAMS[teamId].name} (${source})`);
+      logActivity('golden_record', teamId, `Golden Record refreshed for ${TEAMS[teamId].name}`, source);
+    }
+  }
+  io.emit("stateUpdate", gameState);
 }
 
 function activateGoldenRecord(teamId, source = 'system') {
@@ -1133,13 +1160,20 @@ app.post("/api/cointoss/:team", (req, res) => {
   }
   turnState.firstTeam = teamId;
   turnState.currentTeam = teamId;
-  turnState.phase = 'genre-pick';
+  turnState.phase = roundState.currentRound === 4 ? 'playing-first' : 'genre-pick';
   io.emit('turnUpdate', turnState);
   logActivity('cointoss', teamId, `Coin toss: ${TEAMS[teamId].name} goes first`, 'api');
 
-  const genrePage = GENRE_PAGES[roundState.currentRound];
-  if (genrePage) {
-    navigateStreamDeck(genrePage);
+  // R4 on a tied-score entry: also set R4NEXT to the cointoss winner's block
+  // so the operator's next GO fires the right team's countdown. Otherwise
+  // navigate to the round's genre picker page.
+  if (roundState.currentRound === 4) {
+    retargetR4NextToTeam(teamId, 'cointoss-api');
+  } else {
+    const genrePage = GENRE_PAGES[roundState.currentRound];
+    if (genrePage) {
+      navigateStreamDeck(genrePage);
+    }
   }
 
   // Update LEADERSD to the cointoss winner so the QLab Auto StreamDeck cue
@@ -1384,11 +1418,13 @@ function cueFor(teamId) {
 function retargetR4NextToFirstTeam() {
   const order = r4TeamOrder();
   if (!order) {
+    // Tied entry — R4NEXT points at the coin flip cue (CF4) so firing R4NEXT
+    // plays the coin flip. After the coin flip resolves, /chart-toppers/cointoss
+    // fires and the cointoss handler retargets R4NEXT to the winner's block.
     const ties = gameState.anthems?.earnedTime || 0;
-    console.warn(
-      `[R4 FLOW] Tie score (${ties}s each) — R4NEXT not retargeted. Operator must set the target manually in QLab.`
-    );
-    logActivity('round', 'all', `R4 tie (${ties}s each) — R4NEXT not retargeted`, 'system');
+    console.log(`[R4 FLOW] Tie score (${ties}s each) — R4NEXT → ${CONFIG.QLAB_CUE_CF4} (coin flip)`);
+    logActivity('round', 'all', `R4 tie (${ties}s each) — R4NEXT → ${CONFIG.QLAB_CUE_CF4}`, 'system');
+    updateQLabCueTarget(CONFIG.QLAB_CUE_R4NEXT, CONFIG.QLAB_CUE_CF4);
     return;
   }
   const targetCue = cueFor(order.firstTeamId);
@@ -1411,15 +1447,6 @@ function retargetR4NextToTeam(teamId, source = 'system') {
   updateQLabCueTarget(CONFIG.QLAB_CUE_R4NEXT, targetCue);
 }
 
-// Round 1 flow: retarget R1GOTO based on how many teams have played.
-//   - first team done: R1GOTO → R1TRACKS (second team plays)
-//   - both done: R1GOTO → R2
-function retargetR1GOTO(source = 'system') {
-  const target = r1PlayedTeams >= 2 ? CONFIG.QLAB_CUE_R2 : CONFIG.QLAB_CUE_R1_SECONDTEAM;
-  const label = r1PlayedTeams >= 2 ? 'both played → R2' : 'SECONDTEAM';
-  console.log(`[R1 FLOW] Retargeting R1GOTO → ${target} (${label}) (${source})`);
-  updateQLabCueTarget(CONFIG.QLAB_CUE_R1GOTO, target);
-}
 
 // Map a team to its StreamDeck-page cue (SDE10 for icons, SDE11 for anthems).
 // Used by retargetLeaderSD to point LEADERSD at the current leader's (or R4
@@ -1442,6 +1469,61 @@ function retargetR2GO2(source = 'system') {
   );
   logActivity('round', 'all', `R2 retarget ${CONFIG.QLAB_CUE_R2GO2} → ${target} (${label})`, source);
   updateQLabCueTarget(CONFIG.QLAB_CUE_R2GO2, target);
+}
+
+// Shared R2 refresh-tracks logic used by both the HTTP endpoint and the OSC
+// handler. State-based, idempotent — repeated calls don't double-advance.
+//   - 0 teams played: ignore
+//   - 1 team played: swap tracks for opponent, nav SD, force LEADERSD
+//   - 2 teams played: R2GO2 → AWO
+function handleRefreshTracks(source) {
+  if (!lastLoadedGenre.genreIndex) {
+    console.warn(`[REFRESH TRACKS] No genre loaded yet, ignoring (${source})`);
+    return { success: false, error: 'No genre loaded yet' };
+  }
+
+  const playedCount = r2PlayedTeams.size;
+
+  if (playedCount === 0) {
+    console.warn(`[REFRESH TRACKS] No team has played yet, ignoring (${source})`);
+    return { success: false, error: 'No team has played yet' };
+  }
+
+  if (playedCount === 1) {
+    const playedTeam = r2PlayedTeams.has('anthems') ? 'anthems' : 'icons';
+    const nextTeam = otherTeam(playedTeam);
+    console.log(`[REFRESH TRACKS] First team (${TEAMS[playedTeam].name}) done — swapping tracks for ${TEAMS[nextTeam].name} (${source})`);
+    const result = loadGenreTracks(lastLoadedGenre.genreIndex);
+
+    // Anticipate second team — mark them played so next refresh hits AWO branch
+    r2PlayedTeams.add(nextTeam);
+    console.log(`[REFRESH TRACKS] Marked ${TEAMS[nextTeam].name} as played (anticipated)`);
+
+    // Update currentTeam so subsequent correct/incorrect targets the right team
+    turnState.currentTeam = nextTeam;
+    io.emit('turnUpdate', turnState);
+    setCompanionVariable('current_team', TEAMS[nextTeam].name);
+
+    // Nav SD + force LEADERSD to opponent
+    navigateStreamDeck(TEAM_PAGES[nextTeam]);
+    const nextSdeCue = sdeCueFor(nextTeam);
+    updateQLabCueTarget(CONFIG.QLAB_CUE_LEADER_SD, nextSdeCue);
+    console.log(`[LEADER SD] Refresh tracks — forced LEADERSD → ${nextSdeCue} (${TEAMS[nextTeam].name}, opponent of ${TEAMS[playedTeam].name})`);
+
+    // Dashboard glow swap
+    io.emit("teamStopPlaying", playedTeam);
+    io.emit("triggerStop", playedTeam);
+    io.emit("teamPlaying", nextTeam);
+    io.emit("triggerPlaying", nextTeam);
+    console.log(`[REFRESH TRACKS] StreamDeck → ${TEAMS[nextTeam].name} page, dashboard switched (was ${playedTeam})`);
+
+    return { success: true, phase: 'swap', nextTeam, ...result };
+  }
+
+  // Both teams played → R2GO2 → AWO
+  console.log(`[REFRESH TRACKS] Both teams played — retargeting R2GO2 → ${CONFIG.QLAB_CUE_R3} (${source})`);
+  updateQLabCueTarget(CONFIG.QLAB_CUE_R2GO2, CONFIG.QLAB_CUE_R3);
+  return { success: true, phase: 'advance' };
 }
 
 // Retarget R2COINFLIP based on whether R1 ended in a draw.
@@ -1474,13 +1556,6 @@ function retargetR3CoinFlip(source = 'system') {
   }
 }
 
-// Retarget TARGETBACKGROUND to the first team's ident video.
-function retargetTeamBackground(teamId, source = 'system') {
-  const bgFile = teamId === 'anthems' ? CONFIG.QLAB_BG_ANTHEMS : CONFIG.QLAB_BG_ICONS;
-  updateQLabCueFilePath(CONFIG.QLAB_CUE_TARGET_BG, bgFile);
-  console.log(`[BG] TARGETBACKGROUND → ${TEAMS[teamId].name} ident (${source})`);
-}
-
 // Retarget LEADERSD to the team currently in the lead. Combined score =
 // earnedTime + points so it works in R1-R3 (time-based) and R4 (points-based).
 // On tie, fall back to turnState.currentTeam (i.e. whoever just won the coin
@@ -1495,7 +1570,10 @@ function retargetLeaderSD(source = 'system') {
   let label;
   if (aScore === iScore) {
     if (!turnState.currentTeam) {
-      console.log(`[LEADER SD] Tie (${aScore} each) and no currentTeam — LEADERSD not retargeted (${source})`);
+      // Tied with no coin-toss winner yet — park LEADERSD on SDE1 so the
+      // SD shows the neutral page until a team is selected.
+      console.log(`[LEADER SD] Tie (${aScore} each) and no currentTeam — LEADERSD → SDE1 (${source})`);
+      updateQLabCueTarget(CONFIG.QLAB_CUE_LEADER_SD, 'SDE1');
       return;
     }
     leaderId = turnState.currentTeam;
@@ -1507,13 +1585,36 @@ function retargetLeaderSD(source = 'system') {
     label = roundState.currentRound === 4 ? 'Loser (R4)' : 'Leader';
   }
 
-  // Round 4: loser goes first, so LEADERSD points to the loser
-  const targetTeam = roundState.currentRound === 4 ? loserId : leaderId;
+  // Round 4: loser goes first, so LEADERSD normally points at the loser.
+  // EXCEPTION: on a tied R4 (cointoss decided), leaderId is already the
+  // cointoss winner (turnState.currentTeam) who plays first — point at them
+  // directly, NOT the opposite team.
+  const r4NotTied = roundState.currentRound === 4 && aScore !== iScore;
+  const targetTeam = r4NotTied ? loserId : leaderId;
   const targetCue = sdeCueFor(targetTeam);
   console.log(
     `[LEADER SD] ${label}: ${TEAMS[targetTeam].name} (a=${aScore} i=${iScore}) → ${CONFIG.QLAB_CUE_LEADER_SD} → ${targetCue} (${source})`
   );
   updateQLabCueTarget(CONFIG.QLAB_CUE_LEADER_SD, targetCue);
+}
+
+// Continuously retarget DUALGO as scores change during R4.
+//   - Scores tied  → DUALGO → TIEBREAK
+//   - Scores differ → DUALGO → R5 (winner reveal)
+// Called after every correct/incorrect/undo in R4 and on R4 entry.
+// Uses teamRanking (earnedTime + points) — the game-wide total score.
+// Does NOT touch tiebreakActive or buzzer arming — those stay under
+// the control of /chart-toppers/dualscreen so the operator still drives
+// when the tiebreaker actually fires.
+function retargetDUALGO(source = 'system') {
+  if (roundState.currentRound !== 4) return;
+  const ranking = teamRanking();
+  const target = ranking.tie ? CONFIG.QLAB_CUE_TIEBREAK : 'R5';
+  const label = ranking.tie ? 'TIEBREAK (tied)' : 'R5 (winner reveal)';
+  console.log(
+    `[DUALGO] Retargeting → ${target} — ${label} (a=${ranking.aScore} i=${ranking.iScore}) (${source})`
+  );
+  updateQLabCueTarget('DUALGO', target);
 }
 
 // Delay before the auto-retarget fires after a team starts playing in R4.
@@ -1618,6 +1719,13 @@ const GENRE_CUE_MAP = {
 };
 const START_CUES = ['SG1', 'SG2', 'SG3'];
 
+// R3 genre names are PINNED across all packs — the same Mashup Madness
+// mashups are used for every pack, so G7/G8/G9 always show these labels
+// regardless of pack JSON. R1 and R2 are per-pack (each pack has its own
+// genre set in its JSON). Decade labels keep lowercase 's after the year
+// (e.g. "1980's") — the rest of the catalogue is uppercase.
+const R3_PINNED_GENRES = ["1980's", "1990's", "2000's"];
+
 // Update all G1-G9 genre text cue names in QLab + all Companion variables (called on pack change)
 function updateAllGenreCues(packId) {
   const pack = packData[packId || packSettings.currentPack];
@@ -1630,14 +1738,19 @@ function updateAllGenreCues(packId) {
 
   let delay = 0;
   Object.entries(GENRE_CUE_MAP).forEach(([round, cues]) => {
-    const genres = pack.genres[round];
+    // R3 always uses the pinned mashup decade labels regardless of pack JSON
+    // (the same Mashup Madness mashups are shared across every pack).
+    // R1 + R2 are per-pack — each pack has its own R1/R2 genre set.
+    const genres = round === '3' ? R3_PINNED_GENRES : pack.genres[round];
     if (!genres) return;
 
     cues.forEach((cue, i) => {
       const genreName = genres[i] || '';
       setTimeout(() => {
         updateQLabCueName(cue, genreName);
-        sendBridgeOsc(`/cue/${cue}/text`, genreName.toUpperCase(), `→ set ${cue} text to "${genreName.toUpperCase()}"`);
+        // Send genre name as-is (already cased correctly in pinned constants /
+        // pack JSON — most are uppercase but year suffixes stay lowercase, e.g. "1980's").
+        sendBridgeOsc(`/cue/${cue}/text`, genreName, `→ set ${cue} text to "${genreName}"`);
       }, delay);
       delay += 100;
     });
@@ -1662,6 +1775,9 @@ function updateGenreTargets(roundNum) {
 
   console.log(`[GENRE] Retargeting SG1-SG3 → ${targets.join(', ')} for Round ${roundNum}`);
 
+  // R3 uses the pinned mashup decade labels; R1 + R2 are per-pack.
+  const pinnedGenres = roundNum === 3 ? R3_PINNED_GENRES : null;
+
   START_CUES.forEach((sg, i) => {
     const targetCue = targets[i];
 
@@ -1669,10 +1785,13 @@ function updateGenreTargets(roundNum) {
     updateQLabCueTarget(sg, targetCue);
 
     // Update Companion custom variable with the genre name
-    if (pack && pack.genres && pack.genres[String(roundNum)]) {
-      const genreName = pack.genres[String(roundNum)][i] || '';
-      setCompanionVariable(`genre_g${i + 1}`, genreName);
+    let genreName = '';
+    if (pinnedGenres) {
+      genreName = pinnedGenres[i] || '';
+    } else if (pack && pack.genres && pack.genres[String(roundNum)]) {
+      genreName = pack.genres[String(roundNum)][i] || '';
     }
+    setCompanionVariable(`genre_g${i + 1}`, genreName);
   });
 }
 
@@ -1906,11 +2025,21 @@ function loadGenreTracks(genreIndex) {
       logActivity('track_loaded', 'all', `${slot}: ${track.band} - ${track.track} [${genreName}]`, 'osc');
     });
 
-    // R3: set placeholder numbered list on the R3SCORES cue
+    // R3: compose the answer note for R3SCORES from the selected mashups.
+    // Each R3 track entry in the pack JSON has track1 + track2 sub-objects
+    // ({band, track, id}) that describe the two songs layered into the mashup.
+    // Format per line: "N. Band1 - Track1 & Band2 - Track2"
     if (currentRound === '3') {
-      const placeholder = '1. ARTIST - SONG X ARTIST - SONG\n\n2. ARTIST - SONG X ARTIST - SONG\n\n3. ARTIST - SONG X ARTIST - SONG\n\n4. ARTIST - SONG X ARTIST - SONG';
-      updateQLabCueNotes('R3SCORES', placeholder);
-      console.log(`[R3 FLOW] R3SCORES notes updated with placeholder tracks`);
+      const noteLines = selected.map((t, i) => {
+        if (t.track1 && t.track2) {
+          return `${i + 1}. ${t.track1.band} - ${t.track1.track} & ${t.track2.band} - ${t.track2.track}`;
+        }
+        // Fallback for any legacy R3 entries that don't have track1/track2
+        return `${i + 1}. ${t.band} - ${t.track}`;
+      });
+      const notes = noteLines.join('\n\n');
+      updateQLabCueNotes('R3SCORES', notes);
+      console.log(`[R3 FLOW] R3SCORES notes updated with ${selected.length} selected mashups`);
     }
   }
 
@@ -2055,9 +2184,15 @@ app.get('/api/pack-tracks/:packId', (req, res) => {
   res.json(pack);
 });
 
-// POST /api/reload-packs — reload pack data from disk
+// POST /api/reload-packs — reload pack data from disk and refresh QLab
+// genre cues so any text/cue changes flow through immediately.
 app.post('/api/reload-packs', (req, res) => {
   packData = loadPackData();
+  // Push updated G1-G9 text and SG retargets to QLab + Companion now that
+  // pack data has been reloaded.
+  if (packSettings.currentPack && packData[packSettings.currentPack]) {
+    updateAllGenreCues(packSettings.currentPack);
+  }
   res.json({ success: true, packs: Object.keys(packData) });
 });
 
@@ -2075,24 +2210,29 @@ app.post('/api/loadgenre/:index', (req, res) => {
   res.json(result);
 });
 
-// Refresh genre — reload same genre with fresh tracks + switch to other team
+// Refresh genre — reload same genre with fresh tracks + navigate SD to SDE1
 app.post('/api/refreshgenre', (req, res) => {
   if (!lastLoadedGenre.genreIndex) {
     return res.status(400).json({ success: false, error: 'No genre loaded yet' });
   }
   console.log(`[GENRE REFRESH] Reloading genre index ${lastLoadedGenre.genreIndex} for Round ${lastLoadedGenre.round}`);
   const result = loadGenreTracks(lastLoadedGenre.genreIndex);
-
+  // Match /loadgenre behaviour — return SD to SDE1 so the operator sees
+  // the track-picker page after a refresh (important in R1 where the SD
+  // may have been left on a team answer page by /r1teamdone).
+  if (result.success) {
+    navigateStreamDeck(1);
+    console.log(`[API] StreamDeck → SDE1 after refreshgenre`);
+  }
   res.json(result);
 });
 
 // Refresh tracks — reload R2T1/R2T2 with fresh tracks from the selected genre
 app.post('/api/refreshtracks', (req, res) => {
-  if (!lastLoadedGenre.genreIndex) {
-    return res.status(400).json({ success: false, error: 'No genre loaded yet' });
+  const result = handleRefreshTracks('api');
+  if (!result.success) {
+    return res.status(400).json(result);
   }
-  console.log(`[REFRESH TRACKS] Swapping R2 tracks for second team (api)`);
-  const result = loadGenreTracks(lastLoadedGenre.genreIndex);
   res.json(result);
 });
 
@@ -2156,17 +2296,34 @@ app.post("/api/reset", (req, res) => {
   res.json({ success: true, message: "Reset all teams - playing AT and IT cues" });
 });
 
-// Randomise Round 3 scores for testing
+// Randomise Round 3 scores for testing.
+// Optional query/body: ?seconds=N — sets both teams to exactly N seconds
+// earned (overrides the random roll). Use this for deterministic R4 setup.
 app.post("/api/randomise-round3", (req, res) => {
   const R3_POINTS_PER_CORRECT = CONFIG.ROUND_SCORING[3] || 8;
+  const targetSecondsRaw = req.query.seconds ?? req.body?.seconds;
+  const targetSeconds = targetSecondsRaw != null ? parseInt(targetSecondsRaw, 10) : null;
+  const hasTarget = Number.isFinite(targetSeconds) && targetSeconds >= 0;
 
-  // Target ~30s per team. At 1pt = 8s, that's 3 correct (24s) or 4 correct (32s).
-  // Each team gets an independent random pick so the result is varied but always
-  // lands within 6 seconds of the 30s target.
   for (const teamId of ['anthems', 'icons']) {
     const team = gameState[teamId];
-    const numCorrect = 3 + Math.floor(Math.random() * 2); // 3 or 4
-    const r3Time = numCorrect * R3_POINTS_PER_CORRECT;
+
+    // Determine the seconds to add for this team.
+    // With a target: jitter ±3s around the target so both teams land in the
+    // same region but not identical. Synthesize history entries worth
+    // R3_POINTS_PER_CORRECT each (any remainder goes onto the last entry).
+    // Without a target: random 3 or 4 correct answers (~30s).
+    let r3Time;
+    let numCorrect;
+    if (hasTarget) {
+      // Jitter: target-3 .. target+3, clamped to [0, MAX_TIME]
+      const jitter = Math.floor(Math.random() * 7) - 3; // -3..+3
+      r3Time = Math.max(0, Math.min(CONFIG.MAX_TIME, targetSeconds + jitter));
+      numCorrect = Math.max(1, Math.ceil(r3Time / R3_POINTS_PER_CORRECT));
+    } else {
+      numCorrect = 3 + Math.floor(Math.random() * 2); // 3 or 4
+      r3Time = numCorrect * R3_POINTS_PER_CORRECT;
+    }
 
     team.earnedTime = Math.min(team.earnedTime + r3Time, CONFIG.MAX_TIME);
     team.remainingTime = team.maxTime - team.earnedTime;
@@ -2174,26 +2331,35 @@ app.post("/api/randomise-round3", (req, res) => {
     team.correctAnswers += numCorrect;
 
     for (let i = 0; i < numCorrect; i++) {
+      const isLast = i === numCorrect - 1;
+      const pts = hasTarget && isLast
+        ? r3Time - (numCorrect - 1) * R3_POINTS_PER_CORRECT
+        : R3_POINTS_PER_CORRECT;
       team.history.push({
         timestamp: new Date().toISOString(),
         answer: team.correctAnswers - numCorrect + i + 1,
         earnedTime: team.earnedTime - (numCorrect - i - 1) * R3_POINTS_PER_CORRECT,
         remainingTime: team.maxTime - (team.earnedTime - (numCorrect - i - 1) * R3_POINTS_PER_CORRECT),
         round: 3,
-        pointsAwarded: R3_POINTS_PER_CORRECT,
+        pointsAwarded: pts,
         goldenRecord: false,
       });
     }
 
     updateQLabTextCue(teamId, team.earnedTime);
-    console.log(`[API] Randomised R3 for ${TEAMS[teamId].name}: ${numCorrect} correct (+${r3Time}s), total ${team.earnedTime}s`);
+    // Load the countdown video cue to the correct position so R4 is playable.
+    sendQLabLoadCue(teamId, team.remainingTime);
+    const tag = hasTarget ? `target=${targetSeconds}s` : `random ${numCorrect} correct`;
+    console.log(`[API] Randomised R3 for ${TEAMS[teamId].name}: ${tag} (+${r3Time}s), total ${team.earnedTime}s, loaded countdown at ${team.remainingTime}s`);
   }
 
   retargetLeaderSD('randomise-round3');
   io.emit("stateUpdate", gameState);
-  logActivity('system', null, `Randomised Round 3 scores — Anthems: ${gameState.anthems.earnedTime}s, Icons: ${gameState.icons.earnedTime}s`, 'api');
+  const sourceTag = hasTarget ? `target=${targetSeconds}s` : 'random';
+  logActivity('system', null, `Randomised Round 3 scores (${sourceTag}) — Anthems: ${gameState.anthems.earnedTime}s, Icons: ${gameState.icons.earnedTime}s`, 'api');
   res.json({
     success: true,
+    target: hasTarget ? targetSeconds : null,
     anthems: { earnedTime: gameState.anthems.earnedTime, remainingTime: gameState.anthems.remainingTime },
     icons: { earnedTime: gameState.icons.earnedTime, remainingTime: gameState.icons.remainingTime },
   });
@@ -2224,26 +2390,78 @@ async function getMachineId() {
   });
 }
 
+// Two-tier license persistence:
+//   /app/data       → docker named volume (primary)
+//   /app/host-data  → host bind mount (backup; survives volume destruction
+//                     and Docker Desktop factory reset)
+// Mirrors missing files between the two so either tier can rebuild the other.
+const LICENSE_VOLUME_DIR = "/app/data";
+const LICENSE_HOST_BACKUP_DIR = "/app/host-data";
+const LICENSE_PERSIST_FILES = ["license_key", "machine_id"];
+
+function _safeRead(p) {
+  try { return fs.existsSync(p) ? fs.readFileSync(p, "utf8").trim() : ""; }
+  catch { return ""; }
+}
+function _safeWrite(p, content) {
+  try {
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, content, "utf8");
+    return true;
+  } catch (err) {
+    console.error(`[LICENSE] Failed to write ${p}: ${err.message}`);
+    return false;
+  }
+}
+function syncLicensePersistenceTiers() {
+  for (const name of LICENSE_PERSIST_FILES) {
+    const volPath = path.join(LICENSE_VOLUME_DIR, name);
+    const hostPath = path.join(LICENSE_HOST_BACKUP_DIR, name);
+    const volVal = _safeRead(volPath);
+    const hostVal = _safeRead(hostPath);
+    if (volVal && !hostVal) {
+      if (_safeWrite(hostPath, volVal)) console.log(`[LICENSE] Restored host backup: ${name}`);
+    } else if (hostVal && !volVal) {
+      if (_safeWrite(volPath, hostVal)) console.log(`[LICENSE] Restored volume from host backup: ${name}`);
+    } else if (volVal && hostVal && volVal !== hostVal) {
+      if (_safeWrite(hostPath, volVal)) console.warn(`[LICENSE] Resolved ${name} mismatch: host backup overwritten with volume copy`);
+    }
+  }
+}
+function persistLicenseKey(key) {
+  if (!key) return;
+  const targets = [
+    path.join(LICENSE_VOLUME_DIR, "license_key"),
+    path.join(LICENSE_HOST_BACKUP_DIR, "license_key"),
+  ];
+  let wrote = false;
+  for (const target of targets) {
+    if (_safeRead(target) !== key) {
+      if (_safeWrite(target, key)) wrote = true;
+    }
+  }
+  if (wrote) console.log("[LICENSE] License key written to persistent storage (volume + host backup)");
+}
+
 async function validateLicense() {
   try {
+    // Sync the two persistence tiers BEFORE anything else, so a wiped
+    // volume can be repopulated from the host backup (or vice versa).
+    syncLicensePersistenceTiers();
+
     const machineId = await getMachineId();
     console.log(`[LICENSE] Machine ID: ${machineId}`);
+    // Mirror any new/regenerated machine_id back to host backup
+    const hostMid = path.join(LICENSE_HOST_BACKUP_DIR, "machine_id");
+    if (_safeRead(hostMid) !== machineId) _safeWrite(hostMid, machineId);
 
-    // Check env var first, then fall back to persisted file
-    let licenseKey = process.env.LICENSE_KEY || "";
-    if (!licenseKey) {
-      try {
-        const persistedKey = path.join("/app/data", "license_key");
-        if (fs.existsSync(persistedKey)) {
-          licenseKey = fs.readFileSync(persistedKey, "utf8").trim();
-          if (licenseKey) {
-            process.env.LICENSE_KEY = licenseKey;
-            console.log("[LICENSE] Loaded license key from persistent storage");
-          }
-        }
-      } catch (err) {
-        console.error("[LICENSE] Failed to read persisted license key:", err.message);
-      }
+    // Resolve active key: env var → volume → host backup
+    let licenseKey = (process.env.LICENSE_KEY || "").trim();
+    if (!licenseKey) licenseKey = _safeRead(path.join(LICENSE_VOLUME_DIR, "license_key"));
+    if (!licenseKey) licenseKey = _safeRead(path.join(LICENSE_HOST_BACKUP_DIR, "license_key"));
+    if (licenseKey) {
+      process.env.LICENSE_KEY = licenseKey;
+      console.log("[LICENSE] Active license key resolved");
     }
     if (!licenseKey) {
       return {
@@ -2290,6 +2508,11 @@ async function validateLicense() {
 async function initializeLicense() {
   console.log("[LICENSE] Initializing license validation...");
   licenseState = await validateLicense();
+  // Bulletproof persistence: any successful validation writes the key to
+  // BOTH tiers so it survives rebuilds, volume destruction, factory reset.
+  if (licenseState && licenseState.valid) {
+    persistLicenseKey((process.env.LICENSE_KEY || "").trim());
+  }
 }
 
 // License status endpoint
@@ -2312,21 +2535,11 @@ app.post("/api/activate_license", express.json(), async (req, res) => {
 
   const key = license_key.trim();
 
-  // Set in current process environment
+  // Set in current process environment — initializeLicense will validate
+  // and, on success, persist via persistLicenseKey() to both tiers.
+  // Invalid keys never touch disk, so a bad paste can't clobber a working license.
   process.env.LICENSE_KEY = key;
 
-  // Persist to data directory so it survives container restarts
-  const dataDir = "/app/data";
-  try {
-    if (fs.existsSync(dataDir)) {
-      fs.writeFileSync(path.join(dataDir, "license_key"), key, "utf8");
-      console.log("[LICENSE] License key saved to persistent storage");
-    }
-  } catch (err) {
-    console.error("[LICENSE] Failed to persist license key:", err.message);
-  }
-
-  // Re-validate with the new key
   await initializeLicense();
   res.json(licenseState);
 });
@@ -2687,13 +2900,11 @@ app.get("/api/selftest", async (req, res) => {
   );
 
   // 11-18. Goto cue configuration
-  addResult("Goto Cue Configuration", "R1GOTO configured",       !!CONFIG.QLAB_CUE_R1GOTO,        `Value: ${CONFIG.QLAB_CUE_R1GOTO}`);
   addResult("Goto Cue Configuration", "R2GO2 configured",        !!CONFIG.QLAB_CUE_R2GO2,         `Value: ${CONFIG.QLAB_CUE_R2GO2}`);
   addResult("Goto Cue Configuration", "R2COINFLIP configured",   !!CONFIG.QLAB_CUE_R2_COINFLIP,   `Value: ${CONFIG.QLAB_CUE_R2_COINFLIP}`);
   addResult("Goto Cue Configuration", "R3COINFLIP configured",   !!CONFIG.QLAB_CUE_R3_COINFLIP,   `Value: ${CONFIG.QLAB_CUE_R3_COINFLIP}`);
   addResult("Goto Cue Configuration", "R4NEXT configured",       !!CONFIG.QLAB_CUE_R4NEXT,        `Value: ${CONFIG.QLAB_CUE_R4NEXT}`);
   addResult("Goto Cue Configuration", "LEADERSD configured",     !!CONFIG.QLAB_CUE_LEADER_SD,     `Value: ${CONFIG.QLAB_CUE_LEADER_SD}`);
-  addResult("Goto Cue Configuration", "Team background configured", !!CONFIG.QLAB_CUE_TARGET_BG,  `Value: ${CONFIG.QLAB_CUE_TARGET_BG}`);
 
   // 19-20. Team configuration
   addResult("Team Configuration", "Team Anthems cue", !!CONFIG.QLAB_CUE_ANTHEMS, `Value: ${CONFIG.QLAB_CUE_ANTHEMS}`);
@@ -2717,7 +2928,7 @@ app.get("/api/selftest/checklist", (req, res) => {
     checklist: [
       { id: 1,  round: "R1",      item: "Team Anthems wins coin toss → genre loads → 6 tracks appear in QLab" },
       { id: 2,  round: "R1",      item: "Score correct answers → earned time increases on dashboard" },
-      { id: 3,  round: "R1",      item: "Team Icons plays second → R1GOTO advances to R2" },
+      { id: 3,  round: "R1",      item: "Both teams played → R1 advances to R2" },
       { id: 4,  round: "R1",      item: "Undo last answer → earned time decreases correctly" },
       { id: 5,  round: "R1",      item: "Cue notes on .2 slots show correct answer (uppercase)" },
       { id: 6,  round: "R1",      item: "Cue notes on .1 slots are empty" },
@@ -2790,11 +3001,16 @@ function handleOscAddress(address, args) {
         r3LastBuzzTeam = null;
       }
     }
-    // Round 2 only: defensive disarm — R2 has no buzzers, but a stray Companion/
-    // QLab button may have armed them. Disarm immediately after every correct.
+    // R2 + R4: defensive disarm — these rounds have no buzzers during normal
+    // play. A stray Companion/QLab button may have armed them; disarm after
+    // every correct. R4 exception: during an active tiebreaker the buzzers are
+    // intentionally armed by /dualscreen, so skip the disarm if tiebreakActive.
     if (roundState.currentRound === 2) {
       sendBridgeOsc('/cue/IBUZZ/armed', 0, '→ disarm IBUZZ after R2 correct (defensive)');
       sendBridgeOsc('/cue/ABUZZ/armed', 0, '→ disarm ABUZZ after R2 correct (defensive)');
+    } else if (roundState.currentRound === 4 && !tiebreakActive) {
+      sendBridgeOsc('/cue/IBUZZ/armed', 0, '→ disarm IBUZZ after R4 correct (defensive)');
+      sendBridgeOsc('/cue/ABUZZ/armed', 0, '→ disarm ABUZZ after R4 correct (defensive)');
     }
     return;
   }
@@ -2894,11 +3110,14 @@ function handleOscAddress(address, args) {
       navigateStreamDeck(1);
     }
 
-    // Round 2: defensive disarm — R2 has no buzzers, but a stray Companion/QLab
-    // button may have armed them. Disarm immediately after every incorrect.
+    // R2 + R4: defensive disarm — no buzzers during normal play in these rounds.
+    // R4 exception: skip if tiebreakActive so the tiebreaker flow keeps buzzers armed.
     if (roundState.currentRound === 2) {
       sendBridgeOsc('/cue/IBUZZ/armed', 0, '→ disarm IBUZZ after R2 incorrect (defensive)');
       sendBridgeOsc('/cue/ABUZZ/armed', 0, '→ disarm ABUZZ after R2 incorrect (defensive)');
+    } else if (roundState.currentRound === 4 && !tiebreakActive) {
+      sendBridgeOsc('/cue/IBUZZ/armed', 0, '→ disarm IBUZZ after R4 incorrect (defensive)');
+      sendBridgeOsc('/cue/ABUZZ/armed', 0, '→ disarm ABUZZ after R4 incorrect (defensive)');
     }
 
     // R4: advance stage host but don't auto-clear
@@ -3069,7 +3288,6 @@ function handleOscAddress(address, args) {
       console.log(`[TURN] Auto coin-toss from playing: ${TEAMS[teamId].name} goes first`);
       io.emit('turnUpdate', turnState);
       logActivity('cointoss', teamId, `Auto coin-toss: ${TEAMS[teamId].name} goes first (from playing)`, 'osc');
-      retargetTeamBackground(teamId, 'auto-cointoss-osc');
       // Update LEADERSD now that we have a winner — covers tied-score case
       // (e.g. R2 entry 0-0) where retargetLeaderSD would otherwise bail.
       retargetLeaderSD('auto-cointoss-osc');
@@ -3249,49 +3467,76 @@ function handleOscAddress(address, args) {
     return;
   }
 
-  // Dual scoreboard screen: only check for tiebreaker in Round 4
+  // Single scores screen: fired by the QLab cue that shows each team's
+  // individual R4 scoreboard. This is the prep step right before DUALGO
+  // plays — ARM DUALGO now so it's ready when QLab fires it. Target is
+  // already kept live by retargetDUALGO, so by the time DUALGO plays the
+  // target will match the current score state (R5 or TIEBREAK).
+  if (address === '/chart-toppers/singlescores') {
+    // Refresh target one more time for freshness
+    retargetDUALGO('singlescores');
+    sendBridgeOsc('/cue/DUALGO/armed', 1, '→ arm DUALGO on single-scores');
+    console.log(`[SINGLESCORES] DUALGO armed — ready to fire whenever it plays`);
+    return;
+  }
+
+
+  // Dual scoreboard screen: operator-triggered. Expected flow:
+  //   1. /singlescores already fired → DUALGO is armed, target is live
+  //   2. /dualscreen → refresh target → fire /start
+  // Safety net: we still arm DUALGO here via the awaitable path in case
+  // /singlescores wasn't fired. The await guarantees the arm reaches QLab
+  // before /start (previously these raced and /start arrived first).
   if (address === '/chart-toppers/dualscreen') {
     if (roundState.currentRound !== 4) {
       console.log(`[DUALSCREEN] Round ${roundState.currentRound} — ignoring (DUALGO only active in R4)`);
       return;
     }
+    // Refresh target against live scores
+    retargetDUALGO('dualscreen');
     const ranking = teamRanking();
-    if (ranking.tie) {
-      console.log(`[TIEBREAK] Tie detected (${ranking.aScore} each) — DUALGO → TIEBREAK`);
-      tiebreakActive = true;
-      updateQLabCueTarget('DUALGO', CONFIG.QLAB_CUE_TIEBREAK);
-      sendBridgeOsc('/cue/DUALGO/armed', 1, '→ arm DUALGO for tiebreaker');
-      sendBridgeOsc('/cue/DUALGO/start', 0, '→ start DUALGO (tiebreaker)');
-      sendBridgeOsc('/cue/IBUZZ/armed', 1, '→ arm IBUZZ for tiebreaker');
-      sendBridgeOsc('/cue/ABUZZ/armed', 1, '→ arm ABUZZ for tiebreaker');
-      logActivity('tiebreak', 'all', `Tiebreaker triggered (${ranking.aScore} each)`, 'osc');
-    } else {
-      // Clear winner — arm and start DUALGO pointing at R5 (winner reveal)
-      updateQLabCueTarget('DUALGO', 'R5');
-      sendBridgeOsc('/cue/DUALGO/armed', 1, '→ arm DUALGO for winner reveal');
-      sendBridgeOsc('/cue/DUALGO/start', 0, '→ start DUALGO (winner reveal)');
-      console.log(`[DUALSCREEN] No tie — DUALGO → R5 (armed + started)`);
-    }
+    (async () => {
+      if (ranking.tie) {
+        console.log(`[TIEBREAK] Tie detected (${ranking.aScore} each) — firing DUALGO → TIEBREAK`);
+        tiebreakActive = true;
+        // Tiebreaker needs the buzzers armed (R4 otherwise keeps them off)
+        sendBridgeOsc('/cue/IBUZZ/armed', 1, '→ arm IBUZZ for tiebreaker');
+        sendBridgeOsc('/cue/ABUZZ/armed', 1, '→ arm ABUZZ for tiebreaker');
+        logActivity('tiebreak', 'all', `Tiebreaker triggered (${ranking.aScore} each)`, 'osc');
+      } else {
+        console.log(`[DUALSCREEN] No tie (a=${ranking.aScore} i=${ranking.iScore}) — firing DUALGO → R5 (winner reveal)`);
+      }
+      // Arm (safety net) → wait for ACK → fire /start in order.
+      await sendBridgeOscAwait('/cue/DUALGO/armed', 1, '→ arm DUALGO (dualscreen safety)');
+      sendBridgeOsc('/cue/DUALGO/start', 0, `→ start DUALGO (${ranking.tie ? 'tiebreaker' : 'winner reveal'})`);
+    })();
     return;
   }
 
   // Coin toss: /chart-toppers/cointoss/anthems or /chart-toppers/cointoss/icons
+  // Works in R2/R3 (standard coin-flip after a tied previous round) and R4
+  // (final coin flip when scores are tied going into R4 — rare, but possible).
   const cointossMatch = address.match(/^\/chart-toppers\/cointoss\/(anthems|icons)$/);
   if (cointossMatch) {
     const teamId = cointossMatch[1];
     turnState.firstTeam = teamId;
     turnState.currentTeam = teamId;
-    turnState.phase = 'genre-pick';
+    turnState.phase = roundState.currentRound === 4 ? 'playing-first' : 'genre-pick';
     console.log(`[TURN] Coin toss: ${TEAMS[teamId].name} goes first`);
     io.emit('turnUpdate', turnState);
     logActivity('cointoss', teamId, `Coin toss: ${TEAMS[teamId].name} goes first`, 'osc');
 
-    // Navigate StreamDeck to genre page for current round
-    const genrePage = GENRE_PAGES[roundState.currentRound];
-    if (genrePage) {
-      navigateStreamDeck(genrePage);
+    if (roundState.currentRound === 4) {
+      // R4 tied entry: set R4NEXT to the winner's block so the operator's
+      // next GO plays the correct team's countdown.
+      retargetR4NextToTeam(teamId, 'cointoss-osc');
+    } else {
+      // R2/R3: navigate StreamDeck to the genre picker page for the round
+      const genrePage = GENRE_PAGES[roundState.currentRound];
+      if (genrePage) {
+        navigateStreamDeck(genrePage);
+      }
     }
-    retargetTeamBackground(teamId, 'cointoss-osc');
     // Update LEADERSD to the cointoss winner so the QLab Auto StreamDeck cue
     // points to the right team page even when scores are tied.
     retargetLeaderSD('cointoss-osc');
@@ -3325,6 +3570,13 @@ function handleOscAddress(address, args) {
     console.log(`[GENRE REFRESH] Reloading genre index ${lastLoadedGenre.genreIndex} for Round ${lastLoadedGenre.round}`);
     const result = loadGenreTracks(lastLoadedGenre.genreIndex);
     console.log(`[OSC] Refresh genre: ${result.success ? result.genre + ' (fresh tracks)' : result.error}`);
+    // Match /loadgenre behaviour — return SD to SDE1 so the operator sees
+    // the track-picker page after a refresh (important in R1 where the SD
+    // may have been left on a team answer page by /r1teamdone).
+    if (result.success) {
+      navigateStreamDeck(1);
+      console.log(`[OSC] StreamDeck → SDE1 after refreshgenre`);
+    }
     return;
   }
 
@@ -3335,60 +3587,7 @@ function handleOscAddress(address, args) {
   //   - 1 team played: swap tracks for the opponent, force LEADERSD → opponent
   //   - 2 teams played: both done → retarget R2GO2 → AWO
   if (address === '/chart-toppers/refreshtracks') {
-    if (!lastLoadedGenre.genreIndex) {
-      console.warn(`[OSC] refreshtracks — no genre loaded yet, ignoring`);
-      return;
-    }
-
-    const playedCount = r2PlayedTeams.size;
-
-    if (playedCount === 0) {
-      console.warn(`[OSC] refreshtracks — no team has played yet, ignoring`);
-      return;
-    }
-
-    if (playedCount === 1) {
-      // First team done → swap tracks for the second team
-      const playedTeam = r2PlayedTeams.has('anthems') ? 'anthems' : 'icons';
-      const nextTeam = otherTeam(playedTeam);
-      console.log(`[REFRESH TRACKS] First team (${TEAMS[playedTeam].name}) done — swapping tracks for ${TEAMS[nextTeam].name} (osc)`);
-      const result = loadGenreTracks(lastLoadedGenre.genreIndex);
-      console.log(`[OSC] Refresh tracks: ${result.success ? result.genre + ' (fresh tracks loaded)' : result.error}`);
-
-      // Anticipate the second team's play — mark them as played now so the
-      // NEXT /refreshtracks correctly hits the "both played" branch. This
-      // covers QLab setups where /chart-toppers/playing/{secondteam} never
-      // fires (e.g. shared play cue that always emits /playing/anthems).
-      r2PlayedTeams.add(nextTeam);
-      console.log(`[REFRESH TRACKS] Marked ${TEAMS[nextTeam].name} as played (anticipated)`);
-
-      // Update currentTeam to the second team so subsequent logic
-      // (correct/incorrect, dashboard glow) targets the right team.
-      turnState.currentTeam = nextTeam;
-      io.emit('turnUpdate', turnState);
-      setCompanionVariable('current_team', TEAMS[nextTeam].name);
-
-      // Navigate StreamDeck to the second team's answer page directly.
-      navigateStreamDeck(TEAM_PAGES[nextTeam]);
-
-      // Also force LEADERSD to the opponent so any subsequent QLab Auto
-      // StreamDeck (Re-Target) cue fire lands on the same page.
-      const nextSdeCue = sdeCueFor(nextTeam);
-      updateQLabCueTarget(CONFIG.QLAB_CUE_LEADER_SD, nextSdeCue);
-      console.log(`[LEADER SD] Refresh tracks — forced LEADERSD → ${nextSdeCue} (${TEAMS[nextTeam].name}, opponent of ${TEAMS[playedTeam].name})`);
-
-      // Switch the playing glow on the dashboard/stage host
-      io.emit("teamStopPlaying", playedTeam);
-      io.emit("triggerStop", playedTeam);
-      io.emit("teamPlaying", nextTeam);
-      io.emit("triggerPlaying", nextTeam);
-      console.log(`[REFRESH TRACKS] StreamDeck → ${TEAMS[nextTeam].name} page, dashboard switched (was ${playedTeam})`);
-      return;
-    }
-
-    // Both teams played → retarget R2GO2 → AWO (next round)
-    console.log(`[REFRESH TRACKS] Both teams played — retargeting R2GO2 → ${CONFIG.QLAB_CUE_R3} (osc)`);
-    updateQLabCueTarget(CONFIG.QLAB_CUE_R2GO2, CONFIG.QLAB_CUE_R3);
+    handleRefreshTracks('osc');
     return;
   }
 
@@ -3423,21 +3622,9 @@ function handleOscAddress(address, args) {
     return;
   }
 
-  // Swap team background: retarget TARGETBACKGROUND to the other team's ident
-  if (address === '/chart-toppers/swapteambackground') {
-    if (turnState.currentTeam) {
-      const next = otherTeam(turnState.currentTeam);
-      retargetTeamBackground(next, 'swapteambackground');
-    } else {
-      console.warn(`[OSC] swapteambackground — no current team set`);
-    }
-    return;
-  }
-
-  // R1 team done: advance R1 played count and retarget R1GOTO
+  // R1 team done: advance R1 played count and navigate SD to next team
   if (address === '/chart-toppers/r1teamdone') {
     r1PlayedTeams += 1;
-    retargetR1GOTO('r1teamdone');
     console.log(`[R1 FLOW] Team done (${r1PlayedTeams}/2)`);
 
     // First team done → navigate SD to second team's answer page
@@ -3509,6 +3696,40 @@ function sendBridgeOsc(address, value, logLabel) {
   });
   req.write(payload);
   req.end();
+}
+
+// Promise-returning version of sendBridgeOsc. Resolves when the bridge
+// HTTP response ends, so callers can chain operations that MUST arrive at
+// QLab in order (e.g. arm-then-start for a disarmed cue). Without this,
+// two sendBridgeOsc calls in quick succession can arrive out of order.
+function sendBridgeOscAwait(address, value, logLabel) {
+  return new Promise((resolve) => {
+    const payload = JSON.stringify({ address, value });
+    const bridgeUrl = new URL("/send", BRIDGE_URL);
+    const options = {
+      hostname: bridgeUrl.hostname,
+      port: bridgeUrl.port,
+      path: bridgeUrl.pathname,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(payload),
+      },
+    };
+    const req = http.request(options, (res) => {
+      res.on("data", () => {});
+      res.on("end", () => {
+        console.log(`[QLAB OUT] ${address}${logLabel ? " " + logLabel : ""} (bridge: ${res.statusCode})`);
+        resolve(res.statusCode);
+      });
+    });
+    req.on("error", (err) => {
+      console.error(`[QLAB OUT] Bridge error (${address}): ${err.message}`);
+      resolve(0);
+    });
+    req.write(payload);
+    req.end();
+  });
 }
 
 function sendQLabLoadCue(teamId, remainingSeconds) {
@@ -3705,9 +3926,12 @@ function playGoldenRecordCue(teamId) {
 }
 
 // Cues that must stay disarmed after armAllQLabCues — the server arms them
-// on demand when it's actually time to fire them (e.g. /dualscreen handler
-// arms DUALGO in R4, buzzer arming happens in tiebreak flow).
-const BASE_DISARMED_CUES = ['JUMP', 'IBUZZ', 'ABUZZ', 'DUALGO'];
+// on demand when it's actually time to fire them.
+//   - IBUZZ/ABUZZ: armed by R3 track start, R4 tiebreaker, undone on events
+//   - DUALGO: disarmed until R4 single-scores screen fires /singlescores,
+//     which arms it. /dualscreen then fires /start. Prevents DUALGO from
+//     accidentally firing during R1-R3 when "start scores (dual)" plays.
+const BASE_DISARMED_CUES = ['IBUZZ', 'ABUZZ', 'DUALGO'];
 function getDisarmedCues() {
   return BASE_DISARMED_CUES;
 }
