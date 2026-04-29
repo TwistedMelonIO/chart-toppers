@@ -2,11 +2,11 @@
 
 Walkthrough you can tick off during a dry run. Covers QLab-visible things the auto test script can't check (physical StreamDeck navigation, QLab cue playback, on-screen text, audio).
 
-Run the auto test first for fast server-logic verification:
+Run the full auto-test suite first (license persistence + game logic):
 ```
-python3 scripts/test-rounds.py
+bash scripts/test-all.sh
 ```
-Then use this checklist for the visual / audio stuff.
+This wraps `test-license-persistence.sh` and `test-rounds.py`. License tests run first and fail fast — game-logic tests are skipped if persistence is broken. Then use this checklist for the visual / audio stuff.
 
 ---
 
