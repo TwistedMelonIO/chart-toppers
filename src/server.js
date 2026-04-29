@@ -2535,13 +2535,24 @@ app.post("/api/activate_license", express.json(), async (req, res) => {
 
   const key = license_key.trim();
 
-  // Set in current process environment — initializeLicense will validate
-  // and, on success, persist via persistLicenseKey() to both tiers.
-  // Invalid keys never touch disk, so a bad paste can't clobber a working license.
+  // Validate the pasted key. On success: persist via persistLicenseKey() to
+  // both tiers. On failure: silently restore the previously-persisted key
+  // so the running app stays valid until next paste/restart. The response
+  // reflects the paste attempt, not the recovered state.
   process.env.LICENSE_KEY = key;
-
   await initializeLicense();
-  res.json(licenseState);
+  const pasteResult = licenseState;
+
+  if (!pasteResult || !pasteResult.valid) {
+    const persisted = _safeRead(path.join(LICENSE_VOLUME_DIR, "license_key"))
+                   || _safeRead(path.join(LICENSE_HOST_BACKUP_DIR, "license_key"));
+    if (persisted && persisted !== key) {
+      process.env.LICENSE_KEY = persisted;
+      await initializeLicense();
+    }
+  }
+
+  res.json(pasteResult);
 });
 
 // Initialize license on startup
