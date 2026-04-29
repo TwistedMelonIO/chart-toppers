@@ -2879,6 +2879,29 @@ app.get("/api/selftest", async (req, res) => {
     licenseOk ? "Key present" : "No license key configured"
   );
 
+  // 3a-c. Dual-tier license persistence (non-destructive runtime checks)
+  const volKey = _safeRead(path.join(LICENSE_VOLUME_DIR, "license_key"));
+  const hostKey = _safeRead(path.join(LICENSE_HOST_BACKUP_DIR, "license_key"));
+  addResult(
+    "License Persistence",
+    "Volume copy present",
+    !!volKey,
+    volKey ? `${LICENSE_VOLUME_DIR}/license_key (${volKey.length} bytes)` : "Missing — license will not survive container recreate"
+  );
+  addResult(
+    "License Persistence",
+    "Host backup present",
+    !!hostKey,
+    hostKey ? `${LICENSE_HOST_BACKUP_DIR}/license_key (${hostKey.length} bytes)` : "Missing — license will not survive volume destruction"
+  );
+  addResult(
+    "License Persistence",
+    "Tiers in sync",
+    !!(volKey && hostKey && volKey === hostKey),
+    (volKey && hostKey && volKey === hostKey) ? "Volume and host backup identical" :
+      (!volKey || !hostKey) ? "One or both tiers missing" : "Tiers diverge — will resolve on next boot"
+  );
+
   // 4. Buzzer connected
   const buzzerOk = (Date.now() - lastBuzzerHeartbeat) < BUZZER_TIMEOUT_MS;
   addResult(
