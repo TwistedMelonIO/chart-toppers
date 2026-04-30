@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Track QA — Chart Toppers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #0b0b0e; color: #eee; font-family: 'Outfit', system-ui, -apple-system, sans-serif; }
+    body { padding: 2rem; max-width: 980px; margin: 0 auto; }
+    h1 { margin: 0 0 0.25rem 0; font-size: 1.5rem; letter-spacing: 0.02em; }
+    .subtle { color: #888; font-size: 0.85rem; }
+    code { font-family: 'SF Mono', Menlo, monospace; background: rgba(255,255,255,0.06); padding: 0.1em 0.4em; border-radius: 3px; font-size: 0.85em; }
+
+    .selector {
+      display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end;
+      margin: 1.5rem 0; padding: 1rem 1.25rem;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+    }
+    .field { display: flex; flex-direction: column; gap: 0.3rem; }
+    .field label { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    select {
+      padding: 0.6rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(0,0,0,0.3); color: #eee; font: inherit; min-width: 180px;
+    }
+
+    .progress {
+      margin: 1.5rem 0; padding: 1rem 1.25rem;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+    }
+    .progress-bar {
+      height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .progress-bar-fill { height: 100%; background: #4ade80; transition: width 0.2s ease; }
+
+    .card {
+      padding: 1.5rem; background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+    }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .card-header h2 { margin: 0; font-size: 1.1rem; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.6rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: left; font-size: 0.9rem; vertical-align: top; }
+    th { color: #888; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; }
+    td.cue { font-family: 'SF Mono', Menlo, monospace; color: #aaa; white-space: nowrap; }
+    td.title { font-weight: 500; }
+    td.file { font-family: 'SF Mono', Menlo, monospace; color: #888; font-size: 0.78rem; word-break: break-all; }
+
+    .controls { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.5rem; }
+    button {
+      padding: 0.75rem 1.25rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05); color: #eee; font: inherit; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    button:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button.primary { background: #4ade80; color: #0b0b0e; border-color: #4ade80; font-weight: 600; }
+    button.primary:hover:not(:disabled) { background: #5eea90; border-color: #5eea90; }
+    button.danger { color: #f87171; border-color: rgba(248,113,113,0.3); }
+    button.danger:hover:not(:disabled) { background: rgba(248,113,113,0.1); }
+
+    .footer { margin-top: 2rem; display: flex; justify-content: space-between; align-items: center; color: #666; font-size: 0.8rem; }
+    .empty { text-align: center; padding: 2rem; color: #666; }
+    .all-done {
+      padding: 2rem; text-align: center;
+      background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.3);
+      border-radius: 10px;
+    }
+    .all-done h2 { color: #4ade80; margin: 0 0 0.5rem 0; }
+  </style>
+</head>
+<body>
+  <h1>Track QA</h1>
+  <div class="subtle">Loads sequential batches of tracks into the real show cues for verification through actual show flow.</div>
+
+  <div class="selector">
+    <div class="field">
+      <label for="packSel">Pack</label>
+      <select id="packSel"></select>
+    </div>
+    <div class="field">
+      <label for="roundSel">Round</label>
+      <select id="roundSel">
+        <option value="1">Round 1 (6 pairs / batch)</option>
+        <option value="2">Round 2 (2 tracks / batch)</option>
+        <option value="3">Round 3 (4 tracks / batch)</option>
+        <option value="4">Round 4 (40 tracks / batch)</option>
+      </select>
+    </div>
+    <button class="primary" id="loadBtn">Load batch</button>
+  </div>
+
+  <div class="progress" id="progressBox" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <strong id="progressText">— / —</strong>
+      <span class="subtle" id="positionText">—</span>
+    </div>
+    <div class="progress-bar"><div class="progress-bar-fill" id="progressFill" style="width: 0%"></div></div>
+  </div>
+
+  <div class="card" id="batchCard" style="display:none;">
+    <div class="card-header">
+      <h2 id="batchHeader">Currently loaded</h2>
+      <span class="subtle" id="batchSubtitle"></span>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Cue</th><th>Track</th><th>File</th></tr>
+      </thead>
+      <tbody id="batchBody"></tbody>
+    </table>
+
+    <div class="controls">
+      <button class="primary" id="confirmBtn">✓ Confirm batch &amp; load next</button>
+      <button id="backBtn">← Previous batch</button>
+      <button id="reloadBtn">↻ Reload current batch</button>
+    </div>
+  </div>
+
+  <div class="all-done" id="allDone" style="display:none;">
+    <h2>Round complete ✓</h2>
+    <div class="subtle">All tracks in this round have been verified for this pack.</div>
+  </div>
+
+  <div class="empty" id="emptyHint">Pick a pack and round, then hit "Load batch".</div>
+
+  <div class="footer">
+    <span class="subtle">Writes to real show cues. Reset round to start over.</span>
+    <button class="danger" id="resetRoundBtn" disabled>Reset this round</button>
+  </div>
+
+  <script src="qa.js"></script>
+</body>
+</html>

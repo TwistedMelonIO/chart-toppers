@@ -272,8 +272,34 @@ let roundState = {
   completedRounds: [], // Array of completed round numbers
 };
 
+// Pending OSC setTimeout handles for the staggered shuffle writes.
+// Cleared at the start of each reset so a back-to-back trigger (e.g.
+// round-reset followed immediately by round-enter, or rapid genre swaps)
+// doesn't let stale tail-end writes clobber the new shuffle.
+let r1ShuffleTimeouts = [];
+let r4ShuffleTimeouts = [];
+let genreLoadTimeouts = [];
+// Pending OSC sends queued by resetRounds / resetAll. Cleared on each reset
+// so rapid double-resets don't pile up overlapping bursts at the bridge.
+let resetTimeouts = [];
+
+// Schedule an OSC-emitting function relative to a delay counter, tracking the
+// timeout handle in `bucket` so it can be cancelled. Returns the next delay.
+function scheduleOsc(bucket, fn, delay) {
+  bucket.push(setTimeout(fn, delay));
+  return delay + OSC_STAGGER_MS;
+}
+function clearTimeoutBucket(bucket) {
+  bucket.forEach(t => clearTimeout(t));
+  bucket.length = 0;
+}
+
 // Round 4 track play state — tracks which R4 tracks have been triggered (up to 40)
 let r4TracksPlayed = {};
+// Last R4 track number played in the current team's pass. Used to disarm the
+// matching R4TG{N} cue when the second team starts so QLab skips it on the
+// second-team playthrough (QLab can't disarm a cue based on another cue's play).
+let lastR4TrackPlayed = null;
 
 // =============================================================================
 // Turn Tracking & StreamDeck Page Navigation
@@ -402,20 +428,33 @@ function resetR1Tracks() {
   stageHostAnswers = [];
   stageHostAnswerIndex = 0;
 
+  // Cancel any pending writes from a previous shuffle so they don't clobber
+  // the new one when reset and round-enter fire back-to-back.
+  r1ShuffleTimeouts.forEach(t => clearTimeout(t));
+  r1ShuffleTimeouts = [];
+
+  let delay = 0;
+  const queue = (fn) => {
+    r1ShuffleTimeouts.push(setTimeout(fn, delay));
+    delay += OSC_STAGGER_MS;
+  };
   selected.forEach((pair, i) => {
     const slotNum = i + 1;
     const hookSlot = `R1T${slotNum}.1`;
     const revealSlot = `R1T${slotNum}.2`;
 
     const hookPath = basePath ? path.join(basePath, pair.hook.fileName) : pair.hook.fileName;
-    updateQLabCueFilePath(hookSlot, hookPath);
-    updateQLabCueName(hookSlot, `${pair.hook.band} - ${pair.hook.track} [SHORT]`.toUpperCase());
-    updateQLabCueNotes(hookSlot, '');
-
+    const hookName = `${pair.hook.band} - ${pair.hook.track} [SHORT]`.toUpperCase();
     const revealPath = basePath ? path.join(basePath, pair.reveal.fileName) : pair.reveal.fileName;
-    updateQLabCueFilePath(revealSlot, revealPath);
-    updateQLabCueName(revealSlot, `${pair.reveal.band} - ${pair.reveal.track} [LONG]`.toUpperCase());
-    updateQLabCueNotes(revealSlot, `Correct Answer: ${pair.hook.band} - ${pair.hook.track}`.toUpperCase());
+    const revealName = `${pair.reveal.band} - ${pair.reveal.track} [LONG]`.toUpperCase();
+    const revealNotes = `Correct Answer: ${pair.hook.band} - ${pair.hook.track}`.toUpperCase();
+
+    queue(() => updateQLabCueFilePath(hookSlot, hookPath));
+    queue(() => updateQLabCueName(hookSlot, hookName));
+    queue(() => updateQLabCueNotes(hookSlot, ''));
+    queue(() => updateQLabCueFilePath(revealSlot, revealPath));
+    queue(() => updateQLabCueName(revealSlot, revealName));
+    queue(() => updateQLabCueNotes(revealSlot, revealNotes));
 
     setCompanionVariable(`track_${slotNum}`, `${pair.hook.band} - ${pair.hook.track}`);
     stageHostAnswers.push({ number: slotNum, track: pair.hook.track, artist: pair.hook.band });
@@ -433,6 +472,7 @@ function resetR1Tracks() {
 
 function resetR4Tracks() {
   r4TracksPlayed = {};
+  lastR4TrackPlayed = null;
 
   // Shuffle ALL R4 tracks and assign to R4T1-R4T{n} + R4TF notes in matching order
   const pack = packData[packSettings.currentPack];
@@ -441,15 +481,26 @@ function resetR4Tracks() {
     const shuffled = [...allR4].sort(() => Math.random() - 0.5);
     const basePath = packSettings.audioBasePath || '';
 
+    // Cancel any pending writes from a previous shuffle so they don't clobber
+    // the new one when reset and round-enter fire back-to-back.
+    r4ShuffleTimeouts.forEach(t => clearTimeout(t));
+    r4ShuffleTimeouts = [];
+
     stageHostAnswers = [];
     stageHostAnswerIndex = 0;
+    let delay = 0;
+    const queue = (fn) => {
+      r4ShuffleTimeouts.push(setTimeout(fn, delay));
+      delay += OSC_STAGGER_MS;
+    };
     shuffled.forEach((track, i) => {
       const slot = `R4T${i + 1}`;
       const fullPath = basePath ? path.join(basePath, track.fileName) : track.fileName;
-      updateQLabCueFilePath(slot, fullPath);
-      updateQLabCueName(slot, `${track.band} - ${track.track}`);
-      // Set R4TF notes to match the shuffled audio order
-      updateQLabCueNotes(`R4TF${i + 1}`, `CORRECT ANSWER:\n\n${track.band} - ${track.track}`.toUpperCase());
+      const cueName = `${track.band} - ${track.track}`;
+      const notesText = `CORRECT ANSWER:\n\n${track.band} - ${track.track}`.toUpperCase();
+      queue(() => updateQLabCueFilePath(slot, fullPath));
+      queue(() => updateQLabCueName(slot, cueName));
+      queue(() => updateQLabCueNotes(`R4TF${i + 1}`, notesText));
       r4TracksPlayed[i + 1] = false;
       stageHostAnswers.push({ number: i + 1, track: track.track, artist: track.band });
       console.log(`[R4 SHUFFLE] ${slot}: ${track.band} - ${track.track}`);
@@ -514,11 +565,11 @@ function setRound(roundNum, source = 'system') {
     console.log(`[R4 FLOW] All score cues zeroed for R4`);
   }
 
-  // Entering Round 1: reset R1 played count and auto-shuffle 6 random pairs
-  // from ALL R1 tracks (R1 uses buzzers, no genre pick).
+  // Entering Round 1: reset played count. The genre picker drives R1
+  // randomness (loadGenreTracks), so do not auto-shuffle here — that would
+  // race with the genre-pick OSC writes and leave QLab in a mixed state.
   if (roundNum === 1 && prev !== 1) {
     r1PlayedTeams = 0;
-    resetR1Tracks();
     refreshGoldenRecords('r1-enter');
   }
 
@@ -623,23 +674,32 @@ function resetRounds(source = 'system') {
     clearTimeout(r4AutoRetargetTimer);
     r4AutoRetargetTimer = null;
   }
-  // Reset R2GO2 back to R2Team2 now that no teams have played
-  retargetR2GO2('reset');
-  // Reset R4GOTO back to R4ICON (default, will be retargeted on R4 entry)
-  updateQLabCueTarget('R4GOTO', 'R4ICON');
-  console.log(`[RESET] R4GOTO → R4ICON (default)`);
-  // Reset R4SINGLESCORE back to R4SICON (default, will be retargeted on R4 entry)
-  updateQLabCueTarget('R4SINGLESCORE', 'R4SICON');
-  console.log(`[RESET] R4SINGLESCORE → R4SICON (default)`);
-  // Reset R2COINFLIP back to GP2 (default = no draw, skip coin flip)
-  updateQLabCueTarget(CONFIG.QLAB_CUE_R2_COINFLIP, CONFIG.QLAB_CUE_GP2);
-  console.log(`[RESET] R2COINFLIP → ${CONFIG.QLAB_CUE_GP2} (default)`);
-  // Reset R3COINFLIP back to GP3 (default = no draw, skip coin flip)
-  updateQLabCueTarget(CONFIG.QLAB_CUE_R3_COINFLIP, CONFIG.QLAB_CUE_GP3);
-  console.log(`[RESET] R3COINFLIP → ${CONFIG.QLAB_CUE_GP3} (default)`);
-  // Reset DUALGO back to R5 (default, will be retargeted to TIEBREAK if scores are tied)
-  updateQLabCueTarget('DUALGO', 'R5');
-  console.log(`[RESET] DUALGO → R5 (default)`);
+  // Stagger the bulk of reset OSC so the bridge doesn't fire ~6 retargets
+  // back-to-back at QLab on top of the resetR4Tracks shuffle burst. If a
+  // prior staggered burst is still pending (e.g. resetAll just queued OSC
+  // before calling us), append after it instead of racing against it.
+  let delay = resetTimeouts.length * OSC_STAGGER_MS;
+  delay = scheduleOsc(resetTimeouts, () => retargetR2GO2('reset'), delay);
+  delay = scheduleOsc(resetTimeouts, () => {
+    updateQLabCueTarget('R4GOTO', 'R4ICON');
+    console.log(`[RESET] R4GOTO → R4ICON (default)`);
+  }, delay);
+  delay = scheduleOsc(resetTimeouts, () => {
+    updateQLabCueTarget('R4SINGLESCORE', 'R4SICON');
+    console.log(`[RESET] R4SINGLESCORE → R4SICON (default)`);
+  }, delay);
+  delay = scheduleOsc(resetTimeouts, () => {
+    updateQLabCueTarget(CONFIG.QLAB_CUE_R2_COINFLIP, CONFIG.QLAB_CUE_GP2);
+    console.log(`[RESET] R2COINFLIP → ${CONFIG.QLAB_CUE_GP2} (default)`);
+  }, delay);
+  delay = scheduleOsc(resetTimeouts, () => {
+    updateQLabCueTarget(CONFIG.QLAB_CUE_R3_COINFLIP, CONFIG.QLAB_CUE_GP3);
+    console.log(`[RESET] R3COINFLIP → ${CONFIG.QLAB_CUE_GP3} (default)`);
+  }, delay);
+  delay = scheduleOsc(resetTimeouts, () => {
+    updateQLabCueTarget('DUALGO', 'R5');
+    console.log(`[RESET] DUALGO → R5 (default)`);
+  }, delay);
   // Clear any lingering "now playing" glow on the dashboard
   io.emit("teamStopPlaying", "anthems");
   io.emit("teamStopPlaying", "icons");
@@ -671,23 +731,26 @@ function resetAll(source = 'system') {
     icons: createTeamState(),
   };
   console.log("[GAME] All teams reset to defaults");
-  // Update both QLab text cues to show 0 seconds (standard and R4)
-  updateQLabTextCue("anthems", 0);
-  updateQLabTextCue("icons", 0);
-  sendBridgeOsc('/cue/1.1/text', '0', '→ reset 1.1 to 0');
-  sendBridgeOsc('/cue/2.2/text', '0', '→ reset 2.2 to 0');
-  
+  // Cancel any pending reset OSC before queuing a new burst.
+  clearTimeoutBucket(resetTimeouts);
+  // Stagger the score-zero + arming OSC so QLab isn't slammed.
+  let delay = 0;
+  delay = scheduleOsc(resetTimeouts, () => updateQLabTextCue("anthems", 0), delay);
+  delay = scheduleOsc(resetTimeouts, () => updateQLabTextCue("icons", 0), delay);
+  delay = scheduleOsc(resetTimeouts, () => sendBridgeOsc('/cue/1.1/text', '0', '→ reset 1.1 to 0'), delay);
+  delay = scheduleOsc(resetTimeouts, () => sendBridgeOsc('/cue/2.2/text', '0', '→ reset 2.2 to 0'), delay);
+  delay = scheduleOsc(resetTimeouts, () => armAllQLabCues(), delay);
+
   // Log activity
   logActivity('reset', 'all', 'All teams reset', source);
-
-  // Arm all QLab cues on full reset
-  armAllQLabCues();
 
   // NOTE: QLab doesn't expose collapse/expand via OSC or AppleScript
 
   // Clear played tracks history so all tracks are available again
   resetPlayedTracks();
 
+  // resetRounds queues its own staggered burst onto the same bucket; the
+  // delay continues from where we left off so its OSC lands after this one.
   resetRounds(source);
 }
 
@@ -948,6 +1011,7 @@ function playR4Track(trackNum, source = 'system') {
   }
 
   r4TracksPlayed[trackNum] = true;
+  lastR4TrackPlayed = trackNum;
 
   // Fire QLab cue R4T{n}
   const cueName = `R4T${trackNum}`;
@@ -1065,6 +1129,9 @@ app.post("/api/round/next", (req, res) => {
 });
 
 app.post("/api/round/reset", (req, res) => {
+  // Cancel any pending reset OSC from a prior reset so we start with a clean
+  // staggered queue instead of racing tail-end OSC against the new burst.
+  clearTimeoutBucket(resetTimeouts);
   resetRounds('api');
   res.json({ success: true, round: roundState });
 });
@@ -1076,6 +1143,249 @@ app.post("/api/round/:num", (req, res) => {
   }
   setRound(num, 'api');
   res.json({ success: true, round: roundState });
+});
+
+// =============================================================================
+// Track QA — batch-mode audio verification tool at /qa. Loads sequential
+// batches of tracks into the real show cues (R1T*, R2T*, R3T*, R4T*) so the
+// operator can verify file targets and answer notes through the actual show
+// flow. Marks each batch as verified, then advances. Hidden from the operator
+// dashboard. Delete this block + public/qa.{html,js} when QA is complete.
+// =============================================================================
+const QA_STATE_FILE = path.join(__dirname, "../data/track-qa.json");
+const QA_BATCH_SIZES = { '1': 6, '2': 2, '3': 4, '4': 40 };
+let qaTimeouts = [];
+
+let qaState = { packId: null, round: null, pointer: 0, verified: [] };
+function loadQaState() {
+  try {
+    if (fs.existsSync(QA_STATE_FILE)) {
+      const data = JSON.parse(fs.readFileSync(QA_STATE_FILE, 'utf8'));
+      qaState = {
+        packId: typeof data.packId === 'string' ? data.packId : null,
+        round: typeof data.round === 'string' ? data.round : null,
+        pointer: Number.isInteger(data.pointer) ? data.pointer : 0,
+        verified: Array.isArray(data.verified) ? data.verified : [],
+      };
+    }
+  } catch (err) {
+    console.error('[QA] Failed to load state:', err.message);
+  }
+}
+function saveQaState() {
+  try {
+    fs.writeFileSync(QA_STATE_FILE, JSON.stringify(qaState, null, 2));
+  } catch (err) {
+    console.error('[QA] Failed to save state:', err.message);
+  }
+}
+loadQaState();
+
+// Build the per-round source list in pack JSON order.
+// R1 returns pairs ({hook, reveal}); R2/R3/R4 return single track entries.
+function qaBuildRoundList(packId, round) {
+  const pack = packData[packId];
+  if (!pack || !pack.rounds || !pack.rounds[round]) return [];
+  const tracks = (pack.rounds[round].tracks || []).filter(t => t.band !== 'XX');
+  if (round === '1') {
+    const pairs = {};
+    const order = [];
+    tracks.forEach(t => {
+      const num = t.cue.replace('R1T', '').split('.')[0];
+      if (!pairs[num]) { pairs[num] = {}; order.push(num); }
+      if (t.cue.endsWith('.1')) pairs[num].hook = t;
+      if (t.cue.endsWith('.2')) pairs[num].reveal = t;
+    });
+    return order.map(n => pairs[n]).filter(p => p.hook && p.reveal);
+  }
+  return tracks;
+}
+
+function qaKey(packId, round, item) {
+  // For R1 pairs, key on hook fileName; for others, on the track fileName.
+  const fn = item.hook ? item.hook.fileName : item.fileName;
+  return `${packId}|${round}|${fn}`;
+}
+
+function qaQueue(fn, delay) {
+  qaTimeouts.push(setTimeout(fn, delay));
+}
+function qaCancelPending() {
+  qaTimeouts.forEach(t => clearTimeout(t));
+  qaTimeouts = [];
+}
+
+function qaLoadBatch(packId, round, startIndex) {
+  qaCancelPending();
+  const list = qaBuildRoundList(packId, round);
+  if (!list.length) return { batch: [], total: 0, start: 0, end: 0 };
+  const batchSize = QA_BATCH_SIZES[round] || 1;
+  const start = Math.max(0, Math.min(startIndex, Math.max(0, list.length - 1)));
+  const end = Math.min(start + batchSize, list.length);
+  const batch = list.slice(start, end);
+  const basePath = packSettings.audioBasePath || '';
+  let delay = 0;
+
+  if (round === '1') {
+    batch.forEach((pair, i) => {
+      const slotNum = i + 1;
+      const hookSlot = `R1T${slotNum}.1`;
+      const revealSlot = `R1T${slotNum}.2`;
+      const hookPath = basePath ? path.join(basePath, pair.hook.fileName) : pair.hook.fileName;
+      const hookName = `${pair.hook.band} - ${pair.hook.track} [SHORT]`.toUpperCase();
+      const revealPath = basePath ? path.join(basePath, pair.reveal.fileName) : pair.reveal.fileName;
+      const revealName = `${pair.reveal.band} - ${pair.reveal.track} [LONG]`.toUpperCase();
+      const revealNotes = `Correct Answer: ${pair.hook.band} - ${pair.hook.track}`.toUpperCase();
+      qaQueue(() => updateQLabCueFilePath(hookSlot, hookPath), delay); delay += OSC_STAGGER_MS;
+      qaQueue(() => updateQLabCueName(hookSlot, hookName), delay); delay += OSC_STAGGER_MS;
+      qaQueue(() => updateQLabCueNotes(hookSlot, ''), delay); delay += OSC_STAGGER_MS;
+      qaQueue(() => updateQLabCueFilePath(revealSlot, revealPath), delay); delay += OSC_STAGGER_MS;
+      qaQueue(() => updateQLabCueName(revealSlot, revealName), delay); delay += OSC_STAGGER_MS;
+      qaQueue(() => updateQLabCueNotes(revealSlot, revealNotes), delay); delay += OSC_STAGGER_MS;
+    });
+  } else if (round === '2' || round === '3') {
+    batch.forEach((track, i) => {
+      const slot = `R${round}T${i + 1}`;
+      const fullPath = basePath ? path.join(basePath, track.fileName) : track.fileName;
+      const cueName = `${track.band} - ${track.track}`.toUpperCase();
+      qaQueue(() => updateQLabCueFilePath(slot, fullPath), delay); delay += OSC_STAGGER_MS;
+      qaQueue(() => updateQLabCueName(slot, cueName), delay); delay += OSC_STAGGER_MS;
+    });
+    if (round === '3') {
+      const noteLines = batch.map((t, i) => {
+        if (t.track1 && t.track2) return `${i + 1}. ${t.track1.band} - ${t.track1.track} & ${t.track2.band} - ${t.track2.track}`;
+        return `${i + 1}. ${t.band} - ${t.track}`;
+      });
+      qaQueue(() => updateQLabCueNotes('R3SCORES', noteLines.join('\n\n')), delay); delay += OSC_STAGGER_MS;
+    }
+  } else if (round === '4') {
+    batch.forEach((track, i) => {
+      const slot = `R4T${i + 1}`;
+      const fullPath = basePath ? path.join(basePath, track.fileName) : track.fileName;
+      const cueName = `${track.band} - ${track.track}`;
+      const notesText = `CORRECT ANSWER:\n\n${track.band} - ${track.track}`.toUpperCase();
+      qaQueue(() => updateQLabCueFilePath(slot, fullPath), delay); delay += OSC_STAGGER_MS;
+      qaQueue(() => updateQLabCueName(slot, cueName), delay); delay += OSC_STAGGER_MS;
+      qaQueue(() => updateQLabCueNotes(`R4TF${i + 1}`, notesText), delay); delay += OSC_STAGGER_MS;
+    });
+  }
+
+  console.log(`[QA] Loaded batch ${start + 1}-${end} of ${list.length} (pack=${packId} round=${round})`);
+  return {
+    batch: batch.map(item => {
+      if (item.hook) {
+        return {
+          band: item.hook.band, track: item.hook.track,
+          hookFile: item.hook.fileName, revealFile: item.reveal.fileName,
+          cue: `R1T${batch.indexOf(item) + 1}.1/.2`,
+          key: qaKey(packId, round, item),
+        };
+      }
+      return {
+        band: item.band, track: item.track, fileName: item.fileName,
+        cue: round === '4' ? `R4T${batch.indexOf(item) + 1}` : `R${round}T${batch.indexOf(item) + 1}`,
+        key: qaKey(packId, round, item),
+      };
+    }),
+    total: list.length,
+    start,
+    end,
+  };
+}
+
+function qaSnapshot() {
+  const packs = Object.keys(packData).map(id => ({ id, name: packData[id].name || id }));
+  if (!qaState.packId || !qaState.round || !packData[qaState.packId]) {
+    return { packs, packId: null, round: null, batch: [], total: 0, start: 0, end: 0, verifiedCount: 0, verified: [] };
+  }
+  const list = qaBuildRoundList(qaState.packId, qaState.round);
+  const batchSize = QA_BATCH_SIZES[qaState.round] || 1;
+  const start = Math.max(0, Math.min(qaState.pointer, Math.max(0, list.length - 1)));
+  const end = Math.min(start + batchSize, list.length);
+  const batch = list.slice(start, end).map((item, i) => {
+    if (item.hook) {
+      return {
+        band: item.hook.band, track: item.hook.track,
+        hookFile: item.hook.fileName, revealFile: item.reveal.fileName,
+        cue: `R1T${i + 1}.1/.2`,
+        key: qaKey(qaState.packId, qaState.round, item),
+      };
+    }
+    return {
+      band: item.band, track: item.track, fileName: item.fileName,
+      cue: qaState.round === '4' ? `R4T${i + 1}` : `R${qaState.round}T${i + 1}`,
+      key: qaKey(qaState.packId, qaState.round, item),
+    };
+  });
+  // Verified count restricted to current pack+round
+  const prefix = `${qaState.packId}|${qaState.round}|`;
+  const verifiedInRound = qaState.verified.filter(k => k.startsWith(prefix));
+  return {
+    packs, packId: qaState.packId, round: qaState.round,
+    pointer: qaState.pointer, batchSize,
+    batch, total: list.length, start, end,
+    verifiedCount: verifiedInRound.length,
+    verified: verifiedInRound,
+  };
+}
+
+app.get("/api/qa/state", (req, res) => {
+  res.json(qaSnapshot());
+});
+
+app.post("/api/qa/select", express.json(), (req, res) => {
+  const { packId, round } = req.body || {};
+  if (!packData[packId]) return res.status(400).json({ success: false, error: 'Unknown packId' });
+  if (!QA_BATCH_SIZES[String(round)]) return res.status(400).json({ success: false, error: 'Invalid round' });
+  qaState.packId = packId;
+  qaState.round = String(round);
+  qaState.pointer = 0;
+  saveQaState();
+  qaLoadBatch(qaState.packId, qaState.round, qaState.pointer);
+  res.json({ success: true, ...qaSnapshot() });
+});
+
+app.post("/api/qa/reload", (req, res) => {
+  if (!qaState.packId || !qaState.round) return res.status(400).json({ success: false, error: 'Select a pack and round first' });
+  qaLoadBatch(qaState.packId, qaState.round, qaState.pointer);
+  res.json({ success: true, ...qaSnapshot() });
+});
+
+app.post("/api/qa/confirm", (req, res) => {
+  if (!qaState.packId || !qaState.round) return res.status(400).json({ success: false, error: 'Select a pack and round first' });
+  const list = qaBuildRoundList(qaState.packId, qaState.round);
+  if (!list.length) return res.status(404).json({ success: false, error: 'No tracks for this round' });
+  const batchSize = QA_BATCH_SIZES[qaState.round] || 1;
+  const start = qaState.pointer;
+  const end = Math.min(start + batchSize, list.length);
+  for (let i = start; i < end; i++) {
+    const k = qaKey(qaState.packId, qaState.round, list[i]);
+    if (!qaState.verified.includes(k)) qaState.verified.push(k);
+  }
+  qaState.pointer = end >= list.length ? Math.max(0, list.length - batchSize) : end;
+  saveQaState();
+  const allDone = end >= list.length;
+  qaLoadBatch(qaState.packId, qaState.round, qaState.pointer);
+  res.json({ success: true, allDone, ...qaSnapshot() });
+});
+
+app.post("/api/qa/back", (req, res) => {
+  if (!qaState.packId || !qaState.round) return res.status(400).json({ success: false, error: 'Select a pack and round first' });
+  const batchSize = QA_BATCH_SIZES[qaState.round] || 1;
+  qaState.pointer = Math.max(0, qaState.pointer - batchSize);
+  saveQaState();
+  qaLoadBatch(qaState.packId, qaState.round, qaState.pointer);
+  res.json({ success: true, ...qaSnapshot() });
+});
+
+app.post("/api/qa/reset-round", (req, res) => {
+  if (!qaState.packId || !qaState.round) return res.status(400).json({ success: false, error: 'Select a pack and round first' });
+  const prefix = `${qaState.packId}|${qaState.round}|`;
+  qaState.verified = qaState.verified.filter(k => !k.startsWith(prefix));
+  qaState.pointer = 0;
+  saveQaState();
+  qaLoadBatch(qaState.packId, qaState.round, qaState.pointer);
+  res.json({ success: true, ...qaSnapshot() });
 });
 
 // R4 manual retarget API — flips R4NEXT to the specified team's R4 group.
@@ -1271,6 +1581,20 @@ function loadPackSettings() {
         lastChanged: null,
         ...loaded
       };
+      // Strip wrapping quotes that may have been saved before sanitization
+      // existed (Finder/Terminal paste habit).
+      if (typeof packSettings.audioBasePath === 'string') {
+        const trimmed = packSettings.audioBasePath.trim();
+        if (
+          (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+          (trimmed.startsWith('"') && trimmed.endsWith('"'))
+        ) {
+          packSettings.audioBasePath = trimmed.slice(1, -1);
+          console.log(`[PACK] Stripped wrapping quotes from saved audioBasePath`);
+        } else {
+          packSettings.audioBasePath = trimmed;
+        }
+      }
       console.log(`[PACK] Loaded pack settings: ${packSettings.currentPack}, audioBasePath: "${packSettings.audioBasePath || 'not set'}"`);
     } else {
       console.log('[PACK] No settings file found, using defaults');
@@ -1927,6 +2251,16 @@ function loadGenreTracks(genreIndex) {
   stageHostAnswers = [];
   stageHostAnswerIndex = 0;
 
+  // Cancel any pending OSC writes from a previous genre load so they don't
+  // clobber this one (e.g. rapid genre swap before the previous stagger ends).
+  genreLoadTimeouts.forEach(t => clearTimeout(t));
+  genreLoadTimeouts = [];
+  let osccDelay = 0;
+  const queueOsc = (fn) => {
+    genreLoadTimeouts.push(setTimeout(fn, osccDelay));
+    osccDelay += OSC_STAGGER_MS;
+  };
+
   // Get the dedup set for this round (rounds 1-3 only)
   const dedupSet = playedTracks[currentRound] || null;
 
@@ -1969,17 +2303,18 @@ function loadGenreTracks(genreIndex) {
       const hookSlot = `R1T${slotNum}.1`;
       const revealSlot = `R1T${slotNum}.2`;
 
-      // Retarget hook slot (clear any leftover notes from .1 cues)
       const hookPath = basePath ? path.join(basePath, pair.hook.fileName) : pair.hook.fileName;
-      updateQLabCueFilePath(hookSlot, hookPath);
-      updateQLabCueName(hookSlot, `${pair.hook.band} - ${pair.hook.track} [SHORT]`.toUpperCase());
-      updateQLabCueNotes(hookSlot, '');
-
-      // Retarget reveal slot (notes go on .2 so the answer is visible on the reveal cue)
+      const hookName = `${pair.hook.band} - ${pair.hook.track} [SHORT]`.toUpperCase();
       const revealPath = basePath ? path.join(basePath, pair.reveal.fileName) : pair.reveal.fileName;
-      updateQLabCueFilePath(revealSlot, revealPath);
-      updateQLabCueName(revealSlot, `${pair.reveal.band} - ${pair.reveal.track} [LONG]`.toUpperCase());
-      updateQLabCueNotes(revealSlot, `Correct Answer: ${pair.hook.band} - ${pair.hook.track}`.toUpperCase());
+      const revealName = `${pair.reveal.band} - ${pair.reveal.track} [LONG]`.toUpperCase();
+      const revealNotes = `Correct Answer: ${pair.hook.band} - ${pair.hook.track}`.toUpperCase();
+
+      queueOsc(() => updateQLabCueFilePath(hookSlot, hookPath));
+      queueOsc(() => updateQLabCueName(hookSlot, hookName));
+      queueOsc(() => updateQLabCueNotes(hookSlot, ''));
+      queueOsc(() => updateQLabCueFilePath(revealSlot, revealPath));
+      queueOsc(() => updateQLabCueName(revealSlot, revealName));
+      queueOsc(() => updateQLabCueNotes(revealSlot, revealNotes));
 
       // Push to Companion
       setCompanionVariable(`track_${slotNum}`, `${pair.hook.band} - ${pair.hook.track}`);
@@ -2015,9 +2350,10 @@ function loadGenreTracks(genreIndex) {
       const slotNum = i + 1;
       const slot = `R${currentRound}T${slotNum}`;
       const fullPath = basePath ? path.join(basePath, track.fileName) : track.fileName;
+      const cueName = `${track.band} - ${track.track}`.toUpperCase();
 
-      updateQLabCueFilePath(slot, fullPath);
-      updateQLabCueName(slot, `${track.band} - ${track.track}`.toUpperCase());
+      queueOsc(() => updateQLabCueFilePath(slot, fullPath));
+      queueOsc(() => updateQLabCueName(slot, cueName));
       setCompanionVariable(`track_${slotNum}`, `${track.band} - ${track.track}`);
       stageHostAnswers.push({ number: slotNum, track: track.track, artist: track.band });
 
@@ -2138,6 +2474,10 @@ app.post("/api/pack-settings", (req, res) => {
   // Update QLab track cues (T1-T4) file paths and names based on selected pack
   updateTrackCuesForPack(currentPack);
 
+  // R4 has no genre picker, so its cues stay in pack order unless we shuffle
+  // here. R1-R3 shuffle on round entry / genre pick, so leave them alone.
+  resetR4Tracks();
+
   // Arm selected pack cue group, disarm the others in QLab
   updateQLabPackArming(currentPack);
 
@@ -2160,9 +2500,18 @@ app.get('/api/audio-path', (req, res) => {
 });
 
 app.post('/api/audio-path', express.json(), (req, res) => {
-  const { audioBasePath } = req.body;
+  let { audioBasePath } = req.body;
   if (audioBasePath === undefined) {
     return res.status(400).json({ error: 'audioBasePath required' });
+  }
+  // Strip surrounding whitespace and matching wrapping quotes (common when
+  // pasting from Finder/Terminal which adds 'single' or "double" quotes).
+  audioBasePath = String(audioBasePath).trim();
+  if (
+    (audioBasePath.startsWith("'") && audioBasePath.endsWith("'")) ||
+    (audioBasePath.startsWith('"') && audioBasePath.endsWith('"'))
+  ) {
+    audioBasePath = audioBasePath.slice(1, -1);
   }
   packSettings.audioBasePath = audioBasePath;
   packSettings.lastChanged = new Date().toISOString();
@@ -2950,6 +3299,8 @@ app.get("/api/selftest", async (req, res) => {
     version: PACKAGE_VERSION,
     timestamp: new Date().toISOString(),
     machineName: os.hostname(),
+    machineId: (licenseState && licenseState.machine_id) || null,
+    licensee: (licenseState && licenseState.licensee) || null,
     results,
     summary: { total: results.length, passed, failed: results.length - passed },
   });
@@ -3274,6 +3625,13 @@ function handleOscAddress(address, args) {
       // Retarget R4SINGLESCORE based on first or second team
       const otherPlayed = r4PlayedTeams.has(otherTeam(teamId));
       if (otherPlayed) {
+        // Second team starting — disarm the R4TG{N} cue matching the last
+        // track the first team played, so QLab skips it on this team's pass.
+        if (lastR4TrackPlayed != null) {
+          sendBridgeOsc(`/cue/R4TG${lastR4TrackPlayed}/armed`, 0, `→ disarm R4TG${lastR4TrackPlayed} for second team`);
+          console.log(`[R4 FLOW] Disarmed R4TG${lastR4TrackPlayed} (last track from first team) before ${TEAMS[teamId].name} starts`);
+          lastR4TrackPlayed = null;
+        }
         // Second team — scoreboard goes to dual SCOREBOARD
         updateQLabCueTarget('R4SINGLESCORE', 'SCOREBOARD');
         console.log(`[R4 FLOW] R4SINGLESCORE → SCOREBOARD (second team playing)`);

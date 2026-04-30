@@ -23,6 +23,7 @@ pids/
 *.pid
 *.seed
 *.pid.lock
+data/track-qa.json
 
 # Coverage directory used by tools like istanbul
 coverage/
