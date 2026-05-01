@@ -293,6 +293,16 @@ function clearTimeoutBucket(bucket) {
   bucket.forEach(t => clearTimeout(t));
   bucket.length = 0;
 }
+// Cancel any pending writes targeting show cue content (R1T*/R2T*/R3T*/R4T*
+// paths/names/notes). Called by every function that writes to those cues so a
+// new load doesn't race the tail-end of a previous one — which would leave
+// QLab with mixed state (e.g. new cue name + old file target).
+function cancelAllCueWrites() {
+  clearTimeoutBucket(r1ShuffleTimeouts);
+  clearTimeoutBucket(r4ShuffleTimeouts);
+  clearTimeoutBucket(genreLoadTimeouts);
+  clearTimeoutBucket(qaTimeouts);
+}
 
 // Round 4 track play state — tracks which R4 tracks have been triggered (up to 40)
 let r4TracksPlayed = {};
@@ -428,10 +438,9 @@ function resetR1Tracks() {
   stageHostAnswers = [];
   stageHostAnswerIndex = 0;
 
-  // Cancel any pending writes from a previous shuffle so they don't clobber
-  // the new one when reset and round-enter fire back-to-back.
-  r1ShuffleTimeouts.forEach(t => clearTimeout(t));
-  r1ShuffleTimeouts = [];
+  // Cancel any pending cue-content writes (own bucket + genre/qa/r4) so the
+  // new shuffle isn't clobbered by tail-end OSC from a previous writer.
+  cancelAllCueWrites();
 
   let delay = 0;
   const queue = (fn) => {
@@ -481,10 +490,9 @@ function resetR4Tracks() {
     const shuffled = [...allR4].sort(() => Math.random() - 0.5);
     const basePath = packSettings.audioBasePath || '';
 
-    // Cancel any pending writes from a previous shuffle so they don't clobber
-    // the new one when reset and round-enter fire back-to-back.
-    r4ShuffleTimeouts.forEach(t => clearTimeout(t));
-    r4ShuffleTimeouts = [];
+    // Cancel any pending cue-content writes (own bucket + genre/qa/r1) so the
+    // new shuffle isn't clobbered by tail-end OSC from a previous writer.
+    cancelAllCueWrites();
 
     stageHostAnswers = [];
     stageHostAnswerIndex = 0;
@@ -1153,8 +1161,31 @@ app.post("/api/round/:num", (req, res) => {
 // dashboard. Delete this block + public/qa.{html,js} when QA is complete.
 // =============================================================================
 const QA_STATE_FILE = path.join(__dirname, "../data/track-qa.json");
+const QA_COMPLETIONS_FILE = path.join(__dirname, "../data/qa-completions.json");
 const QA_BATCH_SIZES = { '1': 6, '2': 2, '3': 4, '4': 40 };
 let qaTimeouts = [];
+
+// QA completions log — one entry per (pack, round) marked complete by the
+// operator from the Track QA tool. Surfaced to docforge via /api/selftest/checklist.
+let qaCompletions = []; // [{ packId, round, completedAt, total }]
+function loadQaCompletions() {
+  try {
+    if (fs.existsSync(QA_COMPLETIONS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(QA_COMPLETIONS_FILE, 'utf8'));
+      if (Array.isArray(data?.completions)) qaCompletions = data.completions;
+    }
+  } catch (e) {
+    console.error('[QA] Failed to load completions:', e.message);
+  }
+}
+function saveQaCompletions() {
+  try {
+    fs.writeFileSync(QA_COMPLETIONS_FILE, JSON.stringify({ completions: qaCompletions }, null, 2));
+  } catch (e) {
+    console.error('[QA] Failed to save completions:', e.message);
+  }
+}
+loadQaCompletions();
 
 let qaState = { packId: null, round: null, pointer: 0, verified: [] };
 function loadQaState() {
@@ -1210,13 +1241,11 @@ function qaKey(packId, round, item) {
 function qaQueue(fn, delay) {
   qaTimeouts.push(setTimeout(fn, delay));
 }
-function qaCancelPending() {
-  qaTimeouts.forEach(t => clearTimeout(t));
-  qaTimeouts = [];
-}
 
 function qaLoadBatch(packId, round, startIndex) {
-  qaCancelPending();
+  // Cancel any pending cue-content writes (own bucket + r1/r4/genre) so this
+  // QA batch isn't clobbered by tail-end OSC from a previous writer.
+  cancelAllCueWrites();
   const list = qaBuildRoundList(packId, round);
   if (!list.length) return { batch: [], total: 0, start: 0, end: 0 };
   const batchSize = QA_BATCH_SIZES[round] || 1;
@@ -1268,6 +1297,27 @@ function qaLoadBatch(packId, round, startIndex) {
       qaQueue(() => updateQLabCueName(slot, cueName), delay); delay += OSC_STAGGER_MS;
       qaQueue(() => updateQLabCueNotes(`R4TF${i + 1}`, notesText), delay); delay += OSC_STAGGER_MS;
     });
+  }
+
+  // Push answers to the stagehost iPad so QA loads behave like a real
+  // round-load (genre picker / R1 entry / R4 entry all do this too). For R3
+  // mashups, include displayText with both layered songs so the iPad shows
+  // the same content as the R3SCORES cue notes.
+  stageHostAnswers = batch.map((item, i) => {
+    if (item.hook) {
+      return { number: i + 1, track: item.hook.track, artist: item.hook.band };
+    }
+    const ans = { number: i + 1, track: item.track, artist: item.band };
+    if (round === '3' && item.track1 && item.track2) {
+      ans.displayText = `${item.track1.band} - ${item.track1.track} & ${item.track2.band} - ${item.track2.track}`;
+    }
+    return ans;
+  });
+  stageHostAnswerIndex = 0;
+  const genreLabel = round === '1' ? 'QA' : round === '4' ? 'QA — Final Round' : `QA — ${batch[0]?.genre || ''}`.trim();
+  io.emit('answersUpdate', { round, genre: genreLabel, answers: stageHostAnswers });
+  if (stageHostAnswers.length > 0) {
+    io.emit('currentTrack', { trackNumber: 1, total: stageHostAnswers.length });
   }
 
   console.log(`[QA] Loaded batch ${start + 1}-${end} of ${list.length} (pack=${packId} round=${round})`);
@@ -1386,6 +1436,45 @@ app.post("/api/qa/reset-round", (req, res) => {
   saveQaState();
   qaLoadBatch(qaState.packId, qaState.round, qaState.pointer);
   res.json({ success: true, ...qaSnapshot() });
+});
+
+// Mark the current pack+round as QA-complete. Stored persistently and
+// surfaced as a checklist item in /api/selftest/checklist for docforge.
+app.post("/api/qa/complete", express.json(), (req, res) => {
+  const packId = req.body?.packId || qaState.packId;
+  const round  = req.body?.round  || qaState.round;
+  if (!packId || !round) return res.status(400).json({ success: false, error: 'packId and round required' });
+
+  const list = qaBuildRoundList(packId, round);
+  const total = list.length;
+  const verifiedCount = qaState.verified.filter(k => k.startsWith(`${packId}|${round}|`)).length;
+
+  qaCompletions = qaCompletions.filter(c => !(c.packId === packId && c.round === round));
+  qaCompletions.push({
+    packId, round,
+    completedAt: new Date().toISOString(),
+    total, verifiedCount,
+  });
+  saveQaCompletions();
+  res.json({ success: true, completions: qaCompletions });
+});
+
+// Clear a single completion (or all if no params) — for re-running QA.
+app.delete("/api/qa/complete", (req, res) => {
+  const { packId, round } = req.query;
+  if (packId && round) {
+    qaCompletions = qaCompletions.filter(c => !(c.packId === packId && c.round === round));
+  } else if (!packId && !round) {
+    qaCompletions = [];
+  } else {
+    return res.status(400).json({ success: false, error: 'provide both packId and round, or neither' });
+  }
+  saveQaCompletions();
+  res.json({ success: true, completions: qaCompletions });
+});
+
+app.get("/api/qa/completions", (req, res) => {
+  res.json({ success: true, completions: qaCompletions });
 });
 
 // R4 manual retarget API — flips R4NEXT to the specified team's R4 group.
@@ -1562,9 +1651,31 @@ let packData = loadPackData();
 console.log(`[PACKS] Loaded ${Object.keys(packData).length} pack(s): ${Object.keys(packData).join(', ') || 'none'}`);
 
 // Load pack settings from file or use defaults
+// Per-resolution base font size (pt) for the genre picker text cues. The
+// active resolution is picked in settings; the server scales fontSize down
+// for long genre names so MEDITERRANEAN CLASSICS still fits in the same
+// button as K POP. Tunable via settings.
+const GENRE_FONT_DEFAULTS = {
+  '3840x2160': 120,
+  '5520x1080': 80,
+  '2560x1280': 100,
+};
+
+// Char count below which no shrink applies; above it, fontSize scales
+// linearly as threshold/len. Per-resolution because each QLab project's
+// text bounding box differs.
+const GENRE_SHRINK_THRESHOLD_DEFAULTS = {
+  '3840x2160': 18,
+  '5520x1080': 13,
+  '2560x1280': 13,
+};
+
 let packSettings = {
   currentPack: 'uk-usa-german',
   audioBasePath: '',
+  qlabResolution: '2560x1280',
+  genreFontSizes: { ...GENRE_FONT_DEFAULTS },
+  genreShrinkThresholds: { ...GENRE_SHRINK_THRESHOLD_DEFAULTS },
   lastChanged: null
 };
 
@@ -2050,6 +2161,21 @@ const START_CUES = ['SG1', 'SG2', 'SG3'];
 // (e.g. "1980's") — the rest of the catalogue is uppercase.
 const R3_PINNED_GENRES = ["1980's", "1990's", "2000's"];
 
+// Compute font size for a genre name based on the active QLab resolution.
+// Long names get scaled down so MEDITERRANEAN CLASSICS still fits the same
+// button as K POP. Threshold + curve are intentionally conservative —
+// adjust GENRE_FONT_THRESHOLD / shrink curve once we eyeball real output.
+function computeGenreFontSize(name) {
+  const sizes = packSettings.genreFontSizes || GENRE_FONT_DEFAULTS;
+  const thresholds = packSettings.genreShrinkThresholds || GENRE_SHRINK_THRESHOLD_DEFAULTS;
+  const res = packSettings.qlabResolution;
+  const base = sizes[res] || sizes['2560x1280'] || 100;
+  const threshold = thresholds[res] || thresholds['2560x1280'] || 13;
+  const len = (name || '').length;
+  if (len <= threshold) return base;
+  return Math.round(base * threshold / len);
+}
+
 // Update all G1-G9 genre text cue names in QLab + all Companion variables (called on pack change)
 function updateAllGenreCues(packId) {
   const pack = packData[packId || packSettings.currentPack];
@@ -2069,12 +2195,13 @@ function updateAllGenreCues(packId) {
     if (!genres) return;
 
     cues.forEach((cue, i) => {
-      const genreName = genres[i] || '';
+      const genreName = (genres[i] || '').toUpperCase();
+      const fontSize = computeGenreFontSize(genreName);
       setTimeout(() => {
         updateQLabCueName(cue, genreName);
-        // Send genre name as-is (already cased correctly in pinned constants /
-        // pack JSON — most are uppercase but year suffixes stay lowercase, e.g. "1980's").
         sendBridgeOsc(`/cue/${cue}/text`, genreName, `→ set ${cue} text to "${genreName}"`);
+        sendBridgeOsc(`/cue/${cue}/text/format`, JSON.stringify({ fontSize }),
+          `→ set ${cue} fontSize to ${fontSize}`);
       }, delay);
       delay += 100;
     });
@@ -2115,7 +2242,7 @@ function updateGenreTargets(roundNum) {
     } else if (pack && pack.genres && pack.genres[String(roundNum)]) {
       genreName = pack.genres[String(roundNum)][i] || '';
     }
-    setCompanionVariable(`genre_g${i + 1}`, genreName);
+    setCompanionVariable(`genre_g${i + 1}`, genreName.toUpperCase());
   });
 }
 
@@ -2251,10 +2378,9 @@ function loadGenreTracks(genreIndex) {
   stageHostAnswers = [];
   stageHostAnswerIndex = 0;
 
-  // Cancel any pending OSC writes from a previous genre load so they don't
-  // clobber this one (e.g. rapid genre swap before the previous stagger ends).
-  genreLoadTimeouts.forEach(t => clearTimeout(t));
-  genreLoadTimeouts = [];
+  // Cancel any pending cue-content writes (own bucket + r1/r4/qa) so this
+  // genre load isn't clobbered by tail-end OSC from a previous writer.
+  cancelAllCueWrites();
   let osccDelay = 0;
   const queueOsc = (fn) => {
     genreLoadTimeouts.push(setTimeout(fn, osccDelay));
@@ -2355,7 +2481,11 @@ function loadGenreTracks(genreIndex) {
       queueOsc(() => updateQLabCueFilePath(slot, fullPath));
       queueOsc(() => updateQLabCueName(slot, cueName));
       setCompanionVariable(`track_${slotNum}`, `${track.band} - ${track.track}`);
-      stageHostAnswers.push({ number: slotNum, track: track.track, artist: track.band });
+      const ans = { number: slotNum, track: track.track, artist: track.band };
+      if (currentRound === '3' && track.track1 && track.track2) {
+        ans.displayText = `${track.track1.band} - ${track.track1.track} & ${track.track2.band} - ${track.track2.track}`;
+      }
+      stageHostAnswers.push(ans);
 
       console.log(`[GENRE LOAD] Slot ${slot}: ${track.band} - ${track.track}`);
       logActivity('track_loaded', 'all', `${slot}: ${track.band} - ${track.track} [${genreName}]`, 'osc');
@@ -2454,8 +2584,8 @@ app.get("/api/pack-settings", (req, res) => {
 });
 
 app.post("/api/pack-settings", (req, res) => {
-  const { currentPack, lastChanged } = req.body;
-  
+  const { currentPack, lastChanged, qlabResolution, genreFontSizes } = req.body;
+
   const validPacks = Object.keys(packData).length > 0 ? Object.keys(packData) : ['uk-usa-german', 'european', 'teens'];
   if (!currentPack || !validPacks.includes(currentPack)) {
     return res.status(400).json({ success: false, message: "Invalid pack selection" });
@@ -2465,6 +2595,8 @@ app.post("/api/pack-settings", (req, res) => {
   packSettings = {
     ...packSettings,
     currentPack,
+    ...(qlabResolution ? { qlabResolution } : {}),
+    ...(genreFontSizes && typeof genreFontSizes === 'object' ? { genreFontSizes: { ...packSettings.genreFontSizes, ...genreFontSizes } } : {}),
     lastChanged: lastChanged || new Date().toISOString()
   };
   
@@ -3307,10 +3439,7 @@ app.get("/api/selftest", async (req, res) => {
 });
 
 app.get("/api/selftest/checklist", (req, res) => {
-  res.json({
-    success: true,
-    version: PACKAGE_VERSION,
-    checklist: [
+  const baseChecklist = [
       { id: 1,  round: "R1",      item: "Team Anthems wins coin toss → genre loads → 6 tracks appear in QLab" },
       { id: 2,  round: "R1",      item: "Score correct answers → earned time increases on dashboard" },
       { id: 3,  round: "R1",      item: "Both teams played → R1 advances to R2" },
@@ -3335,7 +3464,24 @@ app.get("/api/selftest/checklist", (req, res) => {
       { id: 22, round: "General", item: "StreamDeck genre pages correct per round (7/8/9)" },
       { id: 23, round: "General", item: "Full game reset clears all state and goto cues" },
       { id: 24, round: "General", item: "Pack switching loads correct tracks for all rounds" },
-    ],
+  ];
+
+  const qaItems = qaCompletions.map((c, i) => {
+    const packName = packData[c.packId]?.name || c.packId;
+    const when = new Date(c.completedAt).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
+    return {
+      id: 100 + i,
+      round: `R${c.round}`,
+      item: `Track QA: ${packName} — Round ${c.round} verified (${c.verifiedCount}/${c.total} tracks)`,
+      passed: true,
+      notes: `Completed ${when} via Track QA tool`,
+    };
+  });
+
+  res.json({
+    success: true,
+    version: PACKAGE_VERSION,
+    checklist: [...baseChecklist, ...qaItems],
   });
 });
 

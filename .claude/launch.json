@@ -11,6 +11,12 @@
         "OSC_LISTEN_PORT": "53536",
         "BRIDGE_URL": "http://localhost:3201"
       }
+    },
+    {
+      "name": "stagehost-static",
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "4321", "--directory", "public"],
+      "port": 4321
     }
   ]
 }

@@ -1,5 +1,16 @@
 {
   "currentPack": "teens",
   "lastChanged": "2026-03-02T14:42:59.033Z",
-  "audioBasePath": "/Users/chrisdevlin/Documents/Chart Toppers/audio/"
+  "audioBasePath": "/Users/chrisdevlin/Documents/Chart Toppers/audio/",
+  "qlabResolution": "2560x1280",
+  "genreFontSizes": {
+    "3840x2160": 120,
+    "5520x1080": 80,
+    "2560x1280": 100
+  },
+  "genreShrinkThresholds": {
+    "3840x2160": 18,
+    "5520x1080": 13,
+    "2560x1280": 13
+  }
 }

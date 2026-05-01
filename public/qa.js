@@ -17,6 +17,8 @@
     resetRoundBtn: document.getElementById('resetRoundBtn'),
     emptyHint: document.getElementById('emptyHint'),
     allDone: document.getElementById('allDone'),
+    markCompleteBtn: document.getElementById('markCompleteBtn'),
+    markCompleteStatus: document.getElementById('markCompleteStatus'),
   };
 
   let state = null;
@@ -91,15 +93,48 @@
     return state;
   }
 
-  els.loadBtn.addEventListener('click', async () => {
-    await postJson('/api/qa/select', { packId: els.packSel.value, round: els.roundSel.value });
-  });
+  // Briefly show busy/done state on a button so the user has feedback for
+  // actions that don't visibly change the page (e.g. reload re-fires OSC).
+  async function withFeedback(btn, doneLabel, fn) {
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '…';
+    try {
+      await fn();
+      btn.textContent = doneLabel;
+      setTimeout(() => { btn.textContent = original; btn.disabled = false; render(); }, 900);
+    } catch (e) {
+      btn.textContent = 'Failed';
+      setTimeout(() => { btn.textContent = original; btn.disabled = false; render(); }, 1500);
+    }
+  }
+
+  els.loadBtn.addEventListener('click', () =>
+    withFeedback(els.loadBtn, 'Loaded ✓', () =>
+      postJson('/api/qa/select', { packId: els.packSel.value, round: els.roundSel.value })));
   els.confirmBtn.addEventListener('click', () => postJson('/api/qa/confirm'));
   els.backBtn.addEventListener('click', () => postJson('/api/qa/back'));
-  els.reloadBtn.addEventListener('click', () => postJson('/api/qa/reload'));
+  els.reloadBtn.addEventListener('click', () =>
+    withFeedback(els.reloadBtn, 'Reloaded ✓', () => postJson('/api/qa/reload')));
   els.resetRoundBtn.addEventListener('click', async () => {
     if (!confirm('Reset verified state for this round and pack?')) return;
-    await postJson('/api/qa/reset-round');
+    await withFeedback(els.resetRoundBtn, 'Reset ✓', () => postJson('/api/qa/reset-round'));
+  });
+
+  els.markCompleteBtn.addEventListener('click', async () => {
+    if (!state?.packId || !state?.round) return;
+    await withFeedback(els.markCompleteBtn, 'Reported ✓', async () => {
+      const res = await fetch('/api/qa/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packId: state.packId, round: state.round }),
+      });
+      const data = await res.json();
+      const packName = state.packs.find(p => p.id === state.packId)?.name || state.packId;
+      els.markCompleteStatus.textContent =
+        `${packName} R${state.round} reported to docforge (${data.completions?.length || 0} total)`;
+      return data;
+    });
   });
 
   refresh();

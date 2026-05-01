@@ -13,9 +13,9 @@
       "Indie"
     ],
     "3": [
-      "TikTok Hits",
-      "Latin",
-      "Disney Hits"
+      "1980's",
+      "1990's",
+      "2000's"
     ],
     "4": [
       "Retro Classics",
@@ -32,784 +32,784 @@
       "tracks": [
         {
           "cue": "R1T1.1",
-          "fileName": "PACK3_Round1_Retro Classics_The Strokes",
+          "fileName": "PACK2_Round1_Retro Classics_The Strokes.mp3",
           "band": "The Strokes",
           "track": "Last Nite",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T1.2",
-          "fileName": "PACK3_Round1_Retro Classics_The Strokes_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_The Strokes REVEAL.mp3",
           "band": "The Strokes",
           "track": "Last Nite",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T2.1",
-          "fileName": "PACK3_Round1_Retro Classics_Yeah Yeah Yeahs",
+          "fileName": "PACK2_Round1_Retro Classics_Yeah Yeah Yeahs.mp3",
           "band": "Yeah Yeah Yeahs",
           "track": "Maps",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T2.2",
-          "fileName": "PACK3_Round1_Retro Classics_Yeah Yeah Yeahs_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Yeah Yeah Yeahs REVEAL.mp3",
           "band": "Yeah Yeah Yeahs",
           "track": "Maps",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T3.1",
-          "fileName": "PACK3_Round1_Retro Classics_Franz Ferdinand",
+          "fileName": "PACK2_Round1_Retro Classics_Franz Ferdinand.mp3",
           "band": "Franz Ferdinand",
           "track": "Take Me Out",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T3.2",
-          "fileName": "PACK3_Round1_Retro Classics_Franz Ferdinand_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Franz Ferdinand REVEAL.mp3",
           "band": "Franz Ferdinand",
           "track": "Take Me Out",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T4.1",
-          "fileName": "PACK3_Round1_Retro Classics_LCD Soundsystem",
+          "fileName": "PACK2_Round1_Retro Classics_LCD Soundsystem.mp3",
           "band": "LCD Soundsystem",
           "track": "All My Friends",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T4.2",
-          "fileName": "PACK3_Round1_Retro Classics_LCD Soundsystem_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_LCD Soundsystem REVEAL.mp3",
           "band": "LCD Soundsystem",
           "track": "All My Friends",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T5.1",
-          "fileName": "PACK3_Round1_Retro Classics_M.I.A.",
+          "fileName": "PACK2_Round1_Retro Classics_M.I.A..mp3",
           "band": "M.I.A.",
           "track": "Paper Planes",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T5.2",
-          "fileName": "PACK3_Round1_Retro Classics_M.I.A._reveal",
+          "fileName": "PACK2_Round1_Retro Classics_M.I.A. REVEAL.mp3",
           "band": "M.I.A.",
           "track": "Paper Planes",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T6.1",
-          "fileName": "PACK3_Round1_Retro Classics_Kanye West",
+          "fileName": "PACK2_Round1_Retro Classics_Kanye West.mp3",
           "band": "Kanye West",
           "track": "Gold Digger",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T6.2",
-          "fileName": "PACK3_Round1_Retro Classics_Kanye West_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Kanye West REVEAL.mp3",
           "band": "Kanye West",
           "track": "Gold Digger",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T7.1",
-          "fileName": "PACK3_Round1_Retro Classics_Jay-Z",
+          "fileName": "PACK2_Round1_Retro Classics_Jay-Z.mp3",
           "band": "Jay-Z",
           "track": "99 Problems",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T7.2",
-          "fileName": "PACK3_Round1_Retro Classics_Jay-Z_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Jay-Z REVEAL.mp3",
           "band": "Jay-Z",
           "track": "99 Problems",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T8.1",
-          "fileName": "PACK3_Round1_Retro Classics_Nelly",
+          "fileName": "PACK2_Round1_Retro Classics_Nelly.mp3",
           "band": "Nelly",
           "track": "Hot in Herre",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T8.2",
-          "fileName": "PACK3_Round1_Retro Classics_Nelly_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Nelly REVEAL.mp3",
           "band": "Nelly",
           "track": "Hot in Herre",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T9.1",
-          "fileName": "PACK3_Round1_Retro Classics_Justin Timberlake",
+          "fileName": "PACK2_Round1_Retro Classics_Justin Timberlake.mp3",
           "band": "Justin Timberlake",
           "track": "Cry Me a River",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T9.2",
-          "fileName": "PACK3_Round1_Retro Classics_Justin Timberlake_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Justin Timberlake REVEAL.mp3",
           "band": "Justin Timberlake",
           "track": "Cry Me a River",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T10.1",
-          "fileName": "PACK3_Round1_Retro Classics_Beyonc\u00e9",
-          "band": "Beyonc\u00e9",
+          "fileName": "PACK2_Round1_Retro Classics_Beyoncé.mp3",
+          "band": "Beyoncé",
           "track": "Crazy in Love",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T10.2",
-          "fileName": "PACK3_Round1_Retro Classics_Beyonc\u00e9_reveal",
-          "band": "Beyonc\u00e9",
+          "fileName": "PACK2_Round1_Retro Classics_Beyoncé REVEAL.mp3",
+          "band": "Beyoncé",
           "track": "Crazy in Love",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T11.1",
-          "fileName": "PACK3_Round1_Retro Classics_Usher",
+          "fileName": "PACK2_Round1_Retro Classics_Usher.mp3",
           "band": "Usher",
           "track": "Yeah!",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T11.2",
-          "fileName": "PACK3_Round1_Retro Classics_Usher_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Usher REVEAL.mp3",
           "band": "Usher",
           "track": "Yeah!",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T12.1",
-          "fileName": "PACK3_Round1_Retro Classics_Alicia Keys",
+          "fileName": "PACK2_Round1_Retro Classics_Alicia Keys.mp3",
           "band": "Alicia Keys",
           "track": "Fallin'",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T12.2",
-          "fileName": "PACK3_Round1_Retro Classics_Alicia Keys_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Alicia Keys REVEAL.mp3",
           "band": "Alicia Keys",
           "track": "Fallin'",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T13.1",
-          "fileName": "PACK3_Round1_Retro Classics_Norah Jones",
+          "fileName": "PACK2_Round1_Retro Classics_Norah Jones.mp3",
           "band": "Norah Jones",
           "track": "Don't Know Why",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T13.2",
-          "fileName": "PACK3_Round1_Retro Classics_Norah Jones_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Norah Jones REVEAL.mp3",
           "band": "Norah Jones",
           "track": "Don't Know Why",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T14.1",
-          "fileName": "PACK3_Round1_Retro Classics_Jack Johnson",
+          "fileName": "PACK2_Round1_Retro Classics_Jack Johnson.mp3",
           "band": "Jack Johnson",
           "track": "Better Together",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T14.2",
-          "fileName": "PACK3_Round1_Retro Classics_Jack Johnson_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Jack Johnson REVEAL.mp3",
           "band": "Jack Johnson",
           "track": "Better Together",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T15.1",
-          "fileName": "PACK3_Round1_Retro Classics_Coldplay",
+          "fileName": "PACK2_Round1_Retro Classics_Coldplay.mp3",
           "band": "Coldplay",
           "track": "Yellow",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T15.2",
-          "fileName": "PACK3_Round1_Retro Classics_Coldplay_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Coldplay REVEAL.mp3",
           "band": "Coldplay",
           "track": "Yellow",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T16.1",
-          "fileName": "PACK3_Round1_Retro Classics_The White Stripes",
+          "fileName": "PACK2_Round1_Retro Classics_The White Stripes.mp3",
           "band": "The White Stripes",
           "track": "Seven Nation Army",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T16.2",
-          "fileName": "PACK3_Round1_Retro Classics_The White Stripes_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_The White Stripes REVEAL.mp3",
           "band": "The White Stripes",
           "track": "Seven Nation Army",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T17.1",
-          "fileName": "PACK3_Round1_Retro Classics_Radiohead",
+          "fileName": "PACK2_Round1_Retro Classics_Radiohead.mp3",
           "band": "Radiohead",
           "track": "Creep",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T17.2",
-          "fileName": "PACK3_Round1_Retro Classics_Radiohead_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Radiohead REVEAL.mp3",
           "band": "Radiohead",
           "track": "Creep",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T18.1",
-          "fileName": "PACK3_Round1_Retro Classics_Beck",
+          "fileName": "PACK2_Round1_Retro Classics_Beck.mp3",
           "band": "Beck",
           "track": "Loser",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T18.2",
-          "fileName": "PACK3_Round1_Retro Classics_Beck_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_Beck REVEAL.mp3",
           "band": "Beck",
           "track": "Loser",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T19.1",
-          "fileName": "PACK3_Round1_Retro Classics_No Doubt",
+          "fileName": "PACK2_Round1_Retro Classics_No Doubt.mp3",
           "band": "No Doubt",
           "track": "Don't Speak",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T19.2",
-          "fileName": "PACK3_Round1_Retro Classics_No Doubt_reveal",
+          "fileName": "PACK2_Round1_Retro Classics_No Doubt REVEAL.mp3",
           "band": "No Doubt",
           "track": "Don't Speak",
           "genre": "Retro Classics"
         },
         {
           "cue": "R1T20.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Taylor Swift",
+          "fileName": "PACK2_Round1_TikTok Hits_Taylor Swift.mp3",
           "band": "Taylor Swift",
           "track": "The Fate of Ophelia",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T20.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Taylor Swift_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Taylor Swift REVEAL.mp3",
           "band": "Taylor Swift",
           "track": "The Fate of Ophelia",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T21.1",
-          "fileName": "PACK3_Round1_TikTok Hits_RAYE",
+          "fileName": "PACK2_Round1_TikTok Hits_RAYE.mp3",
           "band": "RAYE",
           "track": "Where is my Husband",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T21.2",
-          "fileName": "PACK3_Round1_TikTok Hits_RAYE_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_RAYE REVEAL.mp3",
           "band": "RAYE",
           "track": "Where is my Husband",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T22.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Alex Warren",
+          "fileName": "PACK2_Round1_TikTok Hits_Alex Warren.mp3",
           "band": "Alex Warren",
           "track": "Ordinary",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T22.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Alex Warren_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Alex Warren REVEAL.mp3",
           "band": "Alex Warren",
           "track": "Ordinary",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T23.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Sombr",
+          "fileName": "PACK2_Round1_TikTok Hits_Sombr.mp3",
           "band": "Sombr",
           "track": "Back to Friends",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T23.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Sombr_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Sombr REVEAL.mp3",
           "band": "Sombr",
           "track": "Back to Friends",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T24.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Olivia Dean",
+          "fileName": "PACK2_Round1_TikTok Hits_Olivia Dean.mp3",
           "band": "Olivia Dean",
           "track": "Man I Need",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T24.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Olivia Dean_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Olivia Dean REVEAL.mp3",
           "band": "Olivia Dean",
           "track": "Man I Need",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T25.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Lady Gaga & Bruno Mars",
+          "fileName": "PACK2_Round1_TikTok Hits_Lady Gaga & Bruno Mars.mp3",
           "band": "Lady Gaga & Bruno Mars",
           "track": "Die With a Smile",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T25.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Lady Gaga & Bruno Mars_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Lady Gaga & Bruno Mars REVEAL.mp3",
           "band": "Lady Gaga & Bruno Mars",
           "track": "Die With a Smile",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T26.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Ros\u00e9",
-          "band": "Ros\u00e9",
+          "fileName": "PACK2_Round1_TikTok Hits_Rosé.mp3",
+          "band": "Rosé",
           "track": "APT",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T26.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Ros\u00e9_reveal",
-          "band": "Ros\u00e9",
+          "fileName": "PACK2_Round1_TikTok Hits_Rosé REVEAL.mp3",
+          "band": "Rosé",
           "track": "APT",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T27.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Black Eyed Peas",
+          "fileName": "PACK2_Round1_TikTok Hits_Black Eyed Peas.mp3",
           "band": "Black Eyed Peas",
           "track": "Rock That Body",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T27.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Black Eyed Peas_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Black Eyed Peas REVEAL.mp3",
           "band": "Black Eyed Peas",
           "track": "Rock That Body",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T28.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Wiz The MC & bees and honey",
+          "fileName": "PACK2_Round1_TikTok Hits_Wiz The MC & bees and honey.mp3",
           "band": "Wiz The MC & bees and honey",
           "track": "Show Me Love",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T28.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Wiz The MC & bees and honey_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Wiz The MC & bees and honey REVEAL.mp3",
           "band": "Wiz The MC & bees and honey",
           "track": "Show Me Love",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T29.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Chappel Roam",
-          "band": "Chappel Roam",
+          "fileName": "PACK2_Round1_TikTok Hits_Chappel Roam.mp3",
+          "band": "Chappell Roan",
           "track": "Pink Pony Club",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T29.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Chappel Roam_reveal",
-          "band": "Chappel Roam",
+          "fileName": "PACK2_Round1_TikTok Hits_Chappel Roam REVEAL.mp3",
+          "band": "Chappell Roan",
           "track": "Pink Pony Club",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T30.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Artemas",
+          "fileName": "PACK2_Round1_TikTok Hits_Artemas.mp3",
           "band": "Artemas",
           "track": "I Like The Way You Kiss Me",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T30.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Artemas_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Artemas REVEAL.mp3",
           "band": "Artemas",
           "track": "I Like The Way You Kiss Me",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T31.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Hozier",
+          "fileName": "PACK2_Round1_TikTok Hits_Hozier.mp3",
           "band": "Hozier",
           "track": "Too Sweet",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T31.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Hozier_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Hozier REVEAL.mp3",
           "band": "Hozier",
           "track": "Too Sweet",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T32.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Tyla",
+          "fileName": "PACK2_Round1_TikTok Hits_Tyla.mp3",
           "band": "Tyla",
           "track": "Water",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T32.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Tyla_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Tyla REVEAL.mp3",
           "band": "Tyla",
           "track": "Water",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T33.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Teddy Simms",
-          "band": "Teddy Simms",
+          "fileName": "PACK2_Round1_TikTok Hits_Teddy Simms.mp3",
+          "band": "Teddy Swims",
           "track": "Lose Control",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T33.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Teddy Simms_reveal",
-          "band": "Teddy Simms",
+          "fileName": "PACK2_Round1_TikTok Hits_Teddy Simms REVEAL.mp3",
+          "band": "Teddy Swims",
           "track": "Lose Control",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T34.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Natasha Beddingfield",
-          "band": "Natasha Beddingfield",
+          "fileName": "PACK2_Round1_TikTok Hits_Natasha Beddingfield.mp3",
+          "band": "Natasha Bedingfield",
           "track": "Unwritten",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T34.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Natasha Beddingfield_reveal",
-          "band": "Natasha Beddingfield",
+          "fileName": "PACK2_Round1_TikTok Hits_Natasha Beddingfield REVEAL.mp3",
+          "band": "Natasha Bedingfield",
           "track": "Unwritten",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T35.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Sophie Ellis-Bexter",
-          "band": "Sophie Ellis-Bexter",
+          "fileName": "PACK2_Round1_TikTok Hits_Sophie Ellis-Bexter.mp3",
+          "band": "Sophie Ellis-Bextor",
           "track": "Murder on the Dancefloor",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T35.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Sophie Ellis-Bexter_reveal",
-          "band": "Sophie Ellis-Bexter",
+          "fileName": "PACK2_Round1_TikTok Hits_Sophie Ellis-Bexter REVEAL.mp3",
+          "band": "Sophie Ellis-Bextor",
           "track": "Murder on the Dancefloor",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T36.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Jain",
+          "fileName": "PACK2_Round1_TikTok Hits_Jain.mp3",
           "band": "Jain",
           "track": "Makeba",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T36.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Jain_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Jain REVEAL.mp3",
           "band": "Jain",
           "track": "Makeba",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T37.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Dua Lipa",
+          "fileName": "PACK2_Round1_TikTok Hits_Dua Lipa.mp3",
           "band": "Dua Lipa",
           "track": "Dance The Night",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T37.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Dua Lipa_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Dua Lipa REVEAL.mp3",
           "band": "Dua Lipa",
           "track": "Dance The Night",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T38.1",
-          "fileName": "PACK3_Round1_TikTok Hits_Harry Styles",
+          "fileName": "PACK2_Round1_TikTok Hits_Harry Styles.mp3",
           "band": "Harry Styles",
           "track": "As it Was",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T38.2",
-          "fileName": "PACK3_Round1_TikTok Hits_Harry Styles_reveal",
+          "fileName": "PACK2_Round1_TikTok Hits_Harry Styles REVEAL.mp3",
           "band": "Harry Styles",
           "track": "As it Was",
           "genre": "TikTok Hits"
         },
         {
           "cue": "R1T39.1",
-          "fileName": "PACK3_Round1_K Pop_aespa",
+          "fileName": "PACK2_Round1_KPOP_aespa.mp3",
           "band": "aespa",
           "track": "Next Level",
           "genre": "K Pop"
         },
         {
           "cue": "R1T39.2",
-          "fileName": "PACK3_Round1_K Pop_aespa_reveal",
+          "fileName": "PACK2_Round1_KPOP_aespa REVEAL.mp3",
           "band": "aespa",
           "track": "Next Level",
           "genre": "K Pop"
         },
         {
           "cue": "R1T40.1",
-          "fileName": "PACK3_Round1_K Pop_MONSTA X",
+          "fileName": "PACK2_Round1_KPOP_MONSTA X.mp3",
           "band": "MONSTA X",
           "track": "Hero",
           "genre": "K Pop"
         },
         {
           "cue": "R1T40.2",
-          "fileName": "PACK3_Round1_K Pop_MONSTA X_reveal",
+          "fileName": "PACK2_Round1_KPOP_MONSTA X REVEAL.mp3",
           "band": "MONSTA X",
           "track": "Hero",
           "genre": "K Pop"
         },
         {
           "cue": "R1T41.1",
-          "fileName": "PACK3_Round1_K Pop_Red Velvet",
+          "fileName": "PACK2_Round1_KPOP_Red Velvet.mp3",
           "band": "Red Velvet",
           "track": "Psycho",
           "genre": "K Pop"
         },
         {
           "cue": "R1T41.2",
-          "fileName": "PACK3_Round1_K Pop_Red Velvet_reveal",
+          "fileName": "PACK2_Round1_KPOP_Red Velvet REVEAL.mp3",
           "band": "Red Velvet",
           "track": "Psycho",
           "genre": "K Pop"
         },
         {
           "cue": "R1T42.1",
-          "fileName": "PACK3_Round1_K Pop_SHINee",
+          "fileName": "PACK2_Round1_KPOP_SHINee.mp3",
           "band": "SHINee",
           "track": "Ring Ding Dong",
           "genre": "K Pop"
         },
         {
           "cue": "R1T42.2",
-          "fileName": "PACK3_Round1_K Pop_SHINee_reveal",
+          "fileName": "PACK2_Round1_KPOP_SHINee REVEAL.mp3",
           "band": "SHINee",
           "track": "Ring Ding Dong",
           "genre": "K Pop"
         },
         {
           "cue": "R1T43.1",
-          "fileName": "PACK3_Round1_K Pop_Big Bang",
+          "fileName": "PACK2_Round1_KPOP_Big Bang.mp3",
           "band": "Big Bang",
           "track": "Bang Bang Bang",
           "genre": "K Pop"
         },
         {
           "cue": "R1T43.2",
-          "fileName": "PACK3_Round1_K Pop_Big Bang_reveal",
+          "fileName": "PACK2_Round1_KPOP_Big Bang REVEAL.mp3",
           "band": "Big Bang",
           "track": "Bang Bang Bang",
           "genre": "K Pop"
         },
         {
           "cue": "R1T44.1",
-          "fileName": "PACK3_Round1_K Pop_2NE1",
+          "fileName": "PACK2_Round1_KPOP_2NE1.mp3",
           "band": "2NE1",
           "track": "I Am the Best",
           "genre": "K Pop"
         },
         {
           "cue": "R1T44.2",
-          "fileName": "PACK3_Round1_K Pop_2NE1_reveal",
+          "fileName": "PACK2_Round1_KPOP_2NE1 REVEAL.mp3",
           "band": "2NE1",
           "track": "I Am the Best",
           "genre": "K Pop"
         },
         {
           "cue": "R1T45.1",
-          "fileName": "PACK3_Round1_K Pop_GOT7",
+          "fileName": "PACK2_Round1_KPOP_GOT7.mp3",
           "band": "GOT7",
           "track": "Never Ever",
           "genre": "K Pop"
         },
         {
           "cue": "R1T45.2",
-          "fileName": "PACK3_Round1_K Pop_GOT7_reveal",
+          "fileName": "PACK2_Round1_KPOP_GOT7 REVEAL.mp3",
           "band": "GOT7",
           "track": "Never Ever",
           "genre": "K Pop"
         },
         {
           "cue": "R1T46.1",
-          "fileName": "PACK3_Round1_K Pop_iKON",
+          "fileName": "PACK2_Round1_KPOP_iKON.mp3",
           "band": "iKON",
           "track": "Love Scenario",
           "genre": "K Pop"
         },
         {
           "cue": "R1T46.2",
-          "fileName": "PACK3_Round1_K Pop_iKON_reveal",
+          "fileName": "PACK2_Round1_KPOP_iKON REVEAL.mp3",
           "band": "iKON",
           "track": "Love Scenario",
           "genre": "K Pop"
         },
         {
           "cue": "R1T47.1",
-          "fileName": "PACK3_Round1_K Pop_ATEEZ",
+          "fileName": "PACK2_Round1_KPOP_ATEEZ.mp3",
           "band": "ATEEZ",
           "track": "Fireworks",
           "genre": "K Pop"
         },
         {
           "cue": "R1T47.2",
-          "fileName": "PACK3_Round1_K Pop_ATEEZ_reveal",
+          "fileName": "PACK2_Round1_KPOP_ATEEZ REVEAL.mp3",
           "band": "ATEEZ",
           "track": "Fireworks",
           "genre": "K Pop"
         },
         {
           "cue": "R1T48.1",
-          "fileName": "PACK3_Round1_K Pop_TXT",
+          "fileName": "PACK2_Round1_KPOP_TXT.mp3",
           "band": "TXT",
           "track": "0X1=LOVESONG",
           "genre": "K Pop"
         },
         {
           "cue": "R1T48.2",
-          "fileName": "PACK3_Round1_K Pop_TXT_reveal",
+          "fileName": "PACK2_Round1_KPOP_TXT REVEAL.mp3",
           "band": "TXT",
           "track": "0X1=LOVESONG",
           "genre": "K Pop"
         },
         {
           "cue": "R1T49.1",
-          "fileName": "PACK3_Round1_K Pop_NCT 127",
+          "fileName": "PACK2_Round1_KPOP_NCT 127.mp3",
           "band": "NCT 127",
           "track": "Cherry Bomb",
           "genre": "K Pop"
         },
         {
           "cue": "R1T49.2",
-          "fileName": "PACK3_Round1_K Pop_NCT 127_reveal",
+          "fileName": "PACK2_Round1_KPOP_NCT 127 REVEAL.mp3",
           "band": "NCT 127",
           "track": "Cherry Bomb",
           "genre": "K Pop"
         },
         {
           "cue": "R1T50.1",
-          "fileName": "PACK3_Round1_K Pop_Wanna One",
+          "fileName": "PACK2_Round1_KPOP_Wanna One.mp3",
           "band": "Wanna One",
           "track": "Energetic",
           "genre": "K Pop"
         },
         {
           "cue": "R1T50.2",
-          "fileName": "PACK3_Round1_K Pop_Wanna One_reveal",
+          "fileName": "PACK2_Round1_KPOP_Wanna One REVEAL.mp3",
           "band": "Wanna One",
           "track": "Energetic",
           "genre": "K Pop"
         },
         {
           "cue": "R1T51.1",
-          "fileName": "PACK3_Round1_K Pop_IU",
+          "fileName": "PACK2_Round1_KPOP_IU.mp3",
           "band": "IU",
           "track": "Celebrity",
           "genre": "K Pop"
         },
         {
           "cue": "R1T51.2",
-          "fileName": "PACK3_Round1_K Pop_IU_reveal",
+          "fileName": "PACK2_Round1_KPOP_IU REVEAL.mp3",
           "band": "IU",
           "track": "Celebrity",
           "genre": "K Pop"
         },
         {
           "cue": "R1T52.1",
-          "fileName": "PACK3_Round1_K Pop_Sunmi",
+          "fileName": "PACK2_Round1_KPOP_Sunmi.mp3",
           "band": "Sunmi",
           "track": "Gashina",
           "genre": "K Pop"
         },
         {
           "cue": "R1T52.2",
-          "fileName": "PACK3_Round1_K Pop_Sunmi_reveal",
+          "fileName": "PACK2_Round1_KPOP_Sunmi REVEAL.mp3",
           "band": "Sunmi",
           "track": "Gashina",
           "genre": "K Pop"
         },
         {
           "cue": "R1T53.1",
-          "fileName": "PACK3_Round1_K Pop_HyunA",
+          "fileName": "PACK2_Round1_KPOP_HyunA.mp3",
           "band": "HyunA",
           "track": "Bubble Pop!",
           "genre": "K Pop"
         },
         {
           "cue": "R1T53.2",
-          "fileName": "PACK3_Round1_K Pop_HyunA_reveal",
+          "fileName": "PACK2_Round1_KPOP_HyunA REVEAL.mp3",
           "band": "HyunA",
           "track": "Bubble Pop!",
           "genre": "K Pop"
         },
         {
           "cue": "R1T54.1",
-          "fileName": "PACK3_Round1_K Pop_CL",
+          "fileName": "PACK2_Round1_KPOP_CL.mp3",
           "band": "CL",
           "track": "The Baddest Female",
           "genre": "K Pop"
         },
         {
           "cue": "R1T54.2",
-          "fileName": "PACK3_Round1_K Pop_CL_reveal",
+          "fileName": "PACK2_Round1_KPOP_CL REVEAL.mp3",
           "band": "CL",
           "track": "The Baddest Female",
           "genre": "K Pop"
         },
         {
           "cue": "R1T55.1",
-          "fileName": "PACK3_Round1_K Pop_f(x)",
+          "fileName": "PACK2_Round1_KPOP_f(x).mp3",
           "band": "f(x)",
           "track": "Electric Shock",
           "genre": "K Pop"
         },
         {
           "cue": "R1T55.2",
-          "fileName": "PACK3_Round1_K Pop_f(x)_reveal",
+          "fileName": "PACK2_Round1_KPOP_f(x) REVEAL.mp3",
           "band": "f(x)",
           "track": "Electric Shock",
           "genre": "K Pop"
         },
         {
           "cue": "R1T56.1",
-          "fileName": "PACK3_Round1_K Pop_Girls' Generation",
+          "fileName": "PACK2_Round1_KPOP_Girls' Generation.mp3",
           "band": "Girls' Generation",
           "track": "Gee",
           "genre": "K Pop"
         },
         {
           "cue": "R1T56.2",
-          "fileName": "PACK3_Round1_K Pop_Girls' Generation_reveal",
+          "fileName": "PACK2_Round1_KPOP_Girls' Generation REVEAL.mp3",
           "band": "Girls' Generation",
           "track": "Gee",
           "genre": "K Pop"
@@ -822,169 +822,169 @@
       "tracks": [
         {
           "cue": "R2T1",
-          "fileName": "PACK3_Round2_Grammy Winners_Billie Eilish",
+          "fileName": "PACK2_Round2_Grammy Winners_Billie Eilish.mp3",
           "band": "Billie Eilish",
           "track": "Bad Guy",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R2T2",
-          "fileName": "PACK3_Round2_Grammy Winners_Olivia Rodrigo",
+          "fileName": "PACK2_Round2_Grammy Winners_Olivia Rodrigo.mp3",
           "band": "Olivia Rodrigo",
           "track": "good 4 u",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R2T3",
-          "fileName": "PACK3_Round2_Grammy Winners_Harry Styles",
+          "fileName": "PACK2_Round2_Grammy Winners_Harry Styles.mp3",
           "band": "Harry Styles",
           "track": "As It Was",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R2T4",
-          "fileName": "PACK3_Round2_Grammy Winners_Doja Cat",
+          "fileName": "PACK2_Round2_Grammy Winners_Doja Cat.mp3",
           "band": "Doja Cat",
           "track": "Say So",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R2T5",
-          "fileName": "PACK3_Round2_Grammy Winners_Taylor Swift",
+          "fileName": "PACK2_Round2_Grammy Winners_Taylor Swift.mp3",
           "band": "Taylor Swift",
           "track": "Anti-Hero",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R2T6",
-          "fileName": "PACK3_Round2_Grammy Winners_Billie Eilish",
-          "band": "Billie Eilish",
+          "fileName": "PACK2_Round2_Grammy Winners_Billie Eilish 2.mp3",
+          "band": "Billie Eilish 2",
           "track": "Happier Than Ever",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R2T7",
-          "fileName": "PACK3_Round2_Grammy Winners_Olivia Rodrigo",
-          "band": "Olivia Rodrigo",
+          "fileName": "PACK2_Round2_Grammy Winners_Olivia Rodrigo 2.mp3",
+          "band": "Olivia Rodrigo 2",
           "track": "brutal",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R2T8",
-          "fileName": "PACK3_Round2_Grammy Winners_Harry Styles",
-          "band": "Harry Styles",
+          "fileName": "PACK2_Round2_Grammy Winners_Demon Hunters.mp3",
+          "band": "Demon Hunters",
           "track": "Golden",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R2T9",
-          "fileName": "PACK3_Round2_Musicals_Grease",
+          "fileName": "PACK2_Round2_Musicals_Grease.mp3",
           "band": "Grease",
           "track": "Summer Nights",
           "genre": "Musicals"
         },
         {
           "cue": "R2T10",
-          "fileName": "PACK3_Round2_Musicals_Hamilton",
+          "fileName": "PACK2_Round2_Musicals_Hamilton.mp3",
           "band": "Hamilton",
           "track": "My Shot",
           "genre": "Musicals"
         },
         {
           "cue": "R2T11",
-          "fileName": "PACK3_Round2_Musicals_The Greatest Showman",
+          "fileName": "PACK2_Round2_Musicals_The Greatest Showman.mp3",
           "band": "The Greatest Showman",
           "track": "This Is Me",
           "genre": "Musicals"
         },
         {
           "cue": "R2T12",
-          "fileName": "PACK3_Round2_Musicals_Mamma Mia",
+          "fileName": "PACK2_Round2_Musicals_Mamma Mia.mp3",
           "band": "Mamma Mia",
           "track": "Dancing Queen",
           "genre": "Musicals"
         },
         {
           "cue": "R2T13",
-          "fileName": "PACK3_Round2_Musicals_Wicked",
+          "fileName": "PACK2_Round2_Musicals_Wicked.mp3",
           "band": "Wicked",
           "track": "Defying Gravity",
           "genre": "Musicals"
         },
         {
           "cue": "R2T14",
-          "fileName": "PACK3_Round2_Musicals_Hamilton",
-          "band": "Hamilton",
+          "fileName": "PACK2_Round2_Musicals_Hamilton 2.mp3",
+          "band": "Hamilton 2",
           "track": "The Room Where It Happens",
           "genre": "Musicals"
         },
         {
           "cue": "R2T15",
-          "fileName": "PACK3_Round2_Musicals_Dear Evan Hansen",
+          "fileName": "PACK2_Round2_Musicals_Dear Evan Hansen.mp3",
           "band": "Dear Evan Hansen",
           "track": "You Will Be Found",
           "genre": "Musicals"
         },
         {
           "cue": "R2T16",
-          "fileName": "PACK3_Round2_Musicals_Hairspray",
+          "fileName": "PACK2_Round2_Musicals_Hairspray.mp3",
           "band": "Hairspray",
           "track": "You Can't Stop the Beat",
           "genre": "Musicals"
         },
         {
           "cue": "R2T17",
-          "fileName": "PACK3_Round2_Indie_Arctic Monkeys",
+          "fileName": "PACK2_Round2_Indie_Arctic Monkeys.mp3",
           "band": "Arctic Monkeys",
           "track": "R U Mine?",
           "genre": "Indie"
         },
         {
           "cue": "R2T18",
-          "fileName": "PACK3_Round2_Indie_The 1975",
+          "fileName": "PACK2_Round2_Indie_The 1975.mp3",
           "band": "The 1975",
           "track": "Somebody Else",
           "genre": "Indie"
         },
         {
           "cue": "R2T19",
-          "fileName": "PACK3_Round2_Indie_Tame Impala",
+          "fileName": "PACK2_Round2_Indie_Tame Impala.mp3",
           "band": "Tame Impala",
           "track": "The Less I Know the Better",
           "genre": "Indie"
         },
         {
           "cue": "R2T20",
-          "fileName": "PACK3_Round2_Indie_Vampire Weekend",
+          "fileName": "PACK2_Round2_Indie_Vampire Weekend.mp3",
           "band": "Vampire Weekend",
           "track": "A-Punk",
           "genre": "Indie"
         },
         {
           "cue": "R2T21",
-          "fileName": "PACK3_Round2_Indie_Paramore",
+          "fileName": "PACK2_Round2_Indie_Paramore.mp3",
           "band": "Paramore",
           "track": "Misery Business",
           "genre": "Indie"
         },
         {
           "cue": "R2T22",
-          "fileName": "PACK3_Round2_Indie_Arctic Monkeys",
-          "band": "Arctic Monkeys",
+          "fileName": "PACK2_Round2_Indie_Arctic Monkeys 2.mp3",
+          "band": "Arctic Monkeys 2",
           "track": "Do I Wanna Know?",
           "genre": "Indie"
         },
         {
           "cue": "R2T23",
-          "fileName": "PACK3_Round2_Indie_The 1975",
-          "band": "The 1975",
+          "fileName": "PACK2_Round2_Indie_The 1975 2.mp3",
+          "band": "The 1975 2",
           "track": "Chocolate",
           "genre": "Indie"
         },
         {
           "cue": "R2T24",
-          "fileName": "PACK3_Round2_Indie_Tame Impala",
-          "band": "Tame Impala",
+          "fileName": "PACK2_Round2_Indie_Tame Impala 2.mp3",
+          "band": "Tame Impala 2",
           "track": "Elephant",
           "genre": "Indie"
         }
@@ -996,129 +996,363 @@
       "tracks": [
         {
           "cue": "R3T1",
-          "fileName": "Round 3- Mashup Madness_2000_s_A1_A2.wav",
-          "band": "Mashup",
-          "track": "A1 vs A2",
-          "genre": "Disney Hits"
+          "fileName": "Mashup Madness_80's_A1_A2.wav",
+          "genre": "1980's",
+          "band": "1980's Mashup",
+          "track": "A: Spandau Ballet + Bonnie Tyler",
+          "track1": {
+            "band": "Spandau Ballet",
+            "track": "True"
+          },
+          "track2": {
+            "band": "Bonnie Tyler",
+            "track": "Total Eclipse of the Heart"
+          }
         },
         {
           "cue": "R3T2",
-          "fileName": "Round 3- Mashup Madness_2000_s_B1_B2.wav",
-          "band": "Mashup",
-          "track": "B1 vs B2",
-          "genre": "Disney Hits"
+          "fileName": "Mashup Madness_80's_B1_B2.wav",
+          "genre": "1980's",
+          "band": "1980's Mashup",
+          "track": "B: Rick Astley + Human League",
+          "track1": {
+            "band": "Rick Astley",
+            "track": "Never Gonna Give You Up"
+          },
+          "track2": {
+            "band": "Human League",
+            "track": "Don't You Want Me"
+          }
         },
         {
           "cue": "R3T3",
-          "fileName": "Round 3- Mashup Madness_2000_s_C1_C2.wav",
-          "band": "Mashup",
-          "track": "C1 vs C2",
-          "genre": "Disney Hits"
+          "fileName": "Mashup Madness_80's_C1_C2.wav",
+          "genre": "1980's",
+          "band": "1980's Mashup",
+          "track": "C: Michael Jackson + Queen",
+          "track1": {
+            "band": "Michael Jackson",
+            "track": "Billie Jean"
+          },
+          "track2": {
+            "band": "Queen",
+            "track": "Another One Bites the Dust"
+          }
         },
         {
           "cue": "R3T4",
-          "fileName": "Round 3- Mashup Madness_2000_s_D1_F2.wav",
-          "band": "Mashup",
-          "track": "D1 vs F2",
-          "genre": "Disney Hits"
+          "fileName": "Mashup Madness_80's_D1_D2.wav",
+          "genre": "1980's",
+          "band": "1980's Mashup",
+          "track": "D: Journey + Cyndi Lauper",
+          "track1": {
+            "band": "Journey",
+            "track": "Don't Stop Believin'"
+          },
+          "track2": {
+            "band": "Cyndi Lauper",
+            "track": "Girls Just Want to Have Fun"
+          }
         },
         {
           "cue": "R3T5",
-          "fileName": "Round 3- Mashup Madness_2000_s_D2_F1.wav",
-          "band": "Mashup",
-          "track": "D2 vs F1",
-          "genre": "Disney Hits"
+          "fileName": "Mashup Madness_80's_E1_E2.wav",
+          "genre": "1980's",
+          "band": "1980's Mashup",
+          "track": "E: Bon Jovi + Survivor",
+          "track1": {
+            "band": "Bon Jovi",
+            "track": "Livin' on a Prayer"
+          },
+          "track2": {
+            "band": "Survivor",
+            "track": "Eye of the Tiger"
+          }
         },
         {
           "cue": "R3T6",
-          "fileName": "Round 3- Mashup Madness_2000_s_E1_E2.wav",
-          "band": "Mashup",
-          "track": "E1 vs E2",
-          "genre": "Disney Hits"
+          "fileName": "Mashup Madness_80's_F1_F2.wav",
+          "genre": "1980's",
+          "band": "1980's Mashup",
+          "track": "F: Soft Cell + Eurythmics",
+          "track1": {
+            "band": "Soft Cell",
+            "track": "Tainted Love"
+          },
+          "track2": {
+            "band": "Eurythmics",
+            "track": "Sweet Dreams (Are Made of This)"
+          }
         },
         {
           "cue": "R3T7",
-          "fileName": "Round 3- Mashup Madness_2000_s_A1_A2.wav",
-          "band": "Mashup",
-          "track": "A1 vs A2",
-          "genre": "Latin"
+          "fileName": "Mashup Madness_80's_G1_G2.wav",
+          "genre": "1980's",
+          "band": "1980's Mashup",
+          "track": "G: Tears For Fears + Depeche Mode",
+          "track1": {
+            "band": "Tears For Fears",
+            "track": "Everybody Wants to Rule the World"
+          },
+          "track2": {
+            "band": "Depeche Mode",
+            "track": "Personal Jesus"
+          }
         },
         {
           "cue": "R3T8",
-          "fileName": "Round 3- Mashup Madness_2000_s_B1_B2.wav",
-          "band": "Mashup",
-          "track": "B1 vs B2",
-          "genre": "Latin"
+          "fileName": "Mashup Madness_80's_H1_H2.wav",
+          "genre": "1980's",
+          "band": "1980's Mashup",
+          "track": "H: Kool & The Gang + The Police",
+          "track1": {
+            "band": "Kool & The Gang",
+            "track": "Celebration"
+          },
+          "track2": {
+            "band": "The Police",
+            "track": "Every Breath You Take"
+          }
         },
         {
           "cue": "R3T9",
-          "fileName": "Round 3- Mashup Madness_2000_s_C1_C2.wav",
-          "band": "Mashup",
-          "track": "C1 vs C2",
-          "genre": "Latin"
+          "fileName": "Round 3- Mashup Madness_90's_A1_A2.wav",
+          "genre": "1990's",
+          "band": "1990's Mashup",
+          "track": "A: Coolio + Fugees",
+          "track1": {
+            "band": "Coolio",
+            "track": "Gangsta's Paradise"
+          },
+          "track2": {
+            "band": "Fugees",
+            "track": "Killing Me Softly"
+          }
         },
         {
           "cue": "R3T10",
-          "fileName": "Round 3- Mashup Madness_2000_s_D1_F2.wav",
-          "band": "Mashup",
-          "track": "D1 vs F2",
-          "genre": "Latin"
+          "fileName": "Round 3- Mashup Madness_90's_B1_B2.wav",
+          "genre": "1990's",
+          "band": "1990's Mashup",
+          "track": "B: Britney Spears + TLC",
+          "track1": {
+            "band": "Britney Spears",
+            "track": "...Baby One More Time"
+          },
+          "track2": {
+            "band": "TLC",
+            "track": "No Scrubs"
+          }
         },
         {
           "cue": "R3T11",
-          "fileName": "Round 3- Mashup Madness_2000_s_D2_F1.wav",
-          "band": "Mashup",
-          "track": "D2 vs F1",
-          "genre": "Latin"
+          "fileName": "Round 3- Mashup Madness_90's_C1_C2.wav",
+          "genre": "1990's",
+          "band": "1990's Mashup",
+          "track": "C: Backstreet Boys + Los Del Rio",
+          "track1": {
+            "band": "Backstreet Boys",
+            "track": "I Want It That Way"
+          },
+          "track2": {
+            "band": "Los Del Rio",
+            "track": "Macarena"
+          }
         },
         {
           "cue": "R3T12",
-          "fileName": "Round 3- Mashup Madness_2000_s_E1_E2.wav",
-          "band": "Mashup",
-          "track": "E1 vs E2",
-          "genre": "Latin"
+          "fileName": "Round 3- Mashup Madness_90's_D1_D2.wav",
+          "genre": "1990's",
+          "band": "1990's Mashup",
+          "track": "D: Spice Girls + Santana ft. Rob Thomas",
+          "track1": {
+            "band": "Spice Girls",
+            "track": "Wannabe"
+          },
+          "track2": {
+            "band": "Santana ft. Rob Thomas",
+            "track": "Smooth"
+          }
         },
         {
           "cue": "R3T13",
-          "fileName": "Round 3- Mashup Madness_2000_s_A1_A2.wav",
-          "band": "Mashup",
-          "track": "A1 vs A2",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_90's_E1_E2.wav",
+          "genre": "1990's",
+          "band": "1990's Mashup",
+          "track": "E: Ce Ce Peniston + Madonna",
+          "track1": {
+            "band": "Ce Ce Peniston",
+            "track": "Finally"
+          },
+          "track2": {
+            "band": "Madonna",
+            "track": "Vogue"
+          }
         },
         {
           "cue": "R3T14",
-          "fileName": "Round 3- Mashup Madness_2000_s_B1_B2.wav",
-          "band": "Mashup",
-          "track": "B1 vs B2",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_90's_F1_F2.wav",
+          "genre": "1990's",
+          "band": "1990's Mashup",
+          "track": "F: Cher + Haddaway",
+          "track1": {
+            "band": "Cher",
+            "track": "Believe"
+          },
+          "track2": {
+            "band": "Haddaway",
+            "track": "What Is Love"
+          }
         },
         {
           "cue": "R3T15",
-          "fileName": "Round 3- Mashup Madness_2000_s_C1_C2.wav",
-          "band": "Mashup",
-          "track": "C1 vs C2",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_90's_G1_G2.wav",
+          "genre": "1990's",
+          "band": "1990's Mashup",
+          "track": "G: Aqua + Snap!",
+          "track1": {
+            "band": "Aqua",
+            "track": "Barbie Girl"
+          },
+          "track2": {
+            "band": "Snap!",
+            "track": "Rhythm Is a Dancer"
+          }
         },
         {
           "cue": "R3T16",
-          "fileName": "Round 3- Mashup Madness_2000_s_D1_F2.wav",
-          "band": "Mashup",
-          "track": "D1 vs F2",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_90's_H1_H2.wav",
+          "genre": "1990's",
+          "band": "1990's Mashup",
+          "track": "H: Ricky Martin + Lou Bega",
+          "track1": {
+            "band": "Ricky Martin",
+            "track": "Livin' La Vida Loca"
+          },
+          "track2": {
+            "band": "Lou Bega",
+            "track": "Mambo No. 5"
+          }
         },
         {
           "cue": "R3T17",
-          "fileName": "Round 3- Mashup Madness_2000_s_D2_F1.wav",
-          "band": "Mashup",
-          "track": "D2 vs F1",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000's_A1_A2.wav",
+          "genre": "2000's",
+          "band": "2000's Mashup",
+          "track": "A: Shakira + Jennifer Lopez",
+          "track1": {
+            "band": "Shakira",
+            "track": "Whenever Wherever"
+          },
+          "track2": {
+            "band": "Jennifer Lopez",
+            "track": "Let's Get Loud"
+          }
         },
         {
           "cue": "R3T18",
-          "fileName": "Round 3- Mashup Madness_2000_s_E1_E2.wav",
-          "band": "Mashup",
-          "track": "E1 vs E2",
-          "genre": "TikTok Hits"
+          "fileName": "Round 3- Mashup Madness_2000's_B1_B2.wav",
+          "genre": "2000's",
+          "band": "2000's Mashup",
+          "track": "B: Ed Sheeran + Taylor Swift",
+          "track1": {
+            "band": "Ed Sheeran",
+            "track": "Shape of You"
+          },
+          "track2": {
+            "band": "Taylor Swift",
+            "track": "Anti-Hero"
+          }
+        },
+        {
+          "cue": "R3T19",
+          "fileName": "Round 3- Mashup Madness_2000's_C1_C2.wav",
+          "genre": "2000's",
+          "band": "2000's Mashup",
+          "track": "C: Usher ft. Lil Jon + 50 Cent",
+          "track1": {
+            "band": "Usher ft. Lil Jon",
+            "track": "Yeah!"
+          },
+          "track2": {
+            "band": "50 Cent",
+            "track": "In Da Club"
+          }
+        },
+        {
+          "cue": "R3T20",
+          "fileName": "Round 3- Mashup Madness_2000's_D1_F2.wav",
+          "genre": "2000's",
+          "band": "2000's Mashup",
+          "track": "D1+F2: Daft Punk ft. Pharrell + Dua Lipa",
+          "track1": {
+            "band": "Daft Punk ft. Pharrell",
+            "track": "Get Lucky"
+          },
+          "track2": {
+            "band": "Dua Lipa",
+            "track": "Don't Start Now"
+          }
+        },
+        {
+          "cue": "R3T21",
+          "fileName": "Round 3- Mashup Madness_2000's_D2_F1.wav",
+          "genre": "2000's",
+          "band": "2000's Mashup",
+          "track": "D2+F1: Mark Ronson ft. Bruno Mars + The White Stripes",
+          "track1": {
+            "band": "Mark Ronson ft. Bruno Mars",
+            "track": "Uptown Funk"
+          },
+          "track2": {
+            "band": "The White Stripes",
+            "track": "Seven Nation Army"
+          }
+        },
+        {
+          "cue": "R3T22",
+          "fileName": "Round 3- Mashup Madness_2000's_E1_E2.wav",
+          "genre": "2000's",
+          "band": "2000's Mashup",
+          "track": "E: Nelly Furtado + Miley Cyrus",
+          "track1": {
+            "band": "Nelly Furtado",
+            "track": "Promiscuous Girl"
+          },
+          "track2": {
+            "band": "Miley Cyrus",
+            "track": "Flowers"
+          }
+        },
+        {
+          "cue": "R3T23",
+          "fileName": "Round 3- Mashup Madness_2000's_G1_G2.wav",
+          "genre": "2000's",
+          "band": "2000's Mashup",
+          "track": "G: Gotye ft. Kimbra + PSY",
+          "track1": {
+            "band": "Gotye ft. Kimbra",
+            "track": "Somebody That I Used to Know"
+          },
+          "track2": {
+            "band": "PSY",
+            "track": "Gangnam Style"
+          }
+        },
+        {
+          "cue": "R3T24",
+          "fileName": "Round 3- Mashup Madness_2000's_H1_H2.wav",
+          "genre": "2000's",
+          "band": "2000's Mashup",
+          "track": "H: The Weeknd + Harry Styles",
+          "track1": {
+            "band": "The Weeknd",
+            "track": "Blinding Lights"
+          },
+          "track2": {
+            "band": "Harry Styles",
+            "track": "As It Was"
+          }
         }
       ]
     },
@@ -1128,283 +1362,276 @@
       "tracks": [
         {
           "cue": "R4T1",
-          "fileName": "PACK3_Round4_Retro Classics_Coldplay",
+          "fileName": "PACK2_Round4_Retro Classics_Coldplay.mp3",
           "band": "Coldplay",
           "track": "Yellow",
           "genre": "Retro Classics"
         },
         {
           "cue": "R4T2",
-          "fileName": "PACK3_Round4_Retro Classics_The White Stripes",
+          "fileName": "PACK2_Round4_Retro Classics_The White Stripes.mp3",
           "band": "The White Stripes",
           "track": "Seven Nation Army",
           "genre": "Retro Classics"
         },
         {
           "cue": "R4T3",
-          "fileName": "PACK3_Round4_Retro Classics_Radiohead",
+          "fileName": "PACK2_Round4_Retro Classics_Radiohead.mp3",
           "band": "Radiohead",
           "track": "Creep",
           "genre": "Retro Classics"
         },
         {
           "cue": "R4T4",
-          "fileName": "PACK3_Round4_Retro Classics_Beck",
+          "fileName": "PACK2_Round4_Retro Classics_Beck.mp3",
           "band": "Beck",
           "track": "Loser",
           "genre": "Retro Classics"
         },
         {
           "cue": "R4T5",
-          "fileName": "PACK3_Round4_Retro Classics_No Doubt",
+          "fileName": "PACK2_Round4_Retro Classics_No Doubt.mp3",
           "band": "No Doubt",
           "track": "Don't Speak",
           "genre": "Retro Classics"
         },
         {
           "cue": "R4T6",
-          "fileName": "PACK3_Round4_Latin_Juan Luis Guerra",
+          "fileName": "PACK2_Round4_Latin_Juan Luis Guerra.mp3",
           "band": "Juan Luis Guerra",
           "track": "Burbujas de Amor",
           "genre": "Latin"
         },
         {
           "cue": "R4T7",
-          "fileName": "PACK3_Round4_Latin_Alejandro Fern\u00e1ndez",
-          "band": "Alejandro Fern\u00e1ndez",
-          "track": "L\u00e1stima Que Seas Ajena",
+          "fileName": "PACK2_Round4_Latin_Alejandro Fernández.mp3",
+          "band": "Alejandro Fernández",
+          "track": "Lástima Que Seas Ajena",
           "genre": "Latin"
         },
         {
           "cue": "R4T8",
-          "fileName": "PACK3_Round4_Latin_Enrique Iglesias",
+          "fileName": "PACK2_Round4_Latin_Enrique Iglesias.mp3",
           "band": "Enrique Iglesias",
           "track": "Bailando",
           "genre": "Latin"
         },
         {
           "cue": "R4T9",
-          "fileName": "PACK3_Round4_Latin_Shakira",
+          "fileName": "PACK2_Round4_Latin_Shakira.mp3",
           "band": "Shakira",
-          "track": "Monoton\u00eda",
+          "track": "Monotonía",
           "genre": "Latin"
         },
         {
           "cue": "R4T10",
-          "fileName": "PACK3_Round4_Latin_Rosal\u00eda",
-          "band": "Rosal\u00eda",
+          "fileName": "PACK2_Round4_Latin_Rosalía.mp3",
+          "band": "Rosalía",
           "track": "Con Altura",
           "genre": "Latin"
         },
         {
           "cue": "R4T11",
-          "fileName": "PACK3_Round4_K Pop_BTS",
+          "fileName": "PACK2_Round4_KPOP_BTS.mp3",
           "band": "BTS",
           "track": "Dynamite",
           "genre": "K Pop"
         },
         {
           "cue": "R4T12",
-          "fileName": "PACK3_Round4_K Pop_BLACKPINK",
+          "fileName": "PACK2_Round4_KPOP_BLACKPINK.mp3",
           "band": "BLACKPINK",
           "track": "How You Like That",
           "genre": "K Pop"
         },
         {
           "cue": "R4T13",
-          "fileName": "PACK3_Round4_K Pop_TWICE",
+          "fileName": "PACK2_Round4_KPOP_TWICE.mp3",
           "band": "TWICE",
           "track": "Feel Special",
           "genre": "K Pop"
         },
         {
           "cue": "R4T14",
-          "fileName": "PACK3_Round4_K Pop_EXO",
+          "fileName": "PACK2_Round4_KPOP_EXO.mp3",
           "band": "EXO",
           "track": "Power",
           "genre": "K Pop"
         },
         {
           "cue": "R4T15",
-          "fileName": "PACK3_Round4_K Pop_Stray Kids",
+          "fileName": "PACK2_Round4_KPOP_Stray Kids.mp3",
           "band": "Stray Kids",
           "track": "Miroh",
           "genre": "K Pop"
         },
         {
           "cue": "R4T16",
-          "fileName": "PACK3_Round4_K Pop_BTS",
-          "band": "BTS",
+          "fileName": "PACK2_Round4_KPOP_BTS 2.mp3",
+          "band": "BTS 2",
           "track": "Boy With Luv",
           "genre": "K Pop"
         },
         {
           "cue": "R4T17",
-          "fileName": "PACK3_Round4_K Pop_BLACKPINK",
-          "band": "BLACKPINK",
+          "fileName": "PACK2_Round4_KPOP_BLACKPINK 2.mp3",
+          "band": "BLACKPINK 2",
           "track": "Kill This Love",
           "genre": "K Pop"
         },
         {
           "cue": "R4T18",
-          "fileName": "PACK3_Round4_Indie_Car Seat Headrest",
+          "fileName": "PACK2_Round4_Indie_Car Seat Headrest.mp3",
           "band": "Car Seat Headrest",
           "track": "Drunk Drivers/Killer Whales",
           "genre": "Indie"
         },
         {
           "cue": "R4T19",
-          "fileName": "PACK3_Round4_Indie_Alex G",
+          "fileName": "PACK2_Round4_Indie_Alex G.mp3",
           "band": "Alex G",
           "track": "Bug",
           "genre": "Indie"
         },
         {
           "cue": "R4T20",
-          "fileName": "PACK3_Round4_Indie_Men I Trust",
+          "fileName": "PACK2_Round4_Indie_Men I Trust.mp3",
           "band": "Men I Trust",
           "track": "Show Me How",
           "genre": "Indie"
         },
         {
           "cue": "R4T21",
-          "fileName": "PACK3_Round4_Indie_Girl in Red",
+          "fileName": "PACK2_Round4_Indie_Girl in Red.mp3",
           "band": "Girl in Red",
           "track": "we fell in love in october",
           "genre": "Indie"
         },
         {
           "cue": "R4T22",
-          "fileName": "PACK3_Round4_Indie_Rex Orange County",
+          "fileName": "PACK2_Round4_Indie_Rex Orange County.mp3",
           "band": "Rex Orange County",
           "track": "Loving Is Easy",
           "genre": "Indie"
         },
         {
           "cue": "R4T23",
-          "fileName": "PACK3_Round4_Indie_Clairo",
+          "fileName": "PACK2_Round4_Indie_Clairo.mp3",
           "band": "Clairo",
           "track": "Pretty Girl",
           "genre": "Indie"
         },
         {
           "cue": "R4T24",
-          "fileName": "PACK3_Round4_Indie_Japanese Breakfast",
+          "fileName": "PACK2_Round4_Indie_Japanese Breakfast.mp3",
           "band": "Japanese Breakfast",
           "track": "Boyish",
           "genre": "Indie"
         },
         {
           "cue": "R4T25",
-          "fileName": "PACK3_Round4_Grammy Winners_The Weeknd",
+          "fileName": "PACK2_Round4_Grammy Winners_The Weeknd.mp3",
           "band": "The Weeknd",
           "track": "Starboy",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T26",
-          "fileName": "PACK3_Round4_Grammy Winners_Post Malone",
+          "fileName": "PACK2_Round4_Grammy Winners_Post Malone.mp3",
           "band": "Post Malone",
           "track": "Rockstar",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T27",
-          "fileName": "PACK3_Round4_Grammy Winners_Khalid",
+          "fileName": "PACK2_Round4_Grammy Winners_Khalid.mp3",
           "band": "Khalid",
           "track": "Young Dumb & Broke",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T28",
-          "fileName": "PACK3_Round4_Grammy Winners_H.E.R.",
+          "fileName": "PACK2_Round4_Grammy Winners_H.E.R..mp3",
           "band": "H.E.R.",
           "track": "Best Part",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T29",
-          "fileName": "PACK3_Round4_Grammy Winners_SZA",
+          "fileName": "PACK2_Round4_Grammy Winners_SZA.mp3",
           "band": "SZA",
           "track": "Good Days",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T30",
-          "fileName": "PACK3_Round4_Grammy Winners_Summer Walker",
+          "fileName": "PACK2_Round4_Grammy Winners_Summer Walker.mp3",
           "band": "Summer Walker",
           "track": "Come Thru",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T31",
-          "fileName": "PACK3_Round4_Grammy Winners_Giveon",
+          "fileName": "PACK2_Round4_Grammy Winners_Giveon.mp3",
           "band": "Giveon",
           "track": "Heartbreak Anniversary",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T32",
-          "fileName": "PACK3_Round4_Grammy Winners_Silk Sonic",
+          "fileName": "PACK2_Round4_Grammy Winners_Silk Sonic.mp3",
           "band": "Silk Sonic",
           "track": "Smokin Out the Window",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T33",
-          "fileName": "PACK3_Round4_Grammy Winners_Jon Batiste",
+          "fileName": "PACK2_Round4_Grammy Winners_Jon Batiste.mp3",
           "band": "Jon Batiste",
           "track": "I Need You",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T34",
-          "fileName": "PACK3_Round4_Grammy Winners_Arlo Parks",
+          "fileName": "PACK2_Round4_Grammy Winners_Arlo Parks.mp3",
           "band": "Arlo Parks",
           "track": "Hurt",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T35",
-          "fileName": "PACK3_Round4_Grammy Winners_Little Simz",
+          "fileName": "PACK2_Round4_Grammy Winners_Little Simz.mp3",
           "band": "Little Simz",
           "track": "Introvert",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T36",
-          "fileName": "PACK3_Round4_Grammy Winners_Lorde",
+          "fileName": "PACK2_Round4_Grammy Winners_Lorde.mp3",
           "band": "Lorde",
           "track": "Solar Power",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T37",
-          "fileName": "PACK3_Round4_Grammy Winners_Clairo",
+          "fileName": "PACK2_Round4_Grammy Winners_Clairo.mp3",
           "band": "Clairo",
           "track": "Amoeba",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T38",
-          "fileName": "PACK3_Round4_Grammy Winners_Mitski",
+          "fileName": "PACK2_Round4_Grammy Winners_Mitski.mp3",
           "band": "Mitski",
           "track": "The Only Heartbreaker",
           "genre": "Grammy Winners"
         },
         {
           "cue": "R4T39",
-          "fileName": "PACK3_Round4_Grammy Winners_Wet Leg",
+          "fileName": "PACK2_Round4_Grammy Winners_Wet Leg.mp3",
           "band": "Wet Leg",
           "track": "Chaise Longue",
           "genre": "Grammy Winners"
-        },
-        {
-          "cue": "R4T40",
-          "fileName": "PACK3_Round4_XX_XX",
-          "band": "XX",
-          "track": "XX",
-          "genre": "XX"
         }
       ]
     }
