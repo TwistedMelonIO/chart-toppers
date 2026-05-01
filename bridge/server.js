@@ -28,6 +28,17 @@ function oscFloat(val) {
 }
 
 function buildOscMessage(address, value) {
+  // Multi-arg form: array of numbers / strings (e.g. RGBA color = 4 floats)
+  if (Array.isArray(value)) {
+    let typeTags = ",";
+    const parts = [];
+    for (const v of value) {
+      if (typeof v === "number") { typeTags += "f"; parts.push(oscFloat(v)); }
+      else if (typeof v === "string") { typeTags += "s"; parts.push(oscString(v)); }
+      else throw new Error(`Unsupported array element type: ${typeof v}`);
+    }
+    return Buffer.concat([oscString(address), oscString(typeTags), ...parts]);
+  }
   if (typeof value === "number") {
     return Buffer.concat([oscString(address), oscString(",f"), oscFloat(value)]);
   } else if (typeof value === "string") {

@@ -1670,6 +1670,11 @@ const GENRE_SHRINK_THRESHOLD_DEFAULTS = {
   '2560x1280': 13,
 };
 
+// Color sent with every /text/format. QLab resets all unspecified fields
+// in the format record, so we must include color or it defaults to white.
+// rgbaColor uses 0-1 floats. Default is the show's pale yellow (#FFFFAE).
+const GENRE_TEXT_COLOR_DEFAULT = { red: 1, green: 1, blue: 0.682, alpha: 1 };
+
 let packSettings = {
   currentPack: 'uk-usa-german',
   audioBasePath: '',
@@ -2197,11 +2202,14 @@ function updateAllGenreCues(packId) {
     cues.forEach((cue, i) => {
       const genreName = (genres[i] || '').toUpperCase();
       const fontSize = computeGenreFontSize(genreName);
+      const c = packSettings.genreTextColor || GENRE_TEXT_COLOR_DEFAULT;
       setTimeout(() => {
         updateQLabCueName(cue, genreName);
         sendBridgeOsc(`/cue/${cue}/text`, genreName, `→ set ${cue} text to "${genreName}"`);
-        sendBridgeOsc(`/cue/${cue}/text/format`, JSON.stringify({ fontSize }),
+        sendBridgeOsc(`/cue/${cue}/text/format/fontSize`, fontSize,
           `→ set ${cue} fontSize to ${fontSize}`);
+        sendBridgeOsc(`/cue/${cue}/text/format/color`, [c.red, c.green, c.blue, c.alpha],
+          `→ set ${cue} color to rgba(${c.red},${c.green},${c.blue},${c.alpha})`);
       }, delay);
       delay += 100;
     });
