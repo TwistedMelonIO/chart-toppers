@@ -1162,7 +1162,7 @@ app.post("/api/round/:num", (req, res) => {
 // =============================================================================
 const QA_STATE_FILE = path.join(__dirname, "../data/track-qa.json");
 const QA_COMPLETIONS_FILE = path.join(__dirname, "../data/qa-completions.json");
-const QA_BATCH_SIZES = { '1': 6, '2': 2, '3': 4, '4': 40 };
+const QA_BATCH_SIZES = { '1': 6, '2': 2, '3': 4, '4': 35 };
 let qaTimeouts = [];
 
 // QA completions log — one entry per (pack, round) marked complete by the

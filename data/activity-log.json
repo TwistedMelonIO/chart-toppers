@@ -70,5 +70,69 @@
     "team": "all",
     "details": "Question pack changed from uk-usa-german to teens",
     "source": "api"
+  },
+  {
+    "id": 1774896545580.1812,
+    "timestamp": "2026-03-30T18:49:05.580Z",
+    "type": "round",
+    "team": "all",
+    "details": "Round changed to Track 1",
+    "source": "api"
+  },
+  {
+    "id": 1774896551055.9104,
+    "timestamp": "2026-03-30T18:49:11.055Z",
+    "type": "round",
+    "team": "all",
+    "details": "Round changed to Track 2",
+    "source": "api"
+  },
+  {
+    "id": 1774953518922.358,
+    "timestamp": "2026-03-31T10:38:38.922Z",
+    "type": "round",
+    "team": "all",
+    "details": "Round changed to Track 1",
+    "source": "api"
+  },
+  {
+    "id": 1774953522012.2766,
+    "timestamp": "2026-03-31T10:38:42.012Z",
+    "type": "correct",
+    "team": "anthems",
+    "details": "Correct answer #1 (+2s, 2s total, round 1)",
+    "source": "api"
+  },
+  {
+    "id": 1774953525567.7205,
+    "timestamp": "2026-03-31T10:38:45.567Z",
+    "type": "round",
+    "team": "all",
+    "details": "Round changed to Track 2",
+    "source": "api"
+  },
+  {
+    "id": 1774953525613.314,
+    "timestamp": "2026-03-31T10:38:45.613Z",
+    "type": "correct",
+    "team": "anthems",
+    "details": "Correct answer #2 (+4s, 6s total, round 2)",
+    "source": "api"
+  },
+  {
+    "id": 1774953528457.3325,
+    "timestamp": "2026-03-31T10:38:48.457Z",
+    "type": "round",
+    "team": "all",
+    "details": "Round changed to Track 3",
+    "source": "api"
+  },
+  {
+    "id": 1774953528497.7952,
+    "timestamp": "2026-03-31T10:38:48.497Z",
+    "type": "correct",
+    "team": "anthems",
+    "details": "Correct answer #3 (+6s, 12s total, round 3)",
+    "source": "api"
   }
 ]

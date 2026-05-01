@@ -3,8 +3,9 @@
   "name": "Pack 1: UK / USA / Germany",
   "genres": {
     "1": [
-      "Boy Bands",
-      "Country Hits"
+      "70's, 80's & 90's",
+      "BOY BANDS",
+      "COUNTRY HITS"
     ],
     "2": [
       "Roof Raisers",
@@ -30,241 +31,801 @@
       "tracks": [
         {
           "cue": "R1T1.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_21.1_Story of my Life.mp3",
-          "band": "One Direction",
-          "track": "Story of my Life",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_1.1_Stayin' Alive.mp3",
+          "band": "The Bee Gees",
+          "track": "Stayin' Alive",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T1.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_21.1_Story of my Life REVEAL.mp3",
-          "band": "One Direction",
-          "track": "Story of my Life",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_1.2_.mp3",
+          "band": "The Bee Gees",
+          "track": "Stayin' Alive",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T2.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_22.1_Back For Good.mp3",
-          "band": "Take That",
-          "track": "Back For Good",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_2.1_Go Your Own Way.mp3",
+          "band": "Fleetwood Mac",
+          "track": "Go Your Own Way",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T2.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_22.1_Back For Good REVEAL.mp3",
-          "band": "Take That",
-          "track": "Back For Good",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_2.2_.mp3",
+          "band": "Fleetwood Mac",
+          "track": "Go Your Own Way",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T3.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_27.1_I Want It That Way.mp3",
-          "band": "Backstreet Boys",
-          "track": "I Want It That Way",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_3.1_Hotel California.mp3",
+          "band": "Eagles",
+          "track": "Hotel California",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T3.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_27.1_I Want It That Way REVEAL.mp3",
-          "band": "Backstreet Boys",
-          "track": "I Want It That Way",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_3.2_.mp3",
+          "band": "Eagles",
+          "track": "Hotel California",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T4.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_31.1_End Of The Road.mp3",
-          "band": "Boyz II Men",
-          "track": "End Of The Road",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_4.1_Billie Jean.mp3",
+          "band": "Michael Jackson",
+          "track": "Billie Jean",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T4.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_31.1_End Of The Road REVEAL.mp3",
-          "band": "Boyz II Men",
-          "track": "End Of The Road",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_4.2_.mp3",
+          "band": "Michael Jackson",
+          "track": "Billie Jean",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T5.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_33.1_All My Loving.mp3",
-          "band": "The Beatles",
-          "track": "All My Loving",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_5.1_Like a Virgin.mp3",
+          "band": "Madonna",
+          "track": "Like a Virgin",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T5.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_33.1_All My Loving REVEAL.mp3",
-          "band": "The Beatles",
-          "track": "All My Loving",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_5.2_.mp3",
+          "band": "Madonna",
+          "track": "Like a Virgin",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T6.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_35.1_Dynamite.mp3",
-          "band": "BTS",
-          "track": "Dynamite",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_6.1_Purple Rain.mp3",
+          "band": "Prince",
+          "track": "Purple Rain",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T6.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_35.1_Dynamite REVEAL.mp3",
-          "band": "BTS",
-          "track": "Dynamite",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_6.2_.mp3",
+          "band": "Prince",
+          "track": "Purple Rain",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T7.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_36.1_I Want You Back.mp3",
-          "band": "Jackson 5",
-          "track": "I Want You Back",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_7.1_Careless Whisper.mp3",
+          "band": "George Michael",
+          "track": "Careless Whisper",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T7.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_36.1_I Want You Back REVEAL.mp3",
-          "band": "Jackson 5",
-          "track": "I Want You Back",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_7.2_.mp3",
+          "band": "George Michael",
+          "track": "Careless Whisper",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T8.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_37.1_Bye Bye Bye.mp3",
-          "band": "NSYNC",
-          "track": "Bye Bye Bye",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_8.1_I Wanna Dance with Somebody.mp3",
+          "band": "Whitney Houston",
+          "track": "I Wanna Dance with Somebody",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T8.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_37.1_Bye Bye Bye REVEAL.mp3",
-          "band": "NSYNC",
-          "track": "Bye Bye Bye",
-          "genre": "Boy Bands"
+          "fileName": "PACK_A_ROUND 1_TRACK_8.2_.mp3",
+          "band": "Whitney Houston",
+          "track": "I Wanna Dance with Somebody",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T9.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_44.1_That Don't Impress Me Much.mp3",
-          "band": "Shania Twain",
-          "track": "That Don't Impress Me Much",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_9.1_Never Gonna Give You Up.mp3",
+          "band": "Rick Astley",
+          "track": "Never Gonna Give You Up",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T9.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_44.1_That Don't Impress Me Much REVEAL.mp3",
-          "band": "Shania Twain",
-          "track": "That Don't Impress Me Much",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_9.2_.mp3",
+          "band": "Rick Astley",
+          "track": "Never Gonna Give You Up",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T10.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_45.1_Texas Hold 'em.mp3",
-          "band": "Beyonce",
-          "track": "Texas Hold 'em",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_10.1_Wake Me Up Before You Go-Go.mp3",
+          "band": "Wham!",
+          "track": "Wake Me Up Before You Go-Go",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T10.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_45.1_Texas Hold 'em REVEAL.mp3",
-          "band": "Beyonce",
-          "track": "Texas Hold 'em",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_10.2_.mp3",
+          "band": "Wham!",
+          "track": "Wake Me Up Before You Go-Go",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T11.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_46.1_Old Town Road.mp3",
-          "band": "Lil Nas X",
-          "track": "Old Town Road",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_11.1_Karma Chameleon.mp3",
+          "band": "Culture Club",
+          "track": "Karma Chameleon",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T11.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_46.1_Old Town Road REVEAL.mp3",
-          "band": "Lil Nas X",
-          "track": "Old Town Road",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_11.2_.mp3",
+          "band": "Culture Club",
+          "track": "Karma Chameleon",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T12.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_47.1_Ring of Fire.mp3",
-          "band": "Johnny Cash",
-          "track": "Ring of Fire",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_12.1_Girls on Film.mp3",
+          "band": "Duran Duran",
+          "track": "Girls on Film",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T12.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_47.1_Ring of Fire REVEAL.mp3",
-          "band": "Johnny Cash",
-          "track": "Ring of Fire",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_12.2_.mp3",
+          "band": "Duran Duran",
+          "track": "Girls on Film",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T13.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_48.1_Jolene.mp3",
-          "band": "Dolly Parton",
-          "track": "Jolene",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_13.1_Gold.mp3",
+          "band": "Spandau Ballet",
+          "track": "Gold",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T13.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_48.1_Jolene REVEAL.mp3",
-          "band": "Dolly Parton",
-          "track": "Jolene",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_13.2_.mp3",
+          "band": "Spandau Ballet",
+          "track": "Gold",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T14.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_49.1_Take Me Home, Country Roads.mp3",
-          "band": "John Denver",
-          "track": "Take Me Home, Country Roads",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_14.1_Blue Monday.mp3",
+          "band": "New Order",
+          "track": "Blue Monday",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T14.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_49.1_Take Me Home, Country Roads REVEAL.mp3",
-          "band": "John Denver",
-          "track": "Take Me Home, Country Roads",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_14.2_.mp3",
+          "band": "New Order",
+          "track": "Blue Monday",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T15.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_50.1_Love Story.mp3",
-          "band": "Taylor Swift",
-          "track": "Love Story",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_15.1_Just Can't Get Enough.mp3",
+          "band": "Depeche Mode",
+          "track": "Just Can't Get Enough",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T15.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_50.1_Love Story REVEAL.mp3",
-          "band": "Taylor Swift",
-          "track": "Love Story",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_15.2_.mp3",
+          "band": "Depeche Mode",
+          "track": "Just Can't Get Enough",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T16.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_55.1_Somebody Like You.mp3",
-          "band": "Keith Urban",
-          "track": "Somebody Like You",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_16.1_Friday I'm in Love.mp3",
+          "band": "The Cure",
+          "track": "Friday I'm in Love",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T16.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_55.1_Somebody Like You REVEAL.mp3",
-          "band": "Keith Urban",
-          "track": "Somebody Like You",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_16.2_.mp3",
+          "band": "The Cure",
+          "track": "Friday I'm in Love",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T17.1",
-          "fileName": "PACK_A_ROUND 1_TRACK_56.1_Mammas Don't Let Your Babies Grow Up to Be Cowboys.mp3",
-          "band": "Willie Nelson & Waylon Jennings",
-          "track": "Mammas Don't Let Your Babies Grow Up to Be Cowboys",
-          "genre": "Country Hits"
+          "fileName": "PACK_A_ROUND 1_TRACK_17.1_Listen to Your Heart.mp3",
+          "band": "Roxette",
+          "track": "Listen to Your Heart",
+          "genre": "70's, 80's & 90's"
         },
         {
           "cue": "R1T17.2",
-          "fileName": "PACK_A_ROUND 1_TRACK_56.1_Mammas Don't Let Your Babies Grow Up to Be Cowboys REVEAL.mp3",
+          "fileName": "PACK_A_ROUND 1_TRACK_17.2_.mp3",
+          "band": "Roxette",
+          "track": "Listen to Your Heart",
+          "genre": "70's, 80's & 90's"
+        },
+        {
+          "cue": "R1T18.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_18.1_Livin' on a Prayer.mp3",
+          "band": "Bon Jovi",
+          "track": "Livin' on a Prayer",
+          "genre": "70's, 80's & 90's"
+        },
+        {
+          "cue": "R1T18.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_18.2_.mp3",
+          "band": "Bon Jovi",
+          "track": "Livin' on a Prayer",
+          "genre": "70's, 80's & 90's"
+        },
+        {
+          "cue": "R1T19.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_19.1_Born to Run.mp3",
+          "band": "Bruce Springsteen",
+          "track": "Born to Run",
+          "genre": "70's, 80's & 90's"
+        },
+        {
+          "cue": "R1T19.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_19.2_.mp3",
+          "band": "Bruce Springsteen",
+          "track": "Born to Run",
+          "genre": "70's, 80's & 90's"
+        },
+        {
+          "cue": "R1T20.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_20.1_Flying Without Wings.mp3",
+          "band": "Westlife",
+          "track": "Flying Without Wings",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T20.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_20.2_.mp3",
+          "band": "Westlife",
+          "track": "Flying Without Wings",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T21.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_21.1_Story of my Life.mp3",
+          "band": "One Direction",
+          "track": "Story of my Life",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T21.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_21.1_Story of my Life REVEAL.mp3",
+          "band": "One Direction",
+          "track": "Story of my Life",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T22.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_22.1_Back For Good.mp3",
+          "band": "Take That",
+          "track": "Back For Good",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T22.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_22.1_Back For Good REVEAL.mp3",
+          "band": "Take That",
+          "track": "Back For Good",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T23.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_23.1_Take On Me.mp3",
+          "band": "A1",
+          "track": "Take On Me",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T23.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_23.2_.mp3",
+          "band": "A1",
+          "track": "Take On Me",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T24.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_24.1_Stay Another Day.mp3",
+          "band": "East 17",
+          "track": "Stay Another Day",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T24.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_24.2_.mp3",
+          "band": "East 17",
+          "track": "Stay Another Day",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T25.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_25.1_One Love.mp3",
+          "band": "Blue",
+          "track": "One Love",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T25.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_25.2_.mp3",
+          "band": "Blue",
+          "track": "One Love",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T26.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_26.1_Beat Again.mp3",
+          "band": "JLS",
+          "track": "Beat Again",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T26.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_26.2_.mp3",
+          "band": "JLS",
+          "track": "Beat Again",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T27.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_27.1_I Want It That Way.mp3",
+          "band": "Backstreet Boys",
+          "track": "I Want It That Way",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T27.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_27.1_I Want It That Way REVEAL.mp3",
+          "band": "Backstreet Boys",
+          "track": "I Want It That Way",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T28.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_28.1_Year 3000.mp3",
+          "band": "Busted",
+          "track": "Year 3000",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T28.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_28.2_.mp3",
+          "band": "Busted",
+          "track": "Year 3000",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T29.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_29.1_If It Isn't Love.mp3",
+          "band": "New Edition",
+          "track": "If It Isn't Love",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T29.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_29.2_.mp3",
+          "band": "New Edition",
+          "track": "If It Isn't Love",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T30.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_30.1_I Do (Cherish You).mp3",
+          "band": "98 Degrees",
+          "track": "I Do (Cherish You)",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T30.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_30.2_.mp3",
+          "band": "98 Degrees",
+          "track": "I Do (Cherish You)",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T31.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_31.1_End Of The Road.mp3",
+          "band": "Boyz II Men",
+          "track": "End Of The Road",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T31.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_31.1_End Of The Road REVEAL.mp3",
+          "band": "Boyz II Men",
+          "track": "End Of The Road",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T32.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_32.1_MMMBop.mp3",
+          "band": "Hanson",
+          "track": "MMMBop",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T32.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_32.2_.mp3",
+          "band": "Hanson",
+          "track": "MMMBop",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T33.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_33.1_All My Loving.mp3",
+          "band": "The Beatles",
+          "track": "All My Loving",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T33.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_33.1_All My Loving REVEAL.mp3",
+          "band": "The Beatles",
+          "track": "All My Loving",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T34.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_34.1_When Will I Be Famous.mp3",
+          "band": "Bros",
+          "track": "When Will I Be Famous",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T34.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_34.2_.mp3",
+          "band": "Bros",
+          "track": "When Will I Be Famous",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T35.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_35.1_Dynamite.mp3",
+          "band": "BTS",
+          "track": "Dynamite",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T35.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_35.1_Dynamite REVEAL.mp3",
+          "band": "BTS",
+          "track": "Dynamite",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T36.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_36.1_I Want You Back.mp3",
+          "band": "Jackson 5",
+          "track": "I Want You Back",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T36.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_36.1_I Want You Back REVEAL.mp3",
+          "band": "Jackson 5",
+          "track": "I Want You Back",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T37.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_37.1_Bye Bye Bye.mp3",
+          "band": "NSYNC",
+          "track": "Bye Bye Bye",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T37.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_37.1_Bye Bye Bye REVEAL.mp3",
+          "band": "NSYNC",
+          "track": "Bye Bye Bye",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T38.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_38.1_Glad You Came.mp3",
+          "band": "The Wanted",
+          "track": "Glad You Came",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T38.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_38.2_.mp3",
+          "band": "The Wanted",
+          "track": "Glad You Came",
+          "genre": "BOY BANDS"
+        },
+        {
+          "cue": "R1T39.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_39.1_The Gambler.mp3",
+          "band": "Kenny Rogers",
+          "track": "The Gambler",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T39.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_39.2_.mp3",
+          "band": "Kenny Rogers",
+          "track": "The Gambler",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T40.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_40.1_Friends in Low Places.mp3",
+          "band": "Garth Brooks",
+          "track": "Friends in Low Places",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T40.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_40.2_.mp3",
+          "band": "Garth Brooks",
+          "track": "Friends in Low Places",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T41.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_41.1_Fancy.mp3",
+          "band": "Reba McEntire",
+          "track": "Fancy",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T41.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_41.2_.mp3",
+          "band": "Reba McEntire",
+          "track": "Fancy",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T42.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_42.1_Chattahoochee.mp3",
+          "band": "Alan Jackson",
+          "track": "Chattahoochee",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T42.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_42.2_.mp3",
+          "band": "Alan Jackson",
+          "track": "Chattahoochee",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T43.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_43.1_Live Like You Were Dying.mp3",
+          "band": "Tim McGraw",
+          "track": "Live Like You Were Dying",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T43.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_43.2_.mp3",
+          "band": "Tim McGraw",
+          "track": "Live Like You Were Dying",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T44.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_44.1_That Don't Impress Me Much.mp3",
+          "band": "Shania Twain",
+          "track": "That Don't Impress Me Much",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T44.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_44.1_That Don't Impress Me Much REVEAL.mp3",
+          "band": "Shania Twain",
+          "track": "That Don't Impress Me Much",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T45.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_45.1_Texas Hold 'em.mp3",
+          "band": "Beyonce",
+          "track": "Texas Hold 'em",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T45.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_45.1_Texas Hold 'em REVEAL.mp3",
+          "band": "Beyonce",
+          "track": "Texas Hold 'em",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T46.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_46.1_Old Town Road.mp3",
+          "band": "Lil Nas X",
+          "track": "Old Town Road",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T46.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_46.1_Old Town Road REVEAL.mp3",
+          "band": "Lil Nas X",
+          "track": "Old Town Road",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T47.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_47.1_Ring of Fire.mp3",
+          "band": "Johnny Cash",
+          "track": "Ring of Fire",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T47.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_47.1_Ring of Fire REVEAL.mp3",
+          "band": "Johnny Cash",
+          "track": "Ring of Fire",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T48.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_48.1_Jolene.mp3",
+          "band": "Dolly Parton",
+          "track": "Jolene",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T48.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_48.1_Jolene REVEAL.mp3",
+          "band": "Dolly Parton",
+          "track": "Jolene",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T49.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_49.1_Take Me Home, Country Roads.mp3",
+          "band": "John Denver",
+          "track": "Take Me Home, Country Roads",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T49.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_49.1_Take Me Home, Country Roads REVEAL.mp3",
+          "band": "John Denver",
+          "track": "Take Me Home, Country Roads",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T50.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_50.1_Love Story.mp3",
+          "band": "Taylor Swift",
+          "track": "Love Story",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T50.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_50.1_Love Story REVEAL.mp3",
+          "band": "Taylor Swift",
+          "track": "Love Story",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T51.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_51.1_The House That Built Me.mp3",
+          "band": "Miranda Lambert",
+          "track": "The House That Built Me",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T51.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_51.2_.mp3",
+          "band": "Miranda Lambert",
+          "track": "The House That Built Me",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T52.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_52.1_Hey Good Lookin'.mp3",
+          "band": "Hank Williams",
+          "track": "Hey Good Lookin'",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T52.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_52.2_.mp3",
+          "band": "Hank Williams",
+          "track": "Hey Good Lookin'",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T53.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_53.1_Crazy.mp3",
+          "band": "Patsy Cline",
+          "track": "Crazy",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T53.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_53.2_.mp3",
+          "band": "Patsy Cline",
+          "track": "Crazy",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T54.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_54.1_On the Road Again.mp3",
+          "band": "Willie Nelson",
+          "track": "On the Road Again",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T54.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_54.2_.mp3",
+          "band": "Willie Nelson",
+          "track": "On the Road Again",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T55.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_55.1_Somebody Like You.mp3",
+          "band": "Keith Urban",
+          "track": "Somebody Like You",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T55.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_55.1_Somebody Like You REVEAL.mp3",
+          "band": "Keith Urban",
+          "track": "Somebody Like You",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T56.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_56.1_Mama's Don't Let Your Babies Grow Up to Be Cowboys.mp3",
           "band": "Willie Nelson & Waylon Jennings",
-          "track": "Mammas Don't Let Your Babies Grow Up to Be Cowboys",
-          "genre": "Country Hits"
+          "track": "Mama's Don't Let Your Babies Grow Up to Be Cowboys",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T56.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_56.1_Mama's Don't Let Your Babies Grow Up to Be Cowboys REVEAL.mp3",
+          "band": "Willie Nelson & Waylon Jennings",
+          "track": "Mama's Don't Let Your Babies Grow Up to Be Cowboys",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T57.1",
+          "fileName": "PACK_A_ROUND 1_TRACK_57.1_Tennessee Whiskey.mp3",
+          "band": "Chris Stapleton",
+          "track": "Tennessee Whiskey",
+          "genre": "COUNTRY HITS"
+        },
+        {
+          "cue": "R1T57.2",
+          "fileName": "PACK_A_ROUND 1_TRACK_57.2_.mp3",
+          "band": "Chris Stapleton",
+          "track": "Tennessee Whiskey",
+          "genre": "COUNTRY HITS"
         }
       ]
     },
@@ -1003,7 +1564,7 @@
         },
         {
           "cue": "R4T22",
-          "fileName": "PACK_A_ROUND 4_TRACK_30_Bamboléo.mp3",
+          "fileName": "PACK_A_ROUND 4_TRACK_30_Bamboléo.mp3",
           "band": "Gipsy Kings",
           "track": "Bamboléo",
           "genre": "World Pop"
@@ -1062,6 +1623,41 @@
           "fileName": "PACK_A_ROUND 4_TRACK_38_Hero.mp3",
           "band": "Mariah Carey",
           "track": "Hero",
+          "genre": "Power Ballads"
+        },
+        {
+          "cue": "R4T31",
+          "fileName": "PACK_A_ROUND 4_TRACK_39_Africa.mp3",
+          "band": "Toto",
+          "track": "Africa",
+          "genre": "Power Ballads"
+        },
+        {
+          "cue": "R4T32",
+          "fileName": "PACK_A_ROUND 4_TRACK_40_Lemon Tree.mp3",
+          "band": "Fool's Garden",
+          "track": "Lemon Tree",
+          "genre": "Power Ballads"
+        },
+        {
+          "cue": "R4T33",
+          "fileName": "PACK_A_ROUND 4_TRACK_41_Smells Like Teen Spirit.mp3",
+          "band": "Nirvana",
+          "track": "Smells Like Teen Spirit",
+          "genre": "Power Ballads"
+        },
+        {
+          "cue": "R4T34",
+          "fileName": "PACK_A_ROUND 4_TRACK_42_Hotel California.mp3",
+          "band": "The Eagles",
+          "track": "Hotel California",
+          "genre": "Power Ballads"
+        },
+        {
+          "cue": "R4T35",
+          "fileName": "PACK_A_ROUND 4_TRACK_43_What a Wonderful World.mp3",
+          "band": "Louis Armstrong",
+          "track": "What a Wonderful World",
           "genre": "Power Ballads"
         }
       ]

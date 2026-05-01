@@ -74,14 +74,14 @@
         },
         {
           "cue": "R1T4.1",
-          "fileName": "PACK_B_ROUND 1_TRACK_4_Tití Me Preguntó.mp3",
+          "fileName": "PACK_B_ROUND 1_TRACK_4_Tití Me Preguntó.mp3",
           "band": "Bad Bunny",
           "track": "Tití Me Preguntó",
           "genre": "Latin"
         },
         {
           "cue": "R1T4.2",
-          "fileName": "PACK_B_ROUND 1_TRACK_4_Tití Me Preguntó REVEAL.mp3",
+          "fileName": "PACK_B_ROUND 1_TRACK_4_Tití Me Preguntó REVEAL.mp3",
           "band": "Bad Bunny",
           "track": "Tití Me Preguntó",
           "genre": "Latin"
@@ -116,14 +116,14 @@
         },
         {
           "cue": "R1T7.1",
-          "fileName": "PACK_B_ROUND 1_TRACK_7_Bamboléo.mp3",
+          "fileName": "PACK_B_ROUND 1_TRACK_7_Bamboléo.mp3",
           "band": "Gipsy Kings",
           "track": "Bamboléo",
           "genre": "Latin"
         },
         {
           "cue": "R1T7.2",
-          "fileName": "PACK_B_ROUND 1_TRACK_7_Bamboléo REVEAL.mp3",
+          "fileName": "PACK_B_ROUND 1_TRACK_7_Bamboléo REVEAL.mp3",
           "band": "Gipsy Kings",
           "track": "Bamboléo",
           "genre": "Latin"
@@ -298,14 +298,14 @@
         },
         {
           "cue": "R1T20.1",
-          "fileName": "PACK_B_ROUND 1_TRACK_19_Aserejé.mp3",
+          "fileName": "PACK_B_ROUND 1_TRACK_19_Aserejé.mp3",
           "band": "Las Ketchup",
           "track": "Aserejé",
           "genre": "Latin"
         },
         {
           "cue": "R1T20.2",
-          "fileName": "PACK_B_ROUND 1_TRACK_19_Aserejé REVEAL.mp3",
+          "fileName": "PACK_B_ROUND 1_TRACK_19_Aserejé REVEAL.mp3",
           "band": "Las Ketchup",
           "track": "Aserejé",
           "genre": "Latin"
@@ -788,14 +788,14 @@
         },
         {
           "cue": "R1T55.1",
-          "fileName": "PACK_B_ROUND 1_TRACK_52_Mediterráneo.mp3",
+          "fileName": "PACK_B_ROUND 1_TRACK_52_Mediterráneo.mp3",
           "band": "Joan Manuel Serrat",
           "track": "Mediterráneo",
           "genre": "Mediterranean Classics"
         },
         {
           "cue": "R1T55.2",
-          "fileName": "PACK_B_ROUND 1_TRACK_52_Mediterráneo REVEAL.mp3",
+          "fileName": "PACK_B_ROUND 1_TRACK_52_Mediterráneo REVEAL.mp3",
           "band": "Joan Manuel Serrat",
           "track": "Mediterráneo",
           "genre": "Mediterranean Classics"
@@ -941,7 +941,7 @@
         },
         {
           "cue": "R2T18",
-          "fileName": "PACK_B_ROUND 2_TRACK_8_Sarà perché ti amo.mp3",
+          "fileName": "PACK_B_ROUND 2_TRACK_8_Sarà perché ti amo.mp3",
           "band": "Ricchi e Poveri",
           "track": "Sarà perché ti amo",
           "genre": "Heart Strings"
@@ -1645,41 +1645,6 @@
           "fileName": "PACK_B_ROUND 4_TRACK__Eye of the Tiger.mp3",
           "band": "Survivor",
           "track": "Eye of the Tiger",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R4T36",
-          "fileName": "PACK_B_ROUND 4_TRACK__Africa.mp3",
-          "band": "Toto",
-          "track": "Africa",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R4T37",
-          "fileName": "PACK_B_ROUND 4_TRACK__Lemon Tree.mp3",
-          "band": "Fool's Garden",
-          "track": "Lemon Tree",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R4T38",
-          "fileName": "PACK_B_ROUND 4_TRACK__Smells Like Teen Spirit.mp3",
-          "band": "Nirvana",
-          "track": "Smells Like Teen Spirit",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R4T39",
-          "fileName": "PACK_B_ROUND 4_TRACK__Hotel California.mp3",
-          "band": "The Eagles",
-          "track": "Hotel California",
-          "genre": "Power Ballads"
-        },
-        {
-          "cue": "R4T40",
-          "fileName": "PACK_B_ROUND 4_TRACK__What a Wonderful World.mp3",
-          "band": "Louis Armstrong",
-          "track": "What a Wonderful World",
           "genre": "Power Ballads"
         }
       ]
