@@ -45,6 +45,11 @@ class SettingsPage {
       saveAudioPathBtn.addEventListener('click', () => this.saveAudioPath());
     }
 
+    const saveResolutionBtn = document.getElementById('saveResolutionBtn');
+    if (saveResolutionBtn) {
+      saveResolutionBtn.addEventListener('click', () => this.saveResolution());
+    }
+
     if (exportBtn) {
       exportBtn.addEventListener('click', () => this.exportLogs());
     }
@@ -443,6 +448,43 @@ class SettingsPage {
     setTimeout(() => { status.textContent = ''; }, 5000);
   }
 
+  async saveResolution() {
+    const select = document.getElementById('qlabResolution');
+    const status = document.getElementById('resolutionStatus');
+    const btn = document.getElementById('saveResolutionBtn');
+    if (!select) return;
+
+    const packSelect = document.getElementById('packSelect');
+    const currentPack = (packSelect && packSelect.value) || 'uk-usa-german';
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    status.textContent = '';
+
+    try {
+      const res = await fetch('/api/pack-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPack, qlabResolution: select.value })
+      });
+      const data = await res.json();
+      if (data.success) {
+        status.textContent = `Resolution set to ${select.value}; genre cues refreshed.`;
+        status.style.color = '#4ade80';
+      } else {
+        status.textContent = data.message || 'Failed to save.';
+        status.style.color = '#f87171';
+      }
+    } catch (e) {
+      status.textContent = 'Failed to save resolution.';
+      status.style.color = '#f87171';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Save Resolution';
+    setTimeout(() => { status.textContent = ''; }, 5000);
+  }
+
   async loadPackSettings() {
     try {
       const response = await fetch('/api/pack-settings');
@@ -473,6 +515,10 @@ class SettingsPage {
 
     if (packSelect) {
       packSelect.value = settings.currentPack || 'uk-usa-german';
+    }
+    const resolutionSelect = document.getElementById('qlabResolution');
+    if (resolutionSelect && settings.qlabResolution) {
+      resolutionSelect.value = settings.qlabResolution;
     }
     if (currentPackDisplay) {
       const packNames = {

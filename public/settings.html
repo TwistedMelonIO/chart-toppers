@@ -680,7 +680,7 @@
       <div class="header-title">
         <h1>Settings & Activity Log</h1>
         <p class="subtitle">Game activity for today</p>
-        <p class="version-number">v5.6.0</p>
+        <p class="version-number">v5.6.1</p>
       </div>
       <a href="/" class="back-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -720,6 +720,21 @@
             <button class="btn btn-primary" id="saveAudioPathBtn" style="white-space: nowrap; padding: 0.75rem 1.25rem;">Save Path</button>
           </div>
           <div id="audioPathStatus" class="settings-status" style="margin-top: 6px; font-size: 0.85rem;"></div>
+        </div>
+      </details>
+      <details style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.07);">
+        <summary style="color: var(--text-muted); font-size: 0.85rem; cursor: pointer; font-weight: 500; font-family: 'Outfit', sans-serif;">Advanced: QLab Show Resolution</summary>
+        <div style="margin-top: 1rem;">
+          <p class="settings-description" style="margin: 0 0 0.75rem 0; color: var(--text-muted); font-size: 0.85rem;">Resolution of the QLab show file currently running. Server scales genre-picker font sizes to match.</p>
+          <div class="resolution-row" style="display: flex; gap: 8px; align-items: center;">
+            <select id="qlabResolution" class="settings-input" style="flex: 1; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; background: rgba(0,0,0,0.3); color: #fff; font-family: 'Outfit', sans-serif; font-size: 0.9rem;">
+              <option value="2560x1280">2560 × 1280</option>
+              <option value="3840x2160">3840 × 2160 (4K)</option>
+              <option value="5520x1080">5520 × 1080</option>
+            </select>
+            <button class="btn btn-primary" id="saveResolutionBtn" style="white-space: nowrap; padding: 0.75rem 1.25rem;">Save Resolution</button>
+          </div>
+          <div id="resolutionStatus" class="settings-status" style="margin-top: 6px; font-size: 0.85rem;"></div>
         </div>
       </details>
     </div>
