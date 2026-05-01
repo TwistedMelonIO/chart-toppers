@@ -1661,10 +1661,21 @@ const GENRE_FONT_DEFAULTS = {
   '2560x1280': 100,
 };
 
-// Char count below which no shrink applies; above it, fontSize scales
-// linearly as threshold/len. Per-resolution because each QLab project's
-// text bounding box differs.
+// Char count below which no shrink applies. Above it, fontSize scales
+// linearly as rateBasis/len (see GENRE_SHRINK_RATE_BASIS_DEFAULTS).
+// Per-resolution because each QLab project's text bounding box differs.
 const GENRE_SHRINK_THRESHOLD_DEFAULTS = {
+  '3840x2160': 18,
+  '5520x1080': 17,
+  '2560x1280': 13,
+};
+
+// Numerator used in the shrink formula (base * rateBasis / len) once the
+// no-shrink threshold is exceeded. Decoupled from the threshold so the
+// "no-shrink ceiling" can sit slightly above the "shrink-rate basis" — this
+// lets a tight 17-char label render at full size while a 22-char label
+// shrinks just as aggressively as before.
+const GENRE_SHRINK_RATE_BASIS_DEFAULTS = {
   '3840x2160': 18,
   '5520x1080': 13,
   '2560x1280': 13,
@@ -1681,6 +1692,7 @@ let packSettings = {
   qlabResolution: '2560x1280',
   genreFontSizes: { ...GENRE_FONT_DEFAULTS },
   genreShrinkThresholds: { ...GENRE_SHRINK_THRESHOLD_DEFAULTS },
+  genreShrinkRateBasis: { ...GENRE_SHRINK_RATE_BASIS_DEFAULTS },
   lastChanged: null
 };
 
@@ -2173,12 +2185,14 @@ const R3_PINNED_GENRES = ["1980's", "1990's", "2000's"];
 function computeGenreFontSize(name) {
   const sizes = packSettings.genreFontSizes || GENRE_FONT_DEFAULTS;
   const thresholds = packSettings.genreShrinkThresholds || GENRE_SHRINK_THRESHOLD_DEFAULTS;
+  const rateBases = packSettings.genreShrinkRateBasis || GENRE_SHRINK_RATE_BASIS_DEFAULTS;
   const res = packSettings.qlabResolution;
   const base = sizes[res] || sizes['2560x1280'] || 100;
   const threshold = thresholds[res] || thresholds['2560x1280'] || 13;
+  const rateBasis = rateBases[res] || rateBases['2560x1280'] || threshold;
   const len = (name || '').length;
   if (len <= threshold) return base;
-  return Math.round(base * threshold / len);
+  return Math.round(base * rateBasis / len);
 }
 
 // Update all G1-G9 genre text cue names in QLab + all Companion variables (called on pack change)
