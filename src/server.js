@@ -3846,6 +3846,30 @@ function handleOscAddress(address, args) {
     return;
   }
 
+  // R1 explicit iPad track set: /chart-toppers/r1t1 through /chart-toppers/r1t6.
+  // Operator fires this from inside the QLab track group so the iPad always
+  // reflects the actual track playing (no drift from auto-advance).
+  const r1tMatch = address.match(/^\/chart-toppers\/r1t([1-6])$/);
+  if (r1tMatch) {
+    const trackNum = parseInt(r1tMatch[1]);
+    if (roundState.currentRound !== 1) {
+      console.log(`[OSC] /r1t${trackNum} ignored — not in Round 1 (current: R${roundState.currentRound})`);
+      return;
+    }
+    if (stageHostAnswers.length === 0) {
+      console.log(`[OSC] /r1t${trackNum} ignored — no answers loaded yet`);
+      return;
+    }
+    if (trackNum > stageHostAnswers.length) {
+      console.log(`[OSC] /r1t${trackNum} ignored — only ${stageHostAnswers.length} answers loaded`);
+      return;
+    }
+    stageHostAnswerIndex = trackNum - 1;
+    io.emit('currentTrack', { trackNumber: trackNum, total: stageHostAnswers.length });
+    console.log(`[STAGE HOST] iPad set to track ${trackNum}/${stageHostAnswers.length} via /r1t${trackNum}`);
+    return;
+  }
+
   // Round 4 track play: /chart-toppers/r4/1 through /chart-toppers/r4/40
   const r4Match = address.match(/^\/chart-toppers\/r4\/(\d+)$/);
   if (r4Match) {
