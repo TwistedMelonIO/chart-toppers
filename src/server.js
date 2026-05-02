@@ -910,9 +910,12 @@ function registerCorrectAnswer(teamId, source = 'system') {
     }
   }
 
-  // R1/R3: navigate StreamDeck back to SDE1 after correct answer
-  if (currentRound === 1 || currentRound === 3) {
+  // R1: navigate StreamDeck back to SDE1 after correct answer
+  // R3: always return SD to page 12 after correct or incorrect (per operator)
+  if (currentRound === 1) {
     navigateStreamDeck(1);
+  } else if (currentRound === 3) {
+    navigateStreamDeck(12);
   }
 
   return gameState;
@@ -3793,9 +3796,12 @@ function handleOscAddress(address, args) {
       }
     }
 
-    // R1/R3: navigate StreamDeck back to SDE1 after incorrect
-    if (roundState.currentRound === 1 || roundState.currentRound === 3) {
+    // R1: navigate StreamDeck back to SDE1 after incorrect
+    // R3: always return SD to page 12 after correct or incorrect (per operator)
+    if (roundState.currentRound === 1) {
       navigateStreamDeck(1);
+    } else if (roundState.currentRound === 3) {
+      navigateStreamDeck(12);
     }
 
     // R2 + R4: defensive disarm — no buzzers during normal play in these rounds.
