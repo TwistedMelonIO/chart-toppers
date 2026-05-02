@@ -105,7 +105,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // shrink the font until both width and height constraints are satisfied.
     els.answerTrack.style.whiteSpace = 'nowrap';
     isShowingR3List = true;
-    requestAnimationFrame(() => requestAnimationFrame(() => fitAnswerTrack()));
+    // Cap R3 mashup list at 56px (operator wants 80s/2000s rendered smaller
+    // to match how 1990s already auto-shrinks).
+    requestAnimationFrame(() => requestAnimationFrame(() => fitAnswerTrack(56)));
   }
 
   // Find the largest font-size (in px) where the rendered list fits inside
