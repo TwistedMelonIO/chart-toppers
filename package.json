@@ -1,6 +1,6 @@
 {
   "name": "chart-toppers",
-  "version": "5.7.2",
+  "version": "5.8.0",
   "description": "QLab scoring system - OSC-driven game timer with Bitfocus Companion integration",
   "main": "src/server.js",
   "scripts": {

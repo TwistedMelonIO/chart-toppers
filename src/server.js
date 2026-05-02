@@ -514,10 +514,12 @@ function resetR4Tracks() {
       console.log(`[R4 SHUFFLE] ${slot}: ${track.band} - ${track.track}`);
     });
 
+    // Push the full answer set so the client has them cached, but do NOT
+    // emit currentTrack — R4 plays in arbitrary order, so the iPad stays
+    // blank until /chart-toppers/r4/{n} arrives and playR4Track emits
+    // currentTrack for that specific slot. (The client's answersUpdate
+    // handler clears the visible answer for non-R3 rounds.)
     io.emit('answersUpdate', { round: '4', genre: 'Final Round', answers: stageHostAnswers });
-    if (stageHostAnswers.length > 0) {
-      io.emit('currentTrack', { trackNumber: 1, total: stageHostAnswers.length });
-    }
     console.log(`[ROUND 4] Shuffled ${shuffled.length} tracks into R4T/R4TF slots`);
   }
 
@@ -1020,6 +1022,11 @@ function playR4Track(trackNum, source = 'system') {
 
   r4TracksPlayed[trackNum] = true;
   lastR4TrackPlayed = trackNum;
+
+  // Update iPad to show this single answer for the track now playing.
+  if (stageHostAnswers.length > 0 && stageHostAnswers[trackNum - 1]) {
+    io.emit('currentTrack', { trackNumber: trackNum, total: stageHostAnswers.length });
+  }
 
   // Fire QLab cue R4T{n}
   const cueName = `R4T${trackNum}`;

@@ -216,9 +216,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     loadedAnswers = data.answers;
     lastAnswersRound = String(data.round || '');
-    // Trust the payload's round so the list view fires even when the iPad
-    // hasn't entered R3 in the show yet (e.g. QA tool loads).
-    if (currentRound === 3 || lastAnswersRound === '3') {
+    // Trust the payload's round only — currentRound may lag because
+    // setRound emits answersUpdate (from resetR4Tracks) before roundUpdate.
+    if (lastAnswersRound === '3') {
       showR3List(loadedAnswers);
     } else {
       // Clear answer display — wait for currentTrack to show specific answer
