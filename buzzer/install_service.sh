@@ -14,6 +14,11 @@ set -euo pipefail
 #  that sticks forever (until we ship a new buzzer build).
 # ============================================================
 
+# Non-interactive shells (e.g. SSH commands, launchd) get a minimal
+# PATH that excludes Homebrew. Add the standard Homebrew locations so
+# `gh`, `python3` etc. are findable.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
 REPO="TwistedMelonIO/chart-toppers"
 APP_NAME="QLab Buzzer"
 APP_DST_DIR="$HOME/Applications"
