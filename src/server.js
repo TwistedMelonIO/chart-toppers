@@ -4286,20 +4286,14 @@ function handleOscAddress(address, args) {
     return;
   }
 
-  // Refresh tracks: reload the current genre with fresh tracks and stay on
-  // SDE1. Operator-controlled — fires every time regardless of game state.
-  // R2GO2 → AWO advancement is handled separately by /secondteamanswer.
+  // Refresh tracks: state-based, idempotent. Driven by r2PlayedTeams membership
+  // so repeated calls (operator double-press, QLab firing it twice, etc) don't
+  // prematurely advance R2GO2 to AWO.
+  //   - 0 teams played: ignore
+  //   - 1 team played: swap tracks for the opponent, force LEADERSD → opponent
+  //   - 2 teams played: both done → retarget R2GO2 → AWO
   if (address === '/chart-toppers/refreshtracks') {
-    if (!lastLoadedGenre.genreIndex) {
-      console.warn(`[OSC] refreshtracks — no genre loaded yet, ignoring`);
-      return;
-    }
-    const result = loadGenreTracks(lastLoadedGenre.genreIndex);
-    console.log(`[OSC] Refresh tracks: ${result.success ? result.genre + ' (fresh tracks)' : result.error}`);
-    if (result.success) {
-      navigateStreamDeck(1);
-      console.log(`[OSC] StreamDeck → SDE1 after refreshtracks`);
-    }
+    handleRefreshTracks('osc');
     return;
   }
 
