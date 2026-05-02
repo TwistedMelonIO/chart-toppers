@@ -223,27 +223,54 @@ if [ -d "$BUZZER_DIR" ] && [ -f "$BUZZER_DIR/qlab_buzzer.py" ] && [ -n "$PYTHON_
         echo "  Creating buzzer environment..."
         "$PYTHON_BIN" -m venv "$BUZZER_DIR/venv" 2>/dev/null
         "$BUZZER_DIR/venv/bin/pip" install --upgrade pip > /dev/null 2>&1
-        echo "  Installing dependencies..."
-        "$BUZZER_DIR/venv/bin/pip" install -r "$BUZZER_DIR/requirements.txt" 2>&1 | tail -3
-
-        if [ $? -eq 0 ]; then
-            echo "  ✓ Buzzer environment ready"
-            BUZZER_OK=true
-        else
-            echo "  ✗ Failed to install buzzer dependencies."
-        fi
-    else
-        echo "  ✓ Buzzer environment already exists"
-        BUZZER_OK=true
     fi
 
-    # Install launchd service
-    if [ "$BUZZER_OK" = true ] && [ -f "$BUZZER_DIR/com.twistedmelon.qlab-buzzer.plist" ]; then
+    # Always (re)install dependencies so an existing venv can't fall behind requirements.txt
+    echo "  Ensuring buzzer dependencies are up to date..."
+    "$BUZZER_DIR/venv/bin/pip" install -q -r "$BUZZER_DIR/requirements.txt"
+    if [ $? -eq 0 ]; then
+        echo "  ✓ Buzzer environment ready"
+        BUZZER_OK=true
+    else
+        echo "  ✗ Failed to install buzzer dependencies."
+    fi
+
+    # Install launchd service — generate plist with absolute paths so it works
+    # regardless of where the repo lives (iCloud, ~/chart-toppers, anywhere)
+    if [ "$BUZZER_OK" = true ]; then
         PLIST_DST="$HOME/Library/LaunchAgents/com.twistedmelon.qlab-buzzer.plist"
         launchctl unload "$PLIST_DST" 2>/dev/null
-        cp "$BUZZER_DIR/com.twistedmelon.qlab-buzzer.plist" "$PLIST_DST"
+        cat > "$PLIST_DST" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.twistedmelon.qlab-buzzer</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>${BUZZER_DIR}/venv/bin/python3</string>
+        <string>${BUZZER_DIR}/qlab_buzzer.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>${BUZZER_DIR}</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
+    <key>StandardOutPath</key>
+    <string>/tmp/qlab-buzzer.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/qlab-buzzer.log</string>
+    <key>ProcessType</key>
+    <string>Interactive</string>
+</dict>
+</plist>
+EOF
         launchctl load "$PLIST_DST"
-        echo "  ✓ Buzzer service installed (starts on login)"
+        echo "  ✓ Buzzer service installed (starts on login, auto-restarts if it dies)"
     fi
 
     # Accessibility permissions
