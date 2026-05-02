@@ -89,6 +89,39 @@ update_one() {
 
   log "$name: status"
   docker compose ps
+
+  # Chart Toppers also ships a host-side buzzer service (macOS LaunchAgent).
+  # Build its venv if missing, then (re)install so it picks up new code.
+  if [[ "$name" == "chart-toppers" && -d "$dir/buzzer" ]]; then
+    install_buzzer_service "$dir/buzzer"
+  fi
+}
+
+install_buzzer_service() {
+  local buzzer_dir="$1"
+
+  if [[ "$(uname)" != "Darwin" ]]; then
+    warn "buzzer: not macOS, skipping LaunchAgent install"
+    return
+  fi
+
+  if [[ ! -x "$buzzer_dir/venv/bin/python3" ]]; then
+    log "buzzer: building Python venv (first run)"
+    if ! command -v python3 >/dev/null 2>&1; then
+      err "buzzer: python3 not installed — install Xcode Command Line Tools"
+      return 1
+    fi
+    python3 -m venv "$buzzer_dir/venv"
+    "$buzzer_dir/venv/bin/pip" install --quiet -r "$buzzer_dir/requirements.txt"
+  fi
+
+  if [[ -x "$buzzer_dir/install_service.sh" ]]; then
+    log "buzzer: (re)installing LaunchAgent from $buzzer_dir"
+    "$buzzer_dir/install_service.sh"
+  else
+    err "buzzer: install_service.sh missing or not executable in $buzzer_dir"
+    return 1
+  fi
 }
 
 TARGET="${1:-all}"
