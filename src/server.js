@@ -896,13 +896,15 @@ function registerCorrectAnswer(teamId, source = 'system') {
     console.log(`[TIEBREAK] TB stopped — ${TEAMS[teamId].name} answered correctly`);
   }
 
-  // Stage host: advance to next answer
-  if (stageHostAnswers.length > 0) {
+  // Stage host: advance to next answer.
+  // R1: auto-advance is OFF — operator drives the iPad explicitly via
+  // /chart-toppers/r1t{n}. R2/R3/R4 still auto-advance here.
+  if (stageHostAnswers.length > 0 && currentRound !== 1) {
     stageHostAnswerIndex++;
     if (stageHostAnswerIndex < stageHostAnswers.length) {
       io.emit('currentTrack', { trackNumber: stageHostAnswerIndex + 1, total: stageHostAnswers.length });
-    } else if (currentRound >= 1 && currentRound <= 3) {
-      // R1-R3: all answers exhausted — clear the iPad until next genre load
+    } else if (currentRound >= 2 && currentRound <= 3) {
+      // R2-R3: all answers exhausted — clear the iPad until next genre load
       stageHostAnswers = [];
       stageHostAnswerIndex = 0;
       io.emit('clearAnswer');
@@ -3781,8 +3783,9 @@ function handleOscAddress(address, args) {
       }
     }
 
-    // R1-R3: advance stage host to next answer on pass/incorrect
-    if (roundState.currentRound >= 1 && roundState.currentRound <= 3 && stageHostAnswers.length > 0) {
+    // R2-R3: advance stage host to next answer on pass/incorrect.
+    // R1 is excluded — operator drives the iPad explicitly via /chart-toppers/r1t{n}.
+    if (roundState.currentRound >= 2 && roundState.currentRound <= 3 && stageHostAnswers.length > 0) {
       stageHostAnswerIndex++;
       if (stageHostAnswerIndex < stageHostAnswers.length) {
         io.emit('currentTrack', { trackNumber: stageHostAnswerIndex + 1, total: stageHostAnswers.length });
