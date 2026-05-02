@@ -1773,7 +1773,15 @@ function loadPackSettings() {
   } catch (error) {
     console.error('[PACK] Error loading pack settings:', error);
   }
+  // If still unset, fall back to QLAB_AUDIO_PATH (written by install_license.sh
+  // during per-machine setup). Lets a fresh install work without forcing the
+  // operator to re-type the path in Settings.
+  if (!packSettings.audioBasePath && process.env.QLAB_AUDIO_PATH) {
+    packSettings.audioBasePath = process.env.QLAB_AUDIO_PATH.trim();
+    console.log(`[PACK] Seeded audioBasePath from QLAB_AUDIO_PATH env: "${packSettings.audioBasePath}"`);
+  }
 }
+
 
 // Function to save pack settings
 function savePackSettings() {
