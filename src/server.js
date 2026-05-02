@@ -3795,6 +3795,7 @@ function handleOscAddress(address, args) {
     if (state) {
       io.emit("stateUpdate", state);
       io.emit("goldenRecordActivated", teamId);
+      sendBridgeOsc('/cue/GBUZZER/start', null, `→ Golden Record sting (${teamId})`);
     }
     return;
   }
