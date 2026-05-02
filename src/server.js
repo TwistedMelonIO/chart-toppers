@@ -627,17 +627,20 @@ function setRound(roundNum, source = 'system') {
     // Re-send load-to-time for both teams' countdown videos.
     // Covers panic recovery: if all cues were stopped, QLab loses the
     // loadActionAt position. The server still has the correct times.
-    // Zero-score teams get a 10s pity countdown so they still play in R4
-    // without sitting through a full 100s video. Server state is left
-    // untouched (dashboard still shows 0) — only QLab's load position
-    // is overridden.
+    // Zero-score teams get a 10s pity gift so they still play in R4
+    // (and the dashboard timer counts down properly instead of stalling
+    // at the 90s the load math would otherwise produce).
     const R4_ZERO_PITY = 10;
     for (const teamId of ['anthems', 'icons']) {
       const t = gameState[teamId];
-      const loadSeconds = t.earnedTime === 0 ? R4_ZERO_PITY : t.remainingTime;
-      sendQLabLoadCue(teamId, loadSeconds);
-      const tag = t.earnedTime === 0 ? `${R4_ZERO_PITY}s pity (zero score)` : `${t.remainingTime}s remaining`;
-      console.log(`[R4 FLOW] loadActionAt for ${TEAMS[teamId].name}: ${tag}`);
+      if (t.earnedTime === 0) {
+        t.earnedTime = R4_ZERO_PITY;
+        t.remainingTime = Math.max(0, t.maxTime - t.earnedTime);
+        logActivity('system', teamId, `R4 pity gift: +${R4_ZERO_PITY}s (zero-score entry)`, source);
+        console.log(`[R4 FLOW] ${TEAMS[teamId].name} pity gift +${R4_ZERO_PITY}s → ${t.earnedTime}s earned`);
+      }
+      sendQLabLoadCue(teamId, t.remainingTime);
+      console.log(`[R4 FLOW] loadActionAt for ${TEAMS[teamId].name}: ${t.remainingTime}s remaining`);
     }
     // R4TF notes are now set inside resetR4Tracks() to match the shuffled order
   }
