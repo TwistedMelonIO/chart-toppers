@@ -44,6 +44,42 @@ After install, everything starts automatically on login.
 cd ~/chart-toppers && git pull && ./start.sh
 ```
 
+## All-in-One Updater (Chart Toppers + WIIAM + Docforge)
+
+If the machine runs more than one Twisted Melon Docker app, this single command will:
+
+1. Pull the latest GitHub release of **Chart Toppers**, **Win It In A Minute**, and **Docforge**
+2. Rebuild each Docker stack (license, Machine ID, and settings are preserved)
+3. (Re)install the **buzzer LaunchAgent** so it points at the current Chart Toppers install and starts on every login
+
+**Prerequisites:** `git`, `docker` (Docker Desktop running), and access to the private TwistedMelonIO repos. On a fresh Mac, install the Xcode Command Line Tools first (`xcode-select --install`).
+
+**First time on a new machine:**
+
+```bash
+mkdir -p ~/TwistedMelon
+git clone https://github.com/TwistedMelonIO/chart-toppers.git ~/TwistedMelon/chart-toppers
+~/TwistedMelon/chart-toppers/scripts/update-dockers.sh
+```
+
+The first `git clone` will prompt for GitHub credentials — the same account is used to clone WIIAM and Docforge.
+
+**Every time after that:**
+
+```bash
+cd ~/TwistedMelon/chart-toppers && git pull && ./scripts/update-dockers.sh
+```
+
+**Update only one project:**
+
+```bash
+~/TwistedMelon/chart-toppers/scripts/update-dockers.sh chart       # only Chart Toppers
+~/TwistedMelon/chart-toppers/scripts/update-dockers.sh wim         # only Win It In A Minute
+~/TwistedMelon/chart-toppers/scripts/update-dockers.sh docforge    # only Docforge
+```
+
+After the chart-toppers update, watch `tail -f /tmp/qlab-buzzer.log` to confirm the buzzer service has reconnected.
+
 ## Full Clean Reinstall
 
 ```bash
