@@ -3945,11 +3945,17 @@ function handleOscAddress(address, args) {
       // Retarget R4SINGLESCORE based on first or second team
       const otherPlayed = r4PlayedTeams.has(otherTeam(teamId));
       if (otherPlayed) {
-        // Second team starting — disarm the R4TG{N} cue matching the last
-        // track the first team played, so QLab skips it on this team's pass.
-        if (lastR4TrackPlayed != null) {
-          sendBridgeOsc(`/cue/R4TG${lastR4TrackPlayed}/armed`, 0, `→ disarm R4TG${lastR4TrackPlayed} for second team`);
-          console.log(`[R4 FLOW] Disarmed R4TG${lastR4TrackPlayed} (last track from first team) before ${TEAMS[teamId].name} starts`);
+        // Second team starting — disarm the R4TG{N} cue for EVERY track the
+        // first team played, so QLab skips all of them on this team's pass
+        // (not just the most recent one).
+        const playedNums = Object.keys(r4TracksPlayed)
+          .filter((n) => r4TracksPlayed[n])
+          .map((n) => Number(n));
+        if (playedNums.length > 0) {
+          playedNums.forEach((n) => {
+            sendBridgeOsc(`/cue/R4TG${n}/armed`, 0, `→ disarm R4TG${n} for second team`);
+          });
+          console.log(`[R4 FLOW] Disarmed R4TG[${playedNums.join(', ')}] (all tracks from first team) before ${TEAMS[teamId].name} starts`);
           lastR4TrackPlayed = null;
         }
         // Second team — scoreboard goes to dual SCOREBOARD
