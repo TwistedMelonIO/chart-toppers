@@ -1881,6 +1881,17 @@ footer {
   box-shadow: 0 0 6px var(--danger-glow);
 }
 
+.buzzer-dot.warning {
+  background: #f5a623;
+  box-shadow: 0 0 6px rgba(245, 166, 35, 0.7);
+  animation: buzzer-warning-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes buzzer-warning-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(245, 166, 35, 0.7); }
+  50%      { box-shadow: 0 0 14px rgba(245, 166, 35, 1); }
+}
+
 .footer-status {
   display: flex;
   align-items: center;

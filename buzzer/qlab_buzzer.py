@@ -119,6 +119,13 @@ def send_to_qlab(bundle_id, action, cue=None):
         return False
 
 
+_keys_seen_total = 0
+
+
+def get_keys_seen():
+    return _keys_seen_total
+
+
 def make_handler(config, bundle_id, osc_client=None):
     mappings = config.get("key_mappings", {})
     debounce_sec = config.get("debounce_ms", 150) / 1000.0
@@ -156,6 +163,11 @@ def make_handler(config, bundle_id, osc_client=None):
             return
         last_trigger[char] = now
 
+        # Count every accepted mapped keypress so the dashboard can detect
+        # silent permission failures (heartbeat alive but no keys seen).
+        global _keys_seen_total
+        _keys_seen_total += 1
+
         action = mapping["action"]
         cue = mapping.get("cue")
 
@@ -186,8 +198,9 @@ def start_heartbeat(config):
     def heartbeat_loop():
         while True:
             try:
+                payload = json.dumps({"keys_seen": get_keys_seen()}).encode("utf-8")
                 req = urllib.request.Request(heartbeat_url, method="POST",
-                    data=b'{}', headers={"Content-Type": "application/json"})
+                    data=payload, headers={"Content-Type": "application/json"})
                 urllib.request.urlopen(req, timeout=3)
             except (urllib.error.URLError, OSError):
                 pass  # Server not available yet — keep trying

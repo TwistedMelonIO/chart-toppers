@@ -73,7 +73,15 @@ cp "$PLIST_SRC" "$PLIST_DST"
 launchctl load "$PLIST_DST"
 sleep 2
 
-# 6. Resolve the Python.app path that needs permissions
+# 6. Reset stale Python TCC entries.
+# macOS toggling a permission OFF leaves a "denied" record that silently
+# overrides any new "allowed" one — caused us a long debug. Wiping clean
+# before the user grants permissions prevents that trap.
+log "Resetting any existing Python permissions..."
+tccutil reset ListenEvent  org.python.python >/dev/null 2>&1 || true
+tccutil reset Accessibility org.python.python >/dev/null 2>&1 || true
+
+# 7. Resolve the Python.app path that needs permissions
 PY_FRAMEWORK_APP="$(dirname "$(dirname "$(readlink -f "$REPO_DIR/buzzer/venv/bin/python3")")")/Resources/Python.app"
 if [ ! -d "$PY_FRAMEWORK_APP" ]; then
   warn "Could not auto-detect Python.app path. Look under $(brew --prefix python@3.12)/Frameworks/Python.framework/Versions/3.12/Resources/Python.app"
@@ -83,7 +91,7 @@ else
   log "Path copied to clipboard."
 fi
 
-# 7. Open System Settings to Input Monitoring
+# 8. Open System Settings to Input Monitoring
 log "Opening Privacy → Input Monitoring..."
 open "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent" || true
 

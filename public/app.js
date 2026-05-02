@@ -271,16 +271,24 @@ document.addEventListener('DOMContentLoaded', function() {
   const buzzerDot = document.querySelector('.buzzer-dot');
   const buzzerText = document.getElementById('buzzerStatusText');
 
-  function updateBuzzerUI(connected) {
+  function updateBuzzerUI(data) {
+    const connected = !!(data && data.connected);
+    const inputBlocked = !!(data && data.inputBlocked);
+    const keysSeen = data && Number.isFinite(data.keysSeen) ? data.keysSeen : 0;
     if (buzzerDot && buzzerText) {
-      buzzerDot.classList.toggle('connected', connected);
+      buzzerDot.classList.toggle('connected', connected && !inputBlocked);
       buzzerDot.classList.toggle('disconnected', !connected);
-      buzzerText.textContent = connected ? 'Connected' : 'Disconnected';
+      buzzerDot.classList.toggle('warning', connected && inputBlocked);
+      let label;
+      if (!connected) label = 'Disconnected';
+      else if (inputBlocked) label = 'No input — check Mac permissions';
+      else label = `Connected • ${keysSeen} keys`;
+      buzzerText.textContent = label;
     }
   }
 
   socket.on("buzzerStatus", (data) => {
-    updateBuzzerUI(data.connected);
+    updateBuzzerUI(data);
   });
 
   // Highlight undo button when a team buzzes in
@@ -295,8 +303,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Check buzzer status on initial load
   fetch('/api/buzzer/status')
     .then(r => r.json())
-    .then(data => updateBuzzerUI(data.connected))
-    .catch(() => updateBuzzerUI(false));
+    .then(data => updateBuzzerUI(data))
+    .catch(() => updateBuzzerUI({ connected: false }));
 
   socket.on("goldenRecordActivated", (teamId) => {
     const grEl = elements[teamId]?.goldenRecord;

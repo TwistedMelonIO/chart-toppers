@@ -1084,21 +1084,50 @@ app.use(express.static(path.join(__dirname, "../public")));
 // Buzzer Heartbeat
 // =============================================================================
 let lastBuzzerHeartbeat = 0;
+let lastBuzzerKeysSeen = 0;
+let buzzerKeysSeenChangedAt = 0;
+let buzzerConnectedAt = 0;
 const BUZZER_TIMEOUT_MS = 10000; // Consider disconnected after 10s
+// If the daemon has been connected for this long but keys_seen is still 0,
+// the dashboard surfaces a "not receiving input" warning. Catches the silent
+// macOS permission-revocation failure mode.
+const BUZZER_INPUT_GRACE_MS = 30000;
+
+function buzzerStatusPayload() {
+  const now = Date.now();
+  const connected = (now - lastBuzzerHeartbeat) < BUZZER_TIMEOUT_MS;
+  const aliveMs = connected && buzzerConnectedAt ? now - buzzerConnectedAt : 0;
+  const receiving = lastBuzzerKeysSeen > 0;
+  const inputBlocked = connected && !receiving && aliveMs > BUZZER_INPUT_GRACE_MS;
+  return { connected, keysSeen: lastBuzzerKeysSeen, inputBlocked };
+}
 
 app.post("/api/buzzer/heartbeat", (req, res) => {
-  const wasConnected = (Date.now() - lastBuzzerHeartbeat) < BUZZER_TIMEOUT_MS;
-  lastBuzzerHeartbeat = Date.now();
+  const now = Date.now();
+  const wasConnected = (now - lastBuzzerHeartbeat) < BUZZER_TIMEOUT_MS;
+  lastBuzzerHeartbeat = now;
+  const incomingKeys = Number(req.body?.keys_seen);
+  if (Number.isFinite(incomingKeys)) {
+    if (incomingKeys !== lastBuzzerKeysSeen) {
+      lastBuzzerKeysSeen = incomingKeys;
+      buzzerKeysSeenChangedAt = now;
+    }
+  }
   if (!wasConnected) {
+    buzzerConnectedAt = now;
+    // Reset the keypress counter when the daemon reconnects so we re-evaluate
+    // the input-blocked grace window from scratch.
+    lastBuzzerKeysSeen = Number.isFinite(incomingKeys) ? incomingKeys : 0;
     console.log("[BUZZER] Connected");
-    io.emit("buzzerStatus", { connected: true });
+    io.emit("buzzerStatus", buzzerStatusPayload());
+  } else {
+    io.emit("buzzerStatus", buzzerStatusPayload());
   }
   res.json({ ok: true });
 });
 
 app.get("/api/buzzer/status", (req, res) => {
-  const connected = (Date.now() - lastBuzzerHeartbeat) < BUZZER_TIMEOUT_MS;
-  res.json({ connected });
+  res.json(buzzerStatusPayload());
 });
 
 // Map buzzer cue names to team IDs
