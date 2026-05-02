@@ -20,13 +20,22 @@ from pythonosc import udp_client
 SCRIPT_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 
 # When frozen and launched via Launch Services (--windowed .app),
-# stdout/stderr are detached. Redirect them to a file so we still get
-# logs when the LaunchAgent uses `open -a` to start the .app.
+# stdout/stderr are detached at the file-descriptor level. Reassigning
+# sys.stdout isn't enough — we need to dup2 over fds 1 and 2 so that
+# C-level writes (and Python's print) reach the file.
 if getattr(sys, "frozen", False):
+    import os
     try:
-        _log = open("/tmp/qlab-buzzer.log", "a", buffering=1)
-        sys.stdout = _log
-        sys.stderr = _log
+        _log_fd = os.open(
+            "/tmp/qlab-buzzer.log",
+            os.O_WRONLY | os.O_CREAT | os.O_APPEND,
+            0o644,
+        )
+        os.dup2(_log_fd, 1)
+        os.dup2(_log_fd, 2)
+        os.close(_log_fd)
+        sys.stdout = os.fdopen(1, "a", buffering=1)
+        sys.stderr = os.fdopen(2, "a", buffering=1)
     except OSError:
         pass
 
