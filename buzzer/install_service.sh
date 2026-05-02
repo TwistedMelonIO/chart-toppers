@@ -45,9 +45,13 @@ EXEC_PATH="$APP_DST/Contents/MacOS/$APP_NAME"
 # Unload any existing LaunchAgent.
 launchctl unload "$PLIST_DST" 2>/dev/null || true
 
-# Generate LaunchAgent that runs the .app's binary directly.
-# Running the bundled binary (not `open`) keeps the process under
-# launchd so KeepAlive works.
+# Generate LaunchAgent that launches the .app via Launch Services
+# (`open -W -a`). This is required so macOS associates the running
+# process with the .app's bundle identity and the Accessibility grant
+# is honoured. Direct binary execution skips Launch Services and the
+# permission isn't picked up.
+# `open -W` blocks until the .app exits, keeping the process under
+# launchd so KeepAlive can respawn it on crash.
 mkdir -p "$HOME/Library/LaunchAgents"
 cat > "$PLIST_DST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -59,16 +63,15 @@ cat > "$PLIST_DST" <<PLIST
     <string>com.twistedmelon.qlab-buzzer</string>
     <key>ProgramArguments</key>
     <array>
-        <string>$EXEC_PATH</string>
+        <string>/usr/bin/open</string>
+        <string>-W</string>
+        <string>-a</string>
+        <string>$APP_DST</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
     <true/>
-    <key>StandardOutPath</key>
-    <string>/tmp/qlab-buzzer.log</string>
-    <key>StandardErrorPath</key>
-    <string>/tmp/qlab-buzzer.log</string>
     <key>ProcessType</key>
     <string>Interactive</string>
 </dict>

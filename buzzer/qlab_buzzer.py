@@ -19,6 +19,17 @@ from pythonosc import udp_client
 # script's own directory.
 SCRIPT_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 
+# When frozen and launched via Launch Services (--windowed .app),
+# stdout/stderr are detached. Redirect them to a file so we still get
+# logs when the LaunchAgent uses `open -a` to start the .app.
+if getattr(sys, "frozen", False):
+    try:
+        _log = open("/tmp/qlab-buzzer.log", "a", buffering=1)
+        sys.stdout = _log
+        sys.stderr = _log
+    except OSError:
+        pass
+
 APPLESCRIPT_TEMPLATES = {
     "start": 'tell application id "{bundle_id}" to tell front workspace to start cue "{cue}"',
     "go": 'tell application id "{bundle_id}" to tell front workspace to go',
