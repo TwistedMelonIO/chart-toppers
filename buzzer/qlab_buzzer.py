@@ -14,7 +14,10 @@ from pathlib import Path
 from pynput import keyboard
 from pythonosc import udp_client
 
-SCRIPT_DIR = Path(__file__).parent
+# When frozen by PyInstaller, sys._MEIPASS points at the bundled
+# resources dir (where --add-data ends up). Otherwise, fall back to the
+# script's own directory.
+SCRIPT_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 
 APPLESCRIPT_TEMPLATES = {
     "start": 'tell application id "{bundle_id}" to tell front workspace to start cue "{cue}"',

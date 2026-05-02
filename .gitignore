@@ -44,6 +44,9 @@ coverage/
 buzzer/venv/
 buzzer/.pid
 buzzer/buzzer.log
+buzzer/build/
+buzzer/dist/
+buzzer/QLab Buzzer.spec
 
 # Generated reports / PDFs (regenerated locally, not committed)
 reports/*.pdf
