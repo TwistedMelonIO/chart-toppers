@@ -28,6 +28,10 @@ function oscFloat(val) {
 }
 
 function buildOscMessage(address, value) {
+  // No-arg form: caller passed null/undefined (e.g. /cue/X/start)
+  if (value === null || value === undefined) {
+    return Buffer.concat([oscString(address), oscString(",")]);
+  }
   // Multi-arg form: array of numbers / strings (e.g. RGBA color = 4 floats)
   if (Array.isArray(value)) {
     let typeTags = ",";
