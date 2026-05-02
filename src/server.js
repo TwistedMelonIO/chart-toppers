@@ -246,12 +246,6 @@ let r1PlayedTeams = 0; // 0 = none, 1 = first team done, 2 = both done
 // Tracks which teams have played in Round 2 (cleared when entering R2 or on reset)
 let r2PlayedTeams = new Set();
 
-// One-shot flag: true between an R2 incorrect answer and the next /refreshtracks
-// (or the next R2 enter / reset / correct answer). When set, refreshtracks still
-// runs the turn-advance logic but suppresses the StreamDeck nav + dashboard glow
-// swap so the operator can stay on the current page after a wrong answer.
-let r2SuppressNextRefreshNav = false;
-
 // Last loaded genre — used by refreshgenre to reload the same genre with fresh tracks
 let lastLoadedGenre = { round: null, genreIndex: null };
 
@@ -594,7 +588,6 @@ function setRound(roundNum, source = 'system') {
   // Buzzers stay disarmed throughout R2 — no buzzer round.
   if (roundNum === 2 && prev !== 2) {
     r2PlayedTeams.clear();
-    r2SuppressNextRefreshNav = false;
     r2RefreshCount = 0;
     retargetR2GO2('round-enter');
     retargetR2CoinFlip('round-enter');
@@ -687,7 +680,6 @@ function resetRounds(source = 'system') {
   r4PlayedTeams.clear();
   r1PlayedTeams = 0;
   r2PlayedTeams.clear();
-  r2SuppressNextRefreshNav = false;
   r2RefreshCount = 0;
   r3ActiveTrack = 0;
   r3WrongCount = 0;
@@ -885,8 +877,6 @@ function registerCorrectAnswer(teamId, source = 'system') {
       r2PlayedTeams.add(teamId);
       console.log(`[R2 FLOW] ${TEAMS[teamId].name} marked as played (via correct answer) — r2PlayedTeams size: ${r2PlayedTeams.size}`);
     }
-    // Correct answer cancels any pending "skip nav" from a prior incorrect.
-    r2SuppressNextRefreshNav = false;
   }
 
   // Tiebreaker: stop TB cue on correct answer
@@ -2022,28 +2012,20 @@ function handleRefreshTracks(source) {
     io.emit('turnUpdate', turnState);
     setCompanionVariable('current_team', TEAMS[nextTeam].name);
 
-    // Nav SD + force LEADERSD to opponent — UNLESS the previous answer was an
-    // R2 incorrect, in which case the operator wants to stay on the current
-    // page (turn state still advances above so the round still progresses).
-    const suppressNav = r2SuppressNextRefreshNav;
-    r2SuppressNextRefreshNav = false;
-    if (suppressNav) {
-      console.log(`[REFRESH TRACKS] R2 incorrect — turn advanced to ${TEAMS[nextTeam].name} but StreamDeck/glow nav suppressed`);
-    } else {
-      navigateStreamDeck(TEAM_PAGES[nextTeam]);
-      const nextSdeCue = sdeCueFor(nextTeam);
-      updateQLabCueTarget(CONFIG.QLAB_CUE_LEADER_SD, nextSdeCue);
-      console.log(`[LEADER SD] Refresh tracks — forced LEADERSD → ${nextSdeCue} (${TEAMS[nextTeam].name}, opponent of ${TEAMS[playedTeam].name})`);
+    // Nav SD + force LEADERSD to opponent
+    navigateStreamDeck(TEAM_PAGES[nextTeam]);
+    const nextSdeCue = sdeCueFor(nextTeam);
+    updateQLabCueTarget(CONFIG.QLAB_CUE_LEADER_SD, nextSdeCue);
+    console.log(`[LEADER SD] Refresh tracks — forced LEADERSD → ${nextSdeCue} (${TEAMS[nextTeam].name}, opponent of ${TEAMS[playedTeam].name})`);
 
-      // Dashboard glow swap
-      io.emit("teamStopPlaying", playedTeam);
-      io.emit("triggerStop", playedTeam);
-      io.emit("teamPlaying", nextTeam);
-      io.emit("triggerPlaying", nextTeam);
-      console.log(`[REFRESH TRACKS] StreamDeck → ${TEAMS[nextTeam].name} page, dashboard switched (was ${playedTeam})`);
-    }
+    // Dashboard glow swap
+    io.emit("teamStopPlaying", playedTeam);
+    io.emit("triggerStop", playedTeam);
+    io.emit("teamPlaying", nextTeam);
+    io.emit("triggerPlaying", nextTeam);
+    console.log(`[REFRESH TRACKS] StreamDeck → ${TEAMS[nextTeam].name} page, dashboard switched (was ${playedTeam})`);
 
-    return { success: true, phase: 'swap', nextTeam, suppressedNav: suppressNav, ...result };
+    return { success: true, phase: 'swap', nextTeam, ...result };
   }
 
   // Both teams played → R2GO2 → AWO
@@ -3812,16 +3794,14 @@ function handleOscAddress(address, args) {
     if (roundState.currentRound === 2) {
       sendBridgeOsc('/cue/IBUZZ/armed', 0, '→ disarm IBUZZ after R2 incorrect (defensive)');
       sendBridgeOsc('/cue/ABUZZ/armed', 0, '→ disarm ABUZZ after R2 incorrect (defensive)');
-      // R2 incorrect: mark the answering team as played so the round still
-      // advances on the next /refreshtracks, but flag the next refresh to
-      // skip the StreamDeck nav + dashboard glow swap (operator wants to
-      // stay on the current page after a wrong answer).
+      // R2 incorrect: mark the answering team as played so the next
+      // /refreshtracks finds them in r2PlayedTeams and runs the team-swap
+      // (tracks reload + StreamDeck flips to opponent + dashboard glow swap).
       const answeringTeam = turnState.currentTeam;
       if (answeringTeam && !r2PlayedTeams.has(answeringTeam)) {
         r2PlayedTeams.add(answeringTeam);
         console.log(`[R2 FLOW] ${TEAMS[answeringTeam].name} marked as played (via incorrect answer) — r2PlayedTeams size: ${r2PlayedTeams.size}`);
       }
-      r2SuppressNextRefreshNav = true;
     } else if (roundState.currentRound === 4 && !tiebreakActive) {
       sendBridgeOsc('/cue/IBUZZ/armed', 0, '→ disarm IBUZZ after R4 incorrect (defensive)');
       sendBridgeOsc('/cue/ABUZZ/armed', 0, '→ disarm ABUZZ after R4 incorrect (defensive)');
