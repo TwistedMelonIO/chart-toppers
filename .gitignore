@@ -45,6 +45,15 @@ buzzer/venv/
 buzzer/.pid
 buzzer/buzzer.log
 
+# Generated reports / PDFs (regenerated locally, not committed)
+reports/*.pdf
+test-report-demo.pdf
+Chart_Toppers_*.pdf
+
+# Pack data backups (created in-place during pack edits)
+data/packs/_backup_*
+data/packs/_pre_*
+
 # OS generated files
 .DS_Store
 .DS_Store?
