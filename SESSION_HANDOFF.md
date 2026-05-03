@@ -1,7 +1,61 @@
 # Chart Toppers — Session Handoff
 
-> Last updated: 2026-04-03 | Version: v3.4.0
+> Last updated: **2026-05-03** | Version: **v8.0.0** (production-locked)
 > Update this file at the end of every significant session.
+
+---
+
+## CODEWORD: `chart-rollout-216` — 2026-05-03 evening session
+
+If a new Claude session starts with **"resume chart-rollout-216"**, this is the context to load. Read this whole file (especially the section directly below) and the user's memory files for `feedback_macos_network_service_order_qlab_sigpipe`, `feedback_qlab_bundle_drops_untargeted_audio`, `feedback_never_change_show_flow`, `reference_show_machines`, and `project_chart_toppers`.
+
+### Session state at handoff
+
+**Where we are:**
+- Chart Toppers v8.0.0 deployed and verified on Mac Studio + machine 216 (`dpt@192.168.1.216`).
+- Full show run-through on 216 passed. Operator (Chris) signed off the gameplay.
+- Now working through 9 more show machines, 216 was the first.
+
+**Open issues / known quirks on 216:**
+- macOS `Restart…` triggers a network permissions bug → QLab SIGPIPEs on workspace open. Cold boot doesn't trigger it. Workaround: toggle WiFi off→on (or on→off, either direction) from menu bar after restart, then open QLab. Memory: `feedback_macos_network_service_order_qlab_sigpipe`.
+- Audio folder lives at `/Users/dpt/Desktop/Chart Toppers 2560x1280/audio/` (641 files). `.env` `QLAB_AUDIO_PATH` was wrong (pointed at `/Users/dpt/Desktop/audio` — empty stub Docker kept recreating). Now fixed and the stub is removed.
+
+**Recent v7.3.x → v8.0.0 changes shipped this session:**
+- v7.3.0 — buzzer permission canary on dashboard (amber dot if no input)
+- v7.3.1 — auto-seed `audioBasePath` from `QLAB_AUDIO_PATH` env
+- v7.3.2 — OSC bridge handles no-arg messages (fixed silent GBUZZER failure)
+- v7.3.3 — R2 incorrect "stay on page" suppress (later refined)
+- v7.3.5 — revert of v7.3.4 misread
+- v7.3.6 — R3 always returns SD to page 12 on correct/incorrect
+- v7.3.7 — R4 disarms ALL first-team tracks for second team
+- v7.3.8 — R1 explicit iPad track OSC `/chart-toppers/r1t1..r1t6`
+- v7.3.9 — R1 auto-advance disabled (iPad only moves on explicit OSC)
+- v7.3.10 — `/refreshtracks` always navigates SD on team swap
+- v7.3.11 — R3 mashup iPad list capped at 56px
+- v8.0.0 — production lock
+
+**Open work to pick up next:**
+1. **WIIAM on 216** — operator wanted to check Win It In A Minute on this machine but pivoted to fix QLab SIGPIPE. Not yet checked. Repo: `TwistedMelonIO/win-it-in-a-minute` (likely).
+2. **Roll out to next 8 machines.** Per-machine work: copy QLab workspace, copy full audio folder (≥549 files for UK/USA/German pack), install fonts, import updated Companion config, run `install_license.sh`, run `scripts/setup-buzzer-host.sh`, verify R4 group cues numbered `R4TG1`-`R4TG35`, set network service order with WiFi at top, disable unused services. Draft checklist (not yet committed) is in this conversation — Chris approved it, ready to commit as `DEPLOY_CHECKLIST.md`.
+3. **Don't forget:** every machine needs `dpt` user, audio folder copied separately (QLab bundle export drops untargeted files — memory).
+
+**Hard rules learned this session (saved to memory):**
+- Show machines all use the `dpt` user account.
+- macOS TCC denied entries silently override allowed ones — never tell Chris to toggle off, always Remove or `tccutil reset`.
+- QLab "Save as Bundle" drops untargeted audio — full audio folder must be copied by hand on every new machine.
+- Never change show-flow logic without restating + getting explicit yes. v7.3.4 was a misread that broke R2 and had to be reverted.
+- macOS network service order / restart bug — toggle WiFi after restart if QLab SIGPIPEs.
+- Keep replies simple, lead with next action.
+
+**Machine cheat sheet:**
+- This laptop: Chris's main dev machine, M-series Mac, runs the chart-toppers Docker locally.
+- 216: `dpt@192.168.1.216`, Mac Studio, runs the full show stack (chart-toppers Docker, QLab, Companion, buzzer LaunchAgent, StreamDeck).
+- SSH from laptop → 216: `ssh dpt@192.168.1.216` (key already authorised).
+- Docker on 216 needs `PATH=/Applications/Docker.app/Contents/Resources/bin:$PATH` prefix when invoked over SSH.
+
+---
+
+
 
 ---
 
