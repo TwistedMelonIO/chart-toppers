@@ -3728,6 +3728,9 @@ function handleOscAddress(address, args) {
       r3LastBuzzTeam = buzzTeam;
       sendBridgeOsc(`/cue/R3T${r3ActiveTrack}/pause`, 0, `→ pause R3T${r3ActiveTrack} on buzz`);
       console.log(`[R3] Paused R3T${r3ActiveTrack} on buzz`);
+    } else if (tiebreakActive) {
+      sendBridgeOsc('/cue/TB/pause', 0, '→ pause TB on tiebreaker buzz');
+      console.log(`[TIEBREAK] TB paused on buzz`);
     }
     return;
   }
@@ -3736,6 +3739,10 @@ function handleOscAddress(address, args) {
   if (address === '/chart-toppers/incorrect') {
     console.log(`[OSC] Incorrect answer`);
     logActivity('incorrect', 'all', 'Incorrect answer via OSC', 'osc');
+    if (tiebreakActive) {
+      sendBridgeOsc('/cue/TB/start', 0, '→ resume TB after tiebreaker incorrect');
+      console.log(`[TIEBREAK] TB resumed after incorrect`);
+    }
     if (roundState.currentRound === 3) {
       r3WrongCount++;
       if (r3WrongCount < 2 && r3ActiveTrack > 0) {
