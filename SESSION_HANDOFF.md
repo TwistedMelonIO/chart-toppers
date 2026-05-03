@@ -7,7 +7,7 @@
 
 ## CODEWORD: `chart-rollout-216` — 2026-05-03 evening session
 
-If a new Claude session starts with **"resume chart-rollout-216"**, this is the context to load. Read this whole file (especially the section directly below) and the user's memory files for `feedback_macos_network_service_order_qlab_sigpipe`, `feedback_qlab_bundle_drops_untargeted_audio`, `feedback_never_change_show_flow`, `reference_show_machines`, and `project_chart_toppers`.
+If a new Claude session starts with **"resume chart-rollout-216"**, load this whole file as your context. The "Hard rules" + "Open issues" sections below replace the memory files from the previous machine — read them as if they were memory.
 
 ### Session state at handoff
 
@@ -39,13 +39,23 @@ If a new Claude session starts with **"resume chart-rollout-216"**, this is the 
 2. **Roll out to next 8 machines.** Per-machine work: copy QLab workspace, copy full audio folder (≥549 files for UK/USA/German pack), install fonts, import updated Companion config, run `install_license.sh`, run `scripts/setup-buzzer-host.sh`, verify R4 group cues numbered `R4TG1`-`R4TG35`, set network service order with WiFi at top, disable unused services. Draft checklist (not yet committed) is in this conversation — Chris approved it, ready to commit as `DEPLOY_CHECKLIST.md`.
 3. **Don't forget:** every machine needs `dpt` user, audio folder copied separately (QLab bundle export drops untargeted files — memory).
 
-**Hard rules learned this session (saved to memory):**
-- Show machines all use the `dpt` user account.
-- macOS TCC denied entries silently override allowed ones — never tell Chris to toggle off, always Remove or `tccutil reset`.
-- QLab "Save as Bundle" drops untargeted audio — full audio folder must be copied by hand on every new machine.
-- Never change show-flow logic without restating + getting explicit yes. v7.3.4 was a misread that broke R2 and had to be reverted.
-- macOS network service order / restart bug — toggle WiFi after restart if QLab SIGPIPEs.
-- Keep replies simple, lead with next action.
+**Hard rules learned (treat as binding — these were earned the hard way):**
+
+1. **Show machines all use the `dpt` user account.** SSH as `dpt@<ip>`. Per-machine paths under `/Users/dpt/`, never `chrisdevlin`. Audio at `/Users/dpt/Desktop/Chart Toppers <res>/audio/`.
+
+2. **macOS TCC denied entries silently override allowed ones.** Never tell Chris to "toggle off" a stray Privacy & Security entry — denied entries with `auth_value=0` block sibling allowed entries (`auth_value=2`) for the same binary. Always **Remove (`-` button)** or `tccutil reset ListenEvent <bundle-id>` + `tccutil reset Accessibility <bundle-id>`. Diagnose with `sqlite3 /Library/Application\ Support/com.apple.TCC/TCC.db "SELECT service, client, auth_value FROM access WHERE client LIKE '%python%'"`.
+
+3. **QLab "Save as Bundle" silently drops untargeted audio.** Genre-picker shows (Chart Toppers, Code Breakers, future) retarget audio cues at runtime — bundle export only keeps files that are the live target. Always copy the FULL `audio/` folder by hand on every new-machine deploy. Verify count matches pack JSON's expected file count.
+
+4. **Never change show-flow logic without restating + getting explicit yes.** Game-flow handlers in `src/server.js` (handleRefreshTracks, /chart-toppers/incorrect, /chart-toppers/correct, /chart-toppers/refreshtracks, /chart-toppers/secondteamanswer, navigateStreamDeck calls, retarget* helpers, R2/R3/R4 flow blocks) are load-bearing for live shows. Restate the intended change in plain English, wait for explicit yes, make the smallest possible edit, never simplify. v7.3.4 was a misread that broke R2 and had to be reverted as v7.3.5.
+
+5. **macOS `Restart…` triggers a network permissions bug → QLab SIGPIPEs on workspace open.** Cold boot doesn't trigger it. Workaround: toggle WiFi off→on (or on→off, either direction) from menu bar after restart, then open QLab. Once workspace is loaded, WiFi can stay on. Don't quit QLab during the show. Symptom in logs: `RBSProcessExitStatus| domain:signal(2) code:SIGPIPE(13)` immediately after a TLS handshake.
+
+6. **Keep replies simple.** Short, plain-language, lead with the next action, skip background unless asked. Chris is operating heavy tooling under deadline pressure — every extra paragraph costs him time.
+
+7. **License + machine_id always persist via Docker volume + host backup.** `chart-toppers-data` named volume + `~/.twisted-melon/chart-toppers/` host folder. Never wipe with `down -v` without explicit user instruction.
+
+8. **Every push to GitHub gets a semver tag + GitHub Release.** No exceptions. Bump version in `package.json`, `public/index.html`, `public/settings.html`. Commit message format: `vX.Y.Z: <short description>`. Tag with `git tag -a vX.Y.Z`. Release with `gh release create`. Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>.
 
 **Machine cheat sheet:**
 - This laptop: Chris's main dev machine, M-series Mac, runs the chart-toppers Docker locally.
