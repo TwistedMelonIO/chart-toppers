@@ -4250,6 +4250,14 @@ function handleOscAddress(address, args) {
         sendBridgeOsc('/cue/IBUZZ/armed', 1, '→ arm IBUZZ for tiebreaker');
         sendBridgeOsc('/cue/ABUZZ/armed', 1, '→ arm ABUZZ for tiebreaker');
         logActivity('tiebreak', 'all', `Tiebreaker triggered (R4 pts ${ranking.aScore} each)`, 'osc');
+        // Tiebreaker track is fixed for this gameshow: Guns N' Roses - Sweet Child O' Mine.
+        // Append to the existing Final Round answer list and advance the iPad to it,
+        // so the stage host sees the answer the same way as any R4 track.
+        stageHostAnswers.push({ number: stageHostAnswers.length + 1, track: "Sweet Child O' Mine", artist: "Guns N' Roses" });
+        stageHostAnswerIndex = stageHostAnswers.length - 1;
+        io.emit('answersUpdate', { round: '4', genre: 'Final Round', answers: stageHostAnswers });
+        io.emit('currentTrack', { trackNumber: stageHostAnswerIndex + 1, total: stageHostAnswers.length });
+        console.log(`[TIEBREAK] iPad updated with tiebreaker answer (slot ${stageHostAnswerIndex + 1}/${stageHostAnswers.length})`);
       } else {
         console.log(`[DUALSCREEN] R4 not tied (R4 pts: a=${ranking.aScore} i=${ranking.iScore}) — firing DUALGO → R5 (winner reveal)`);
       }
