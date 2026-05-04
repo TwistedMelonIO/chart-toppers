@@ -87,7 +87,7 @@ header {
   margin-bottom: 2.5rem;
   padding: 1rem 0;
   position: relative;
-  animation: fadeInDown 0.8s ease both;
+  /* animation: fadeInDown 0.8s ease both; */
 }
 
 .connection-status {
@@ -129,7 +129,7 @@ header {
 .connection-status.disconnected .dot {
   background: var(--danger);
   box-shadow: 0 0 6px var(--danger-glow);
-  animation: pulse 2s ease-in-out infinite;
+  /* animation: pulse 2s ease-in-out infinite; */
 }
 
 .header-content {
@@ -153,7 +153,7 @@ header h1 {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: shimmerText 4s ease-in-out infinite;
+  /* animation: shimmerText 4s ease-in-out infinite; */
   margin-bottom: 0.25rem;
   text-shadow: none;
   line-height: 1;
@@ -215,7 +215,7 @@ header h1 {
   justify-content: center;
   margin-bottom: 2rem;
   padding: 0 0.5rem;
-  animation: fadeInDown 0.7s ease 0.15s both;
+  /* animation: fadeInDown 0.7s ease 0.15s both; */
 }
 
 .round-pills {
@@ -263,7 +263,7 @@ header h1 {
     0 0 20px rgba(245, 158, 11, 0.12),
     0 0 40px rgba(245, 158, 11, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  animation: roundPulse 3s ease-in-out infinite;
+  /* animation: roundPulse 3s ease-in-out infinite; */
 }
 
 @keyframes roundPulse {
@@ -548,7 +548,7 @@ header h1 {
   --team-glow: var(--team-anthems-glow);
   border-color: rgba(6, 182, 212, 0.25);
   background: linear-gradient(170deg, rgba(6, 182, 212, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
-  animation: fadeInLeft 0.7s ease 0.1s both;
+  /* animation: fadeInLeft 0.7s ease 0.1s both; */
 }
 
 .team-anthems.playing {
@@ -556,7 +556,7 @@ header h1 {
   --team-glow: var(--team-playing-glow);
   border-color: rgba(251, 191, 36, 0.5);
   background: linear-gradient(170deg, rgba(251, 191, 36, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-  animation: pulseGlow 2s ease-in-out infinite;
+  /* animation: pulseGlow 2s ease-in-out infinite; */
 }
 
 /* Team Icons - Hot Rose identity */
@@ -565,7 +565,7 @@ header h1 {
   --team-glow: var(--team-icons-glow);
   border-color: rgba(251, 113, 133, 0.25);
   background: linear-gradient(170deg, rgba(251, 113, 133, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
-  animation: fadeInRight 0.7s ease 0.1s both;
+  /* animation: fadeInRight 0.7s ease 0.1s both; */
 }
 
 .team-icons.playing {
@@ -573,7 +573,7 @@ header h1 {
   --team-glow: var(--team-playing-glow);
   border-color: rgba(251, 191, 36, 0.5);
   background: linear-gradient(170deg, rgba(251, 191, 36, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-  animation: pulseGlow 2s ease-in-out infinite;
+  /* animation: pulseGlow 2s ease-in-out infinite; */
 }
 
 @keyframes pulseGlow {
@@ -656,7 +656,7 @@ header h1 {
 }
 
 .score-card.flash {
-  animation: flashPulse 0.6s ease-out;
+  /* animation: flashPulse 0.6s ease-out; */
 }
 
 @keyframes flashPulse {
@@ -742,7 +742,7 @@ header h1 {
 
 /* Flash animation on correct answer */
 .score-card.flash {
-  animation: flashGreen 0.6s ease;
+  /* animation: flashGreen 0.6s ease; */
 }
 
 @keyframes flashGreen {
@@ -776,13 +776,13 @@ header h1 {
 .score-card.countdown-mode .score-value.countdown-warn {
   color: #f59e0b;
   text-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
-  animation: countdownPulse 1s ease-in-out infinite;
+  /* animation: countdownPulse 1s ease-in-out infinite; */
 }
 
 .score-card.countdown-mode .score-value.countdown-critical {
   color: #ef4444;
   text-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
-  animation: countdownPulse 0.5s ease-in-out infinite;
+  /* animation: countdownPulse 0.5s ease-in-out infinite; */
 }
 
 @keyframes countdownPulse {
@@ -860,7 +860,7 @@ header h1 {
   color: var(--warning, #fbbf24);
   border-color: rgba(251, 191, 36, 0.6);
   opacity: 1;
-  animation: buzz-pulse 0.6s ease-in-out 2;
+  /* animation: buzz-pulse 0.6s ease-in-out 2; */
 }
 
 @keyframes buzz-pulse {
@@ -879,7 +879,7 @@ header h1 {
 .global-controls {
   text-align: center;
   margin-bottom: 1.5rem;
-  animation: fadeInUp 0.7s ease 0.3s both;
+  /* animation: fadeInUp 0.7s ease 0.3s both; */
 }
 
 
@@ -941,7 +941,7 @@ header h1 {
   margin-bottom: 0.5rem;
   background: rgba(255, 255, 255, 0.02);
   border-left: 3px solid var(--correct);
-  animation: slideIn 0.3s ease;
+  /* animation: slideIn 0.3s ease; */
   min-height: 44px;
   transition: background 0.2s ease;
 }
@@ -1033,32 +1033,32 @@ header h1 {
 .gradient-circle.first {
   background: radial-gradient(circle at center, rgba(var(--first-color, 40, 20, 80), 0.5) 0%, rgba(var(--first-color, 40, 20, 80), 0.2) 50%, transparent 50%);
   transform-origin: center center;
-  animation: moveVertical 30s ease infinite;
+  /* animation: moveVertical 30s ease infinite; */
 }
 
 .gradient-circle.second {
   background: radial-gradient(circle at center, rgba(var(--second-color, 60, 30, 120), 0.4) 0%, rgba(var(--second-color, 60, 30, 120), 0.15) 50%, transparent 50%);
   transform-origin: calc(50% - 400px) center;
-  animation: moveInCircle 20s reverse infinite;
+  /* animation: moveInCircle 20s reverse infinite; */
 }
 
 .gradient-circle.third {
   background: radial-gradient(circle at center, rgba(var(--third-color, 80, 40, 140), 0.4) 0%, rgba(var(--third-color, 80, 40, 140), 0.15) 50%, transparent 50%);
   transform-origin: calc(50% + 400px) center;
-  animation: moveInCircle 40s linear infinite;
+  /* animation: moveInCircle 40s linear infinite; */
 }
 
 .gradient-circle.fourth {
   background: radial-gradient(circle at center, rgba(var(--fourth-color, 30, 15, 60), 0.35) 0%, rgba(var(--fourth-color, 30, 15, 60), 0.1) 50%, transparent 50%);
   transform-origin: calc(50% - 200px) center;
-  animation: moveHorizontal 40s ease infinite;
+  /* animation: moveHorizontal 40s ease infinite; */
   opacity: 0.5;
 }
 
 .gradient-circle.fifth {
   background: radial-gradient(circle at center, rgba(var(--fifth-color, 20, 10, 40), 0.35) 0%, rgba(var(--fifth-color, 20, 10, 40), 0.1) 50%, transparent 50%);
   transform-origin: calc(50% - 800px) calc(50% + 800px);
-  animation: moveInCircle 20s ease infinite;
+  /* animation: moveInCircle 20s ease infinite; */
 }
 
 .gradient-circle.pointer {
@@ -1884,7 +1884,7 @@ footer {
 .buzzer-dot.warning {
   background: #f5a623;
   box-shadow: 0 0 6px rgba(245, 166, 35, 0.7);
-  animation: buzzer-warning-pulse 1.2s ease-in-out infinite;
+  /* animation: buzzer-warning-pulse 1.2s ease-in-out infinite; */
 }
 
 @keyframes buzzer-warning-pulse {
@@ -2008,7 +2008,7 @@ footer {
 .golden-record-armed {
   border-color: rgba(255, 215, 0, 0.5);
   background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.03));
-  animation: goldenPulse 1.5s ease-in-out infinite;
+  /* animation: goldenPulse 1.5s ease-in-out infinite; */
 }
 
 .golden-record-armed .golden-record-status {
@@ -2017,7 +2017,7 @@ footer {
 }
 
 .golden-record-armed .golden-record-icon {
-  animation: goldenSpin 2s ease-in-out infinite;
+  /* animation: goldenSpin 2s ease-in-out infinite; */
 }
 
 /* Used state - greyed out */
@@ -2038,7 +2038,7 @@ footer {
 
 /* Flash animation on activation */
 .golden-record-flash {
-  animation: goldenFlash 1.5s ease-out;
+  /* animation: goldenFlash 1.5s ease-out; */
 }
 
 /* History badge for Golden Record entries */
