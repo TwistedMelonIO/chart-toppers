@@ -378,6 +378,21 @@ function teamRanking() {
   return { tie: false, leader, loser, aScore, iScore };
 }
 
+// R4 final-decision ranking: compares R4 points ONLY, ignoring R1-R3
+// earnedTime. Used by retargetDUALGO() and the /dualscreen handler so
+// that a tied R4 (e.g. 6-6 in points) fires the tiebreaker even if
+// cumulative scores from earlier rounds differ.
+function r4FinalRanking() {
+  const aScore = gameState.anthems?.points || 0;
+  const iScore = gameState.icons?.points || 0;
+  if (aScore === iScore) {
+    return { tie: true, aScore, iScore };
+  }
+  const leader = aScore > iScore ? 'anthems' : 'icons';
+  const loser = leader === 'anthems' ? 'icons' : 'anthems';
+  return { tie: false, leader, loser, aScore, iScore };
+}
+
 // Auto-set turnState.currentTeam based on the rule for a given round:
 //   R1 → no auto-set (coin toss required)
 //   R2, R3 → leader plays first
@@ -2116,11 +2131,11 @@ function retargetLeaderSD(source = 'system') {
 // when the tiebreaker actually fires.
 function retargetDUALGO(source = 'system') {
   if (roundState.currentRound !== 4) return;
-  const ranking = teamRanking();
+  const ranking = r4FinalRanking();
   const target = ranking.tie ? CONFIG.QLAB_CUE_TIEBREAK : 'R5';
   const label = ranking.tie ? 'TIEBREAK (tied)' : 'R5 (winner reveal)';
   console.log(
-    `[DUALGO] Retargeting → ${target} — ${label} (a=${ranking.aScore} i=${ranking.iScore}) (${source})`
+    `[DUALGO] Retargeting → ${target} — ${label} (R4 pts: a=${ranking.aScore} i=${ranking.iScore}) (${source})`
   );
   updateQLabCueTarget('DUALGO', target);
 }
@@ -4226,17 +4241,17 @@ function handleOscAddress(address, args) {
     }
     // Refresh target against live scores
     retargetDUALGO('dualscreen');
-    const ranking = teamRanking();
+    const ranking = r4FinalRanking();
     (async () => {
       if (ranking.tie) {
-        console.log(`[TIEBREAK] Tie detected (${ranking.aScore} each) — firing DUALGO → TIEBREAK`);
+        console.log(`[TIEBREAK] R4 tied on points (${ranking.aScore} each) — firing DUALGO → TIEBREAK`);
         tiebreakActive = true;
         // Tiebreaker needs the buzzers armed (R4 otherwise keeps them off)
         sendBridgeOsc('/cue/IBUZZ/armed', 1, '→ arm IBUZZ for tiebreaker');
         sendBridgeOsc('/cue/ABUZZ/armed', 1, '→ arm ABUZZ for tiebreaker');
-        logActivity('tiebreak', 'all', `Tiebreaker triggered (${ranking.aScore} each)`, 'osc');
+        logActivity('tiebreak', 'all', `Tiebreaker triggered (R4 pts ${ranking.aScore} each)`, 'osc');
       } else {
-        console.log(`[DUALSCREEN] No tie (a=${ranking.aScore} i=${ranking.iScore}) — firing DUALGO → R5 (winner reveal)`);
+        console.log(`[DUALSCREEN] R4 not tied (R4 pts: a=${ranking.aScore} i=${ranking.iScore}) — firing DUALGO → R5 (winner reveal)`);
       }
       // Arm (safety net) → wait for ACK → fire /start in order.
       await sendBridgeOscAwait('/cue/DUALGO/armed', 1, '→ arm DUALGO (dualscreen safety)');
